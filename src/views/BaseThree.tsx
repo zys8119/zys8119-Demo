@@ -91,17 +91,31 @@ export class BaseThreeClass {
      * 设置灯光
      */
     setLight(){
+        // 环境灯
+        let ambient = null;
+        ambient= new THREE.AmbientLight(0xffffff);
+        ambient = new THREE.DirectionalLight(0xffffff);
+        ambient = new THREE.HemisphereLight(0x000000);
+        this.scene.add(ambient); //将环境光添加到场景中
+
+        // const light = new THREE.PointLight( 0xffffff, 1, 0 );
+        // light.position.set( 0, 400, 0 );
+        // light.castShadow = true;            // default false
+        // this.scene.add( light );
+        // const helper = new THREE.PointLightHelper(light)
+        // this.scene.add(helper)
+
         const light = new THREE.DirectionalLight(0xffffff, 2)
         light.castShadow = true // 投射阴影
         light.position.set(400, 400, 400)
         light.target.position.set(-0, -0, -0)
-        const d = 50
+        const d = 1000
         light.shadow.camera.left = -d
         light.shadow.camera.right = d
         light.shadow.camera.top = d
         light.shadow.camera.bottom = -d
-        light.shadow.camera.near = 1
-        light.shadow.camera.far = 9000
+        light.shadow.camera.near = 0.1
+        light.shadow.camera.far = 10000
         this.scene.add(light)
         this.scene.add(light.target)
         // 灯光帮助
