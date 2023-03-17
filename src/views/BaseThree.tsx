@@ -1,10 +1,12 @@
 import {
     Scene,
     PerspectiveCamera,
-    WebGLRenderer, Color,
+    WebGLRenderer,
 } from 'three';
 import * as THREE from 'three';
 import WebGL from 'three/examples/jsm/capabilities/WebGL';
+import {OrbitControls} from 'three/examples/jsm/controls/OrbitControls';
+import {VertexNormalsHelper} from 'three/examples/jsm/helpers/VertexNormalsHelper';
 import {SetupContext, Prop} from "vue";
 import cssRender from 'css-render'
 import bem from '@css-render/plugin-bem'
@@ -14,10 +16,10 @@ import {Vector3} from "three/src/math/Vector3";
 import {Vector2} from "three/src/math/Vector2";
 import {ColorRepresentation} from "three/src/utils";
 const datatest = ref<any>({
-    x:-0.5,
-    y:0.5,
+    x:0,
+    y:1,
     z:0,
-    step:0.05
+    step:0.01
 })
 const cssr = cssRender()
 const plugin = bem({
@@ -44,6 +46,7 @@ export class BaseThreeClass {
      * 渲染器
      */
     renderer:WebGLRenderer
+    controls:OrbitControls
     constructor(public props:PropsBase, public ctx:SetupContext<typeof emits>) {
     }
 
@@ -52,7 +55,11 @@ export class BaseThreeClass {
      */
     setScene(){
         this.scene = new Scene()
-        this.scene.rotation.set(-0.5, 0.5, 0)
+        this.scene.rotation.set(0, 1, 0)
+        // watchEffect(()=>{
+        //     const {x, y, z} = datatest.value
+        //     this.scene.rotation.set(x, y, z)
+        // })
     }
 
     /**
@@ -60,7 +67,9 @@ export class BaseThreeClass {
      */
     setCamera(){
         this.camera = new PerspectiveCamera(this.props.fov, this.props.aspect || innerWidth.value / innerHeight.value, this.props.near, this.props.far)
-        this.camera.position.set( 0, 0, 1000);
+        // 设置相机位置
+        this.camera.position.set( 400, 400, 400);
+        // 查看相机具体位置
         this.camera.lookAt( 0, 0, 0 );
     }
 
@@ -70,9 +79,58 @@ export class BaseThreeClass {
     setRenderer(){
         this.renderer = new WebGLRenderer({
             canvas:canvas.value,
-            antialias:true
+            alpha:true,
+            antialias:true,
         })
         this.renderer.setSize(this.props.sizeWidth || innerWidth.value, this.props.sizeHeight || innerHeight.value)
+        this.renderer.shadowMap.enabled = true
+        this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    }
+
+    /**
+     * 设置灯光
+     */
+    setLight(){
+        const light = new THREE.DirectionalLight(0xffffff, 2)
+        light.castShadow = true // 投射阴影
+        light.position.set(400, 400, 400)
+        light.target.position.set(-0, -0, -0)
+        const d = 50
+        light.shadow.camera.left = -d
+        light.shadow.camera.right = d
+        light.shadow.camera.top = d
+        light.shadow.camera.bottom = -d
+        light.shadow.camera.near = 1
+        light.shadow.camera.far = 9000
+        this.scene.add(light)
+        this.scene.add(light.target)
+        // 灯光帮助
+        const helper = new THREE.DirectionalLightHelper(light)
+        this.scene.add(helper)
+
+        const cameraHelper = new THREE.CameraHelper(light.shadow.camera)
+        this.scene.add(cameraHelper)
+    }
+
+    /**
+     * 鼠标控制器
+     */
+    setMouseController(){
+        this.controls = new OrbitControls(this.camera,this.renderer.domElement)
+        this.controls.update()
+    }
+
+    /**
+     * 平面几何
+     */
+    planeGeometry(){
+        const size = 1000
+        const groundGeometry = new THREE.PlaneGeometry(size, size)
+        const groundMaterial = new THREE.MeshPhongMaterial({ color: 0xcc8866, side: THREE.DoubleSide })
+        const groundMesh = new THREE.Mesh(groundGeometry, groundMaterial)
+        groundMesh.rotation.x = Math.PI * -0.5
+        groundMesh.receiveShadow = true // 接受阴影
+        this.scene.add(groundMesh)
     }
 
     /**
@@ -83,6 +141,10 @@ export class BaseThreeClass {
             this.setScene()
             this.setCamera()
             this.setRenderer()
+            this.planeGeometry()
+            this.setCoordinateLine()
+            this.setLight()
+            this.setMouseController()
             this.initRender()
         })
     }
@@ -141,6 +203,13 @@ export class BaseThreeClass {
             new THREE.Vector3( 0, 0, 0 ),
             new THREE.Vector3( 0, 0, lingMax )
         ], "#250bc7")
+
+        const geometry = new THREE.BoxGeometry( 10, 10, 10, 2, 2, 2 );
+        const material = new THREE.MeshBasicMaterial( { color: 0xff0000 } );
+        const box = new THREE.Mesh( geometry, material );
+        const helper1 = new VertexNormalsHelper( box, 2, 0x00ff00 );
+        this.scene.add( box );
+        this.scene.add( helper1 );
     }
 }
 type PropsBase = {
@@ -179,7 +248,8 @@ const style = cB(
         overflow:'hidden',
         display:'flex',
         justifyContent:'center',
-        alignItems:'center'
+        alignItems:'center',
+        backgroundColor:"#222222"
     },
     [
         cE("canvas",{
