@@ -18,11 +18,12 @@
 
 <script setup lang="ts">
 import BaseThree,{BaseThreeClass} from "./BaseThree"
-import { TextGeometry } from 'three/examples/jsm/geometries/TextGeometry.js';
-import { FontLoader } from 'three/examples/jsm/loaders/FontLoader.js';
+import fontUrl from '@/src/assets/miaozidongmanti-regular.ttf';
 const initializationData = ref<any>({
+
 })
-const load = (three:BaseThreeClass)=>{
+
+const load = async (three:BaseThreeClass)=>{
     const {
         THREE,
         camera,
@@ -30,24 +31,9 @@ const load = (three:BaseThreeClass)=>{
         scene,
         controls,
     }:BaseThreeClass = three
-    three.planeGeometry()
-    const {mesh} = three.addBoxGeometry()
+    const {mesh} = three.addBoxGeometry("https://t7.baidu.com/it/u=4036010509,3445021118&fm=193&f=GIF")
     three.transformControls().attach(mesh)
-    new FontLoader().load("https://threejs.org/examples/fonts/optimer_bold.typeface.json", font=>{
-        const geometry = new TextGeometry( 'zhijia', {
-                font,
-                size: 80,
-                height: 5,
-                curveSegments: 12,
-                bevelEnabled: true,
-                bevelThickness: 10,
-                bevelSize: 8,
-                bevelSegments: 5
-        } );
-        scene.add(new THREE.Mesh(geometry, new THREE.MeshPhongMaterial( { color: 0xff0000, flatShading: true } )))
-
-    })
-
+    await three.addText('智加科技')
 }
 const animation = ({scene}:BaseThreeClass)=>{
     scene.rotation.y += 0.005

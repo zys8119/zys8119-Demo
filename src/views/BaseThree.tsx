@@ -9,6 +9,9 @@ import WebGL from 'three/examples/jsm/capabilities/WebGL';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
 import { TransformControls } from 'three/examples/jsm/controls/TransformControls.js';
 import { VertexNormalsHelper } from 'three/examples/jsm/helpers/VertexNormalsHelper';
+import { FontLoader, Font as FontLoaderToFont } from 'three/examples/jsm/loaders/FontLoader.js';
+import { TextGeometry } from 'three/examples/jsm/geometries/TextGeometry.js';
+import {parse as parseFont, Font, GlyphSet} from 'opentype.js';
 import { SetupContext, Prop } from "vue";
 import cssRender from 'css-render'
 import bem from '@css-render/plugin-bem'
@@ -17,6 +20,116 @@ import {createCNode, CSelector} from "css-render/lib/types";
 import {Vector3} from "three/src/math/Vector3";
 import {Vector2} from "three/src/math/Vector2";
 import {ColorRepresentation} from "three/src/utils";
+import {Texture} from "three/src/textures/Texture";
+import fontUrl from "@/src/assets/miaozidongmanti-regular.ttf";
+
+/***
+ * 获取字体格式
+ * @param font
+ * @param text
+ * @param outJs
+ */
+export const convertFont = function(font:Font, text?:string, outJs?:boolean){
+    let scale = (1000 * 100) / ( (font.unitsPerEm || 2048) *72);
+    let result:any = {};
+    result.glyphs = {};
+
+    let restriction = {
+        range : null,
+        set : null
+    };
+
+    if (text) {
+        let restrictContent = text;
+        let rangeSeparator = '-';
+        if (restrictContent.indexOf (rangeSeparator) != -1) {
+            let rangeParts:any = restrictContent.split (rangeSeparator);
+            if (rangeParts.length === 2 && !isNaN (rangeParts[0]) && !isNaN (rangeParts[1])) {
+                restriction.range = [parseInt (rangeParts[0]), parseInt (rangeParts[1])];
+            }
+        }
+        if (restriction.range === null) {
+            restriction.set = restrictContent;
+        }
+    }
+    for(const [k , glyph] of Object.entries<GlyphSet>(font.glyphs.glyphs)){
+        if (glyph.unicode !== undefined) {
+            let glyphCharacter = String.fromCharCode (glyph.unicode);
+            let needToExport = true;
+            if (restriction.range !== null) {
+                needToExport = (glyph.unicode >= restriction.range[0] && glyph.unicode <= restriction.range[1]);
+            } else if (restriction.set !== null) {
+                needToExport = (text.indexOf (glyphCharacter) != -1);
+            }
+            if (needToExport) {
+
+                let token:any = {};
+                token.ha = Math.round(glyph.advanceWidth * scale);
+                token.x_min = Math.round(glyph.xMin * scale);
+                token.x_max = Math.round(glyph.xMax * scale);
+                token.o = ""
+                glyph.path.commands.forEach(function(command,i){
+                    if (command.type.toLowerCase() === "c") {command.type = "b";}
+                    token.o += command.type.toLowerCase();
+                    token.o += " "
+                    if (command.x !== undefined && command.y !== undefined){
+                        token.o += Math.round(command.x * scale);
+                        token.o += " "
+                        token.o += Math.round(command.y * scale);
+                        token.o += " "
+                    }
+                    if (command.x1 !== undefined && command.y1 !== undefined){
+                        token.o += Math.round(command.x1 * scale);
+                        token.o += " "
+                        token.o += Math.round(command.y1 * scale);
+                        token.o += " "
+                    }
+                    if (command.x2 !== undefined && command.y2 !== undefined){
+                        token.o += Math.round(command.x2 * scale);
+                        token.o += " "
+                        token.o += Math.round(command.y2 * scale);
+                        token.o += " "
+                    }
+                });
+                result.glyphs[String.fromCharCode(glyph.unicode)] = token;
+            }
+        }
+    }
+    result.ascender = Math.round(font.ascender * scale);
+    result.descender = Math.round(font.descender * scale);
+    result.underlinePosition = Math.round(font.tables.post.underlinePosition * scale);
+    result.underlineThickness = Math.round(font.tables.post.underlineThickness * scale);
+    result.boundingBox = {
+        "yMin": Math.round(font.tables.head.yMin * scale),
+        "xMin": Math.round(font.tables.head.xMin * scale),
+        "yMax": Math.round(font.tables.head.yMax * scale),
+        "xMax": Math.round(font.tables.head.xMax * scale)
+    };
+    result.resolution = 1000;
+    try {
+        result.familyName = font.names.fullName.en;
+        result.original_font_information = font.tables.name;
+        if (font.names.fullName.en.toLowerCase().indexOf("bold") > -1){
+            result.cssFontWeight = "bold";
+        } else {
+            result.cssFontWeight = "normal";
+        }
+
+        if (font.names.fullName.en.toLowerCase().indexOf("italic") > -1){
+            result.cssFontStyle = "italic";
+        } else {
+            result.cssFontStyle = "normal";
+        }
+    }catch (e) {
+
+    }
+
+    if(outJs) {
+        return "if (_typeface_js && _typeface_js.loadFace) _typeface_js.loadFace("+ JSON.stringify(result) + ");"
+    } else {
+        return result;
+    }
+};
 const cssr = cssRender()
 const plugin = bem({})
 cssr.use(plugin) // bind the plugin with the cssr instance
@@ -58,7 +171,31 @@ export class BaseThreeClass {
      * 渲染器
      */
     renderer:WebGLRenderer
+
+    /**
+     * 鼠标控制器
+     */
     controls:OrbitControls
+
+    /**
+     * 下载的字体文件
+     */
+    fonts = new Map<string, {
+        fontJson:Record<string, any>,
+        font:FontLoaderToFont
+    }>()
+
+    /**
+     * 下载的图片
+     */
+    imagesTexture = new Map<string, Texture>()
+
+    /**
+     * 是否渲染
+     */
+    isRender:boolean = false
+
+
     constructor(public props:PropsBase, public ctx:SetupContext<typeof emits>) {
     }
 
@@ -160,21 +297,31 @@ export class BaseThreeClass {
             baseTheeEl.value.appendChild(WebGL.getWebGLErrorMessage())
         }
     }
-
     /**
      * 初始化渲染
      */
+    private requestAnimationFrameIndex:number
+    private requestAnimationFrame(fn:()=> void){
+        cancelAnimationFrame(this.requestAnimationFrameIndex)
+        this.requestAnimationFrameIndex = requestAnimationFrame(()=>{
+            fn?.()
+            this.requestAnimationFrame(fn)
+        })
+    }
+
     initRender(){
         this.ctx.emit("load", this)
-        this.render()
-        this.renderer.setAnimationLoop((...args)=>{
-            this.ctx.emit('animation', this, ...args)
+        this.requestAnimationFrame(()=>{
+            this.ctx.emit("animation", this)
             this.render()
         })
+        this.render()
+
     }
 
     render(){
         this.renderer.render( this.scene, this.camera );
+        this.isRender = true
     }
 
     /**
@@ -218,14 +365,14 @@ export class BaseThreeClass {
     /**
      * 添加几何体
      */
-    addBoxGeometry():({
+    addBoxGeometry(url?:string):({
         mesh:Mesh,
         material:MeshLambertMaterial
         box:BoxGeometry
     }){
         const box = new THREE.BoxGeometry(100,100,100)
         const material = new THREE.MeshLambertMaterial({
-            map:new THREE.TextureLoader().load("https://t7.baidu.com/it/u=4036010509,3445021118&fm=193&f=GIF"),
+            map:url ? this.downloadImagesTexture(url) : null,
             transparent:true
         })
         const mesh = new THREE.Mesh(box, material)
@@ -237,6 +384,34 @@ export class BaseThreeClass {
             box,
             material,
             mesh
+        }
+    }
+
+    /**
+     * 添加文字
+     */
+    async addText(text:string){
+        const box = new TextGeometry( text, {
+            font:await this.downloadFonts(fontUrl, 'aaa'),
+            size: 80,
+            height: 5,
+            curveSegments: 12,
+            bevelEnabled: true,
+            bevelThickness: 10,
+            bevelSize: 0,
+            bevelSegments: 5
+        } );
+        const material = new THREE.MeshPhongMaterial( {
+            flatShading: true,
+            map:new THREE.TextureLoader().load('https://t7.baidu.com/it/u=4036010509,3445021118&fm=193&f=GIF')
+        })
+        const mesh = new THREE.Mesh(box, material)
+        mesh.position.set(-200,0,100)
+        this.scene.add(mesh)
+        return {
+            mesh,
+            material,
+            box
         }
     }
 
@@ -264,7 +439,36 @@ export class BaseThreeClass {
         this.scene.add(control)
         return control
     }
-
+    /**
+     * 下载字体
+     */
+    async downloadFonts(fontUrl:string, familyName?:string){
+        if(this.fonts.has(familyName)){
+            return this.fonts.get(familyName)?.font
+        }
+        if(this.fonts.has(fontUrl)){
+            return this.fonts.get(fontUrl)?.font
+        }
+        const fontArrayBuffer = parseFont(await fetch(fontUrl).then(res=>res.arrayBuffer()))
+        const fontJson = convertFont(fontArrayBuffer)
+        const fontInfo = {
+            fontJson,
+            font:new FontLoader().parse(fontJson)
+        }
+        this.fonts.set(familyName || fontJson.familyName || fontUrl, fontInfo)
+        return fontInfo.font
+    }
+    /**
+     * 下载字体
+     */
+    downloadImagesTexture(url:string, imageName?:string):Texture{
+        if(this.imagesTexture.has(imageName)){
+            return this.imagesTexture.get(imageName)
+        }
+        const texture = new THREE.TextureLoader().load(url)
+        this.imagesTexture.set(imageName || url, new THREE.TextureLoader().load(url))
+        return texture
+    }
     /**
      * 重置
      */
@@ -306,7 +510,7 @@ export const propsBaseThree:{
 }
 export const emits = {
     load:(myThee:BaseThreeClass)=>true,
-    animation:(myThee:BaseThreeClass, ...args:any[])=>true,
+    animation:(myThee:BaseThreeClass)=>true,
     ['update:modelValue']:(myThee:BaseThreeClass)=>true,
     ['update:initialization-data']:(data:InitializationData)=>true,
 }
