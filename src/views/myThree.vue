@@ -33,7 +33,8 @@ const load = async (three:BaseThreeClass)=>{
     }:BaseThreeClass = three
     const {mesh} = three.addBoxGeometry("https://t7.baidu.com/it/u=4036010509,3445021118&fm=193&f=GIF")
     three.transformControls().attach(mesh)
-    await three.addText('智加科技')
+    await three.downloadFonts(fontUrl, 'aaa')
+    await three.addText('智加科技', 'aaa')
 }
 const animation = ({scene}:BaseThreeClass)=>{
     scene.rotation.y += 0.005

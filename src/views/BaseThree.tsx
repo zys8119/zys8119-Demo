@@ -21,7 +21,6 @@ import {Vector3} from "three/src/math/Vector3";
 import {Vector2} from "three/src/math/Vector2";
 import {ColorRepresentation} from "three/src/utils";
 import {Texture} from "three/src/textures/Texture";
-import fontUrl from "@/src/assets/miaozidongmanti-regular.ttf";
 
 /***
  * 获取字体格式
@@ -390,9 +389,9 @@ export class BaseThreeClass {
     /**
      * 添加文字
      */
-    async addText(text:string){
+    async addText(text:string, fontName:string, map?:Texture){
         const box = new TextGeometry( text, {
-            font:await this.downloadFonts(fontUrl, 'aaa'),
+            font:this.fonts.get(fontName).font,
             size: 80,
             height: 5,
             curveSegments: 12,
@@ -403,7 +402,8 @@ export class BaseThreeClass {
         } );
         const material = new THREE.MeshPhongMaterial( {
             flatShading: true,
-            map:new THREE.TextureLoader().load('https://t7.baidu.com/it/u=4036010509,3445021118&fm=193&f=GIF')
+            color:"#00a6ff",
+            map:map ? map : null
         })
         const mesh = new THREE.Mesh(box, material)
         mesh.position.set(-200,0,100)
