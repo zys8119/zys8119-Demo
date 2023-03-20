@@ -12,6 +12,7 @@ import { TransformControls } from 'three/examples/jsm/controls/TransformControls
 import { VertexNormalsHelper } from 'three/examples/jsm/helpers/VertexNormalsHelper';
 import { FontLoader, Font as FontLoaderToFont } from 'three/examples/jsm/loaders/FontLoader.js';
 import { TextGeometry } from 'three/examples/jsm/geometries/TextGeometry.js';
+import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import {parse as parseFont, Font, GlyphSet} from 'opentype.js';
 import { SetupContext, Prop, getCurrentInstance } from "vue";
 import cssRender from 'css-render'
@@ -518,6 +519,25 @@ export class BaseThreeClass {
         }
         return this.gui
     }
+
+    /**
+     * addGLTFLoader
+     */
+    addGLTFLoader(url){
+        const loader = new GLTFLoader();
+        loader.load(url, ( gltf )=> {
+
+            this.scene.add( gltf.scene );
+
+            // createGUI( gltf.scene, gltf.animations );
+
+        }, undefined, function ( e ) {
+
+            console.error( e );
+
+        } );
+    }
+
     /**
      * 重置
      */

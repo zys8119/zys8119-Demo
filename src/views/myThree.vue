@@ -29,6 +29,7 @@ const load = async (three:BaseThreeClass)=>{
     three.transformControls().attach(mesh)
     await three.downloadFonts(fontUrl, 'aaa')
     await three.addText('智加科技', 'aaa')
+    await three.addGLTFLoader('models/gltf/RobotExpressive/RobotExpressive.glb')
 }
 const animation = ({scene}:BaseThreeClass)=>{
     // scene.rotation.y += 0.005
