@@ -34,7 +34,7 @@ const load = (three:BaseThreeClass)=>{
     const {mesh} = three.addBoxGeometry()
     three.transformControls().attach(mesh)
     new FontLoader().load("https://threejs.org/examples/fonts/optimer_bold.typeface.json", font=>{
-        const geometry = new TextGeometry( '张云山', {
+        const geometry = new TextGeometry( 'zhijia', {
                 font,
                 size: 80,
                 height: 5,
