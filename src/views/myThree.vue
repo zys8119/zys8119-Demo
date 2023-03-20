@@ -3,25 +3,19 @@
         <BaseThree
             @load="load"
             @animation="animation"
+            @gui="gui"
             :near="0.1"
             :far="1000"
             v-model:initialization-data="initializationData"
         >
-            <template #panel>
-                <input placeholder='x' type='number' v-model="initializationData.camera.x" :step="initializationData.camera.step"/>
-                <input placeholder='y' type='number' v-model="initializationData.camera.y" :step="initializationData.camera.step"/>
-                <input placeholder='z' type='number' v-model="initializationData.camera.z" :step="initializationData.camera.step"/>
-            </template>
         </BaseThree>
     </div>
 </template>
 
 <script setup lang="ts">
-import BaseThree,{BaseThreeClass} from "./BaseThree"
+import BaseThree, {BaseThreeClass, InitializationData} from "./BaseThree"
 import fontUrl from '@/src/assets/miaozidongmanti-regular.ttf';
-const initializationData = ref<any>({
-
-})
+const initializationData = ref<any>({})
 
 const load = async (three:BaseThreeClass)=>{
     const {
@@ -37,7 +31,16 @@ const load = async (three:BaseThreeClass)=>{
     await three.addText('智加科技', 'aaa')
 }
 const animation = ({scene}:BaseThreeClass)=>{
-    scene.rotation.y += 0.005
+    // scene.rotation.y += 0.005
+}
+const gui = ({camera}:InitializationData, three:BaseThreeClass)=>{
+    const cameraFolder = three.gui.addFolder('相机')
+    cameraFolder.add(camera, "x",1, 1000000).step(5)
+    cameraFolder.add(camera, "y",1, 1000000).step(5)
+    cameraFolder.add(camera, "z",1, 1000000).step(5)
+    return ()=>{
+        three.camera.position.set(camera.x, camera.y, camera.z)
+    }
 }
 </script>
 

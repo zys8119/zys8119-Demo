@@ -6,13 +6,14 @@ import {
 import * as THREE from 'three';
 import {merge} from 'lodash';
 import WebGL from 'three/examples/jsm/capabilities/WebGL';
+import { GUI } from 'three/examples/jsm/libs/lil-gui.module.min.js';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
 import { TransformControls } from 'three/examples/jsm/controls/TransformControls.js';
 import { VertexNormalsHelper } from 'three/examples/jsm/helpers/VertexNormalsHelper';
 import { FontLoader, Font as FontLoaderToFont } from 'three/examples/jsm/loaders/FontLoader.js';
 import { TextGeometry } from 'three/examples/jsm/geometries/TextGeometry.js';
 import {parse as parseFont, Font, GlyphSet} from 'opentype.js';
-import { SetupContext, Prop } from "vue";
+import { SetupContext, Prop, getCurrentInstance } from "vue";
 import cssRender from 'css-render'
 import bem from '@css-render/plugin-bem'
 import { useSsrAdapter } from '@css-render/vue3-ssr'
@@ -21,6 +22,7 @@ import {Vector3} from "three/src/math/Vector3";
 import {Vector2} from "three/src/math/Vector2";
 import {ColorRepresentation} from "three/src/utils";
 import {Texture} from "three/src/textures/Texture";
+import {ComponentInternalInstance} from "@vue/runtime-core";
 
 /***
  * 获取字体格式
@@ -129,6 +131,7 @@ export const convertFont = function(font:Font, text?:string, outJs?:boolean){
         return result;
     }
 };
+let vm:ComponentInternalInstance = getCurrentInstance()
 const cssr = cssRender()
 const plugin = bem({})
 cssr.use(plugin) // bind the plugin with the cssr instance
@@ -156,6 +159,10 @@ const initializationData = ref<InitializationData>({
         step:10
     }
 })
+
+/**
+ * Three https://threejs.org/docs/index.html#api/zh
+ */
 export class BaseThreeClass {
     THREE:typeof THREE = THREE
     /**
@@ -194,8 +201,16 @@ export class BaseThreeClass {
      */
     isRender:boolean = false
 
+    /**
+     * gui
+     */
+    gui:GUI
+    guiCallback:()=> void
+
 
     constructor(public props:PropsBase, public ctx:SetupContext<typeof emits>) {
+        this.reset()
+        this.watchUpDate()
     }
 
     /**
@@ -212,10 +227,8 @@ export class BaseThreeClass {
         this.camera = new PerspectiveCamera(this.props.fov, this.props.aspect || innerWidth.value / innerHeight.value, this.props.near, this.props.far)
         // 查看相机具体位置
         this.camera.lookAt( 0, 0, 0 );
-        watchEffect(()=>{
-            // 设置相机位置
-            this.camera.position.set(initializationData.value.camera.x, initializationData.value.camera.y, initializationData.value.camera.z);
-        })
+        // 设置相机位置
+        this.camera.position.set(initializationData.value.camera.x, initializationData.value.camera.y, initializationData.value.camera.z);
     }
 
     /**
@@ -469,6 +482,42 @@ export class BaseThreeClass {
         this.imagesTexture.set(imageName || url, new THREE.TextureLoader().load(url))
         return texture
     }
+
+
+    /**
+     * 监听数据
+     */
+    watchUpDate(){
+        // 全局初始化数据监听
+        watch(computed(()=> this.props.initializationData), ()=>{
+            initializationData.value = merge(initializationData.value, this.props.initializationData)
+            // 更新gui数据
+            this.addGUI(true)
+        }, {immediate:true})
+        this.ctx.emit('update:initialization-data', initializationData.value)
+        watch(initializationData, ()=>{
+            this.ctx.emit('update:initialization-data', initializationData.value)
+        },{deep:true})
+        /**
+         * 更新具体数据
+         */
+        watchEffect(()=>{
+            this.guiCallback?.()
+            this.render()
+        })
+    }
+
+    /**
+     * 添加GUI
+     * 开发文档：https://lil-gui.georgealways.com/
+     */
+    addGUI(isUpdate?:boolean):GUI{
+        this.gui = new GUI()
+        if(!isUpdate){
+            this.guiCallback = vm.vnode.props["onGui"]?.( initializationData.value, this)
+        }
+        return this.gui
+    }
     /**
      * 重置
      */
@@ -478,6 +527,7 @@ export class BaseThreeClass {
             this.setCamera()
             this.setRenderer()
             this.setMouseController()
+            this.addGUI()
             this.setLight()
             this.setCoordinateLine()
             this.initRender()
@@ -511,6 +561,7 @@ export const propsBaseThree:{
 export const emits = {
     load:(myThee:BaseThreeClass)=>true,
     animation:(myThee:BaseThreeClass)=>true,
+    gui:(data:InitializationData, myThee:BaseThreeClass)=>true,
     ['update:modelValue']:(myThee:BaseThreeClass)=>true,
     ['update:initialization-data']:(data:InitializationData)=>true,
 }
@@ -567,22 +618,22 @@ export default defineComponent({
     emits,
     setup(props, ctx){
         const {slots} = ctx
-        ctx.emit('update:initialization-data', initializationData.value)
-        watch(props.initializationData, ()=>{
-            initializationData.value = merge(initializationData.value, props.initializationData)
-        })
         onMounted(()=>{
+            vm = getCurrentInstance()
             const myThree =  new BaseThreeClass(props as any, ctx)
             ctx.emit('update:modelValue', myThree)
-            watchEffect(()=>{
+            watch([
+                innerWidth,
+                innerHeight
+            ], ()=>{
                 myThree.reset()
             })
         })
         return ()=> (<div class="base-three" ref={baseTheeEl}>
             <canvas class={'base-three__canvas'} ref={canvas}></canvas>
-            <div class={'base-three__panel'}>
+            {slots.panel ? <div class={'base-three__panel'}>
                 {slots.panel?.(initializationData.value)}
-            </div>
+            </div> : null}
         </div>)
     }
 })
