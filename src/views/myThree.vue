@@ -16,6 +16,7 @@
 <script setup lang="ts">
 import BaseThree, {BaseThreeClass, InitializationData} from "./BaseThree"
 import fontUrl from '@/src/assets/miaozidongmanti-regular.ttf';
+import RobotExpressiveGlb from '@/src/assets/RobotExpressive.glb?url';
 import {AnimationMixer} from 'three';
 import {Object3D} from "three/src/core/Object3D";
 const initializationData = ref<any>({
@@ -40,7 +41,7 @@ const load = async (three:BaseThreeClass)=>{
     await three.downloadFonts(fontUrl, 'aaa')
     await three.addText('智加科技', 'aaa')
     // 3d模型
-    const gltf = await three.addGLTFLoader('http://127.0.0.1:3000/RobotExpressive.glb')
+    const gltf = await three.addGLTFLoader(RobotExpressiveGlb)
     gltf.scene.position.set(300,0,0)
     gltf.scene.scale.set(50,50,50)
     const castShadowInit  = (obj:Object3D)=>{
