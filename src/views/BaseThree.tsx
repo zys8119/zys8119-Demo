@@ -302,7 +302,11 @@ export class BaseThreeClass {
     planeGeometry(){
         const size = 1500
         const groundGeometry = new THREE.PlaneGeometry(size, size)
-        const groundMaterial = new THREE.MeshPhongMaterial({ color: 0xcc8866, side: THREE.DoubleSide })
+        const groundMaterial = new THREE.MeshPhongMaterial({
+            color: 0xcc8866,
+            side: THREE.DoubleSide,
+            map:this.downloadImagesTexture('https://img2.baidu.com/it/u=3539900690,2292901709&fm=253&fmt=auto&app=138&f=JPEG?w=889&h=500')
+        })
         const groundMesh = new THREE.Mesh(groundGeometry, groundMaterial)
         groundMesh.rotation.x = Math.PI * -0.5
         groundMesh.receiveShadow = true // 接受阴影
