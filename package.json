@@ -3,6 +3,7 @@
     "version": "1.0.0",
     "description": "",
     "main": "index.js",
+    "homepage": "https://zys8119.github.io/zys8119-Demo/#/",
     "scripts": {
         "dev": "vite -c vite.config.ts",
         "build": "vite build",
