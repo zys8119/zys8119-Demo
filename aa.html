@@ -1,268 +1,220 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <title>three.js webgl - cameras</title>
+    <title>three.js webgl - animation - skinning - ik</title>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+    <meta name="author" content="Antoine BERNIER (abernier)" />
     <link type="text/css" rel="stylesheet" href="main.css">
     <style>
-        b {
-            color: lightgreen;
+        body {color:white;}
+        #info a {
+            color:#4d6675;
         }
     </style>
 </head>
 <body>
-<div id="info"><a href="https://threejs.org" target="_blank" rel="noopener">three.js</a> - cameras<br/>
-    <b>O</b> orthographic <b>P</b> perspective
+<div id="info">
+    <a href="https://threejs.org" target="_blank" rel="noopener">three.js</a> - webgl - inverse kinematics<br />
+    Character model by <a href="https://assetstore.unity.com/packages/3d/characters/humanoids/humans/kira-lowpoly-character-100303" target="_blank" rel="noopener">Aki</a>, furnitures from <a href="https://poly.pizza" target="_blank" rel="noopener">poly.pizza</a>, scene by <a href="https://abernier.name/three.js/examples/webgl_esher.html" target="_blank" rel="noopener">abernier</a>. CC0.
 </div>
 
 <!-- Import maps polyfill -->
 <!-- Remove this when import maps will be widely supported -->
-<!--<script async src="https://unpkg.com/es-module-shims@1.6.3/dist/es-module-shims.js"></script>-->
+<script async src="https://unpkg.com/es-module-shims@1.6.3/dist/es-module-shims.js"></script>
 
 <script type="importmap">
-			{
-				"imports": {
-					"three": "../build/three.module.js",
-					"three/addons/": "./jsm/"
-				}
+		{
+			"imports": {
+				"three": "../build/three.module.js",
+				"three/addons/": "./jsm/"
 			}
+		}
 		</script>
 
 <script type="module">
-
     import * as THREE from 'three';
 
+    import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+    import { TransformControls } from 'three/addons/controls/TransformControls.js';
+    import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+    import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js';
+    import { CCDIKSolver, CCDIKHelper } from './jsm/animation/CCDIKSolver.js';
     import Stats from 'three/addons/libs/stats.module.js';
+    import { GUI } from 'three/addons/libs/lil-gui.module.min.js';
 
-    let SCREEN_WIDTH = window.innerWidth;
-    let SCREEN_HEIGHT = window.innerHeight;
-    let aspect = SCREEN_WIDTH / SCREEN_HEIGHT;
+    let scene, camera, renderer, orbitControls, transformControls;
+    let mirrorSphereCamera;
 
-    let container, stats;
-    let camera, scene, renderer, mesh;
-    let cameraRig, activeCamera, activeHelper;
-    let cameraPerspective, cameraOrtho;
-    let cameraPerspectiveHelper, cameraOrthoHelper;
-    const frustumSize = 600;
+    const OOI = {};
+    let IKSolver;
 
-    init();
-    animate();
+    let stats, gui, conf;
+    const v0 = new THREE.Vector3();
 
-    function init() {
+    init().then( animate );
 
-        container = document.createElement( 'div' );
-        document.body.appendChild( container );
+    async function init() {
+
+        conf = {
+            followSphere: false,
+            turnHead: true,
+            ik_solver: true,
+        };
 
         scene = new THREE.Scene();
+        scene.fog = new THREE.FogExp2( 0xffffff, .17 );
+        scene.background = new THREE.Color( 0xdddddd );
 
-        //
+        camera = new THREE.PerspectiveCamera( 55, window.innerWidth / window.innerHeight, 0.001, 5000 );
+        camera.position.set( 0.9728517749133652, 1.1044765132727201, 0.7316689528482836 );
+        camera.lookAt( scene.position );
 
-        camera = new THREE.PerspectiveCamera( 50, 0.5 * aspect, 1, 10000 );
-        camera.position.z = 2500;
+        const ambientLight = new THREE.AmbientLight( 0xffffff, 8 ); // soft white light
+        scene.add( ambientLight );
 
-        cameraPerspective = new THREE.PerspectiveCamera( 50, 0.5 * aspect, 150, 1000 );
-
-        cameraPerspectiveHelper = new THREE.CameraHelper( cameraPerspective );
-        scene.add( cameraPerspectiveHelper );
-
-        //
-        cameraOrtho = new THREE.OrthographicCamera( 0.5 * frustumSize * aspect / - 2, 0.5 * frustumSize * aspect / 2, frustumSize / 2, frustumSize / - 2, 150, 1000 );
-
-        cameraOrthoHelper = new THREE.CameraHelper( cameraOrtho );
-        scene.add( cameraOrthoHelper );
-
-        //
-
-        activeCamera = cameraPerspective;
-        activeHelper = cameraPerspectiveHelper;
-
-
-        // counteract different front orientation of cameras vs rig
-
-        cameraOrtho.rotation.y = Math.PI;
-        cameraPerspective.rotation.y = Math.PI;
-
-        cameraRig = new THREE.Group();
-
-        cameraRig.add( cameraPerspective );
-        cameraRig.add( cameraOrtho );
-
-        scene.add( cameraRig );
-
-        //
-
-        mesh = new THREE.Mesh(
-            new THREE.SphereGeometry( 100, 16, 8 ),
-            new THREE.MeshBasicMaterial( { color: 0xffffff, wireframe: true } )
-        );
-        scene.add( mesh );
-
-        const mesh2 = new THREE.Mesh(
-            new THREE.SphereGeometry( 50, 16, 8 ),
-            new THREE.MeshBasicMaterial( { color: 0x00ff00, wireframe: true } )
-        );
-        mesh2.position.y = 150;
-        mesh.add( mesh2 );
-
-        const mesh3 = new THREE.Mesh(
-            new THREE.SphereGeometry( 5, 16, 8 ),
-            new THREE.MeshBasicMaterial( { color: 0x0000ff, wireframe: true } )
-        );
-        mesh3.position.z = 150;
-        cameraRig.add( mesh3 );
-
-        //
-
-        const geometry = new THREE.BufferGeometry();
-        const vertices = [];
-
-        for ( let i = 0; i < 10000; i ++ ) {
-
-            vertices.push( THREE.MathUtils.randFloatSpread( 2000 ) ); // x
-            vertices.push( THREE.MathUtils.randFloatSpread( 2000 ) ); // y
-            vertices.push( THREE.MathUtils.randFloatSpread( 2000 ) ); // z
-
-        }
-
-        geometry.setAttribute( 'position', new THREE.Float32BufferAttribute( vertices, 3 ) );
-
-        const particles = new THREE.Points( geometry, new THREE.PointsMaterial( { color: 0x888888 } ) );
-        scene.add( particles );
-
-        //
-
-        renderer = new THREE.WebGLRenderer( { antialias: true } );
+        renderer = new THREE.WebGLRenderer( { antialias: true, logarithmicDepthBuffer: true } );
         renderer.setPixelRatio( window.devicePixelRatio );
-        renderer.setSize( SCREEN_WIDTH, SCREEN_HEIGHT );
-        container.appendChild( renderer.domElement );
-
-        renderer.autoClear = false;
-
-        //
+        renderer.setSize( window.innerWidth, window.innerHeight );
+        renderer.outputEncoding = THREE.sRGBEncoding;
+        renderer.useLegacyLights = false;
+        document.body.appendChild( renderer.domElement );
 
         stats = new Stats();
-        container.appendChild( stats.dom );
+        document.body.appendChild( stats.dom );
 
-        //
+        orbitControls = new OrbitControls( camera, renderer.domElement );
+        orbitControls.minDistance = .2;
+        orbitControls.maxDistance = 1.5;
+        orbitControls.enableDamping = true;
 
-        window.addEventListener( 'resize', onWindowResize );
-        document.addEventListener( 'keydown', onKeyDown );
+        const dracoLoader = new DRACOLoader();
+        dracoLoader.setDecoderPath( 'jsm/libs/draco/' );
+        const gltfLoader = new GLTFLoader();
+        gltfLoader.setDRACOLoader( dracoLoader );
+
+        const gltf = await gltfLoader.loadAsync( 'models/gltf/kira.glb' );
+        gltf.scene.traverse( n => {
+
+            if ( n.name === 'head' ) OOI.head = n;
+            if ( n.name === 'lowerarm_l' ) OOI.lowerarm_l = n;
+            if ( n.name === 'Upperarm_l' ) OOI.Upperarm_l = n;
+            if ( n.name === 'hand_l' ) OOI.hand_l = n;
+            if ( n.name === 'target_hand_l' ) OOI.target_hand_l = n;
+
+            if ( n.name === 'boule' ) OOI.sphere = n;
+            if ( n.name === 'Kira_Shirt_left' ) OOI.kira = n;
+
+            if ( n.isMesh ) n.frustumCulled = false;
+
+        } );
+        scene.add( gltf.scene );
+
+        orbitControls.target.copy( OOI.sphere.position ); // orbit controls lookAt the sphere
+        OOI.hand_l.attach( OOI.sphere );
+
+        // mirror sphere cube-camera
+        const cubeRenderTarget = new THREE.WebGLCubeRenderTarget( 1024 );
+        mirrorSphereCamera = new THREE.CubeCamera( 0.05, 50, cubeRenderTarget );
+        scene.add( mirrorSphereCamera );
+        const mirrorSphereMaterial = new THREE.MeshBasicMaterial( { envMap: cubeRenderTarget.texture } );
+        OOI.sphere.material = mirrorSphereMaterial;
+
+        transformControls = new TransformControls( camera, renderer.domElement );
+        transformControls.size = .75;
+        transformControls.showX = false;
+        transformControls.space = 'world';
+        transformControls.attach( OOI.target_hand_l );
+        scene.add( transformControls );
+        // disable orbitControls while using transformControls
+        transformControls.addEventListener( 'mouseDown', () => orbitControls.enabled = false );
+        transformControls.addEventListener( 'mouseUp', () => orbitControls.enabled = true );
+
+        OOI.kira.add( OOI.kira.skeleton.bones[ 0 ] );
+        const iks = [
+            {
+                target: 22, // "target_hand_l"
+                effector: 6, // "hand_l"
+                links: [
+                    {
+                        index: 5, // "lowerarm_l"
+                        rotationMin: new THREE.Vector3( 1.2, - 1.8, - .4 ),
+                        rotationMax: new THREE.Vector3( 1.7, - 1.1, .3 )
+                    },
+                    {
+                        index: 4, // "Upperarm_l"
+                        rotationMin: new THREE.Vector3( 0.1, - 0.7, - 1.8 ),
+                        rotationMax: new THREE.Vector3( 1.1, 0, - 1.4 )
+                    },
+                ],
+            }
+        ];
+        IKSolver = new CCDIKSolver( OOI.kira, iks );
+        const ccdikhelper = new CCDIKHelper( OOI.kira, iks, 0.01 );
+        scene.add( ccdikhelper );
+
+        gui = new GUI();
+        gui.add( conf, 'followSphere' ).name( 'follow sphere' );
+        gui.add( conf, 'turnHead' ).name( 'turn head' );
+        gui.add( conf, 'ik_solver' ).name( 'IK auto update' );
+        gui.add( IKSolver, 'update' ).name( 'IK manual update()' );
+        gui.open();
+
+        window.addEventListener( 'resize', onWindowResize, false );
 
     }
 
-    //
+    function animate( ) {
 
-    function onKeyDown( event ) {
+        if ( OOI.sphere && mirrorSphereCamera ) {
 
-        switch ( event.keyCode ) {
-
-            case 79: /*O*/
-
-                activeCamera = cameraOrtho;
-                activeHelper = cameraOrthoHelper;
-
-                break;
-
-            case 80: /*P*/
-
-                activeCamera = cameraPerspective;
-                activeHelper = cameraPerspectiveHelper;
-
-                break;
+            OOI.sphere.visible = false;
+            OOI.sphere.getWorldPosition( mirrorSphereCamera.position );
+            mirrorSphereCamera.update( renderer, scene );
+            OOI.sphere.visible = true;
 
         }
 
-    }
+        if ( OOI.sphere && conf.followSphere ) {
 
-    //
+            // orbitControls follows the sphere
+            OOI.sphere.getWorldPosition( v0 );
+            orbitControls.target.lerp( v0, .1 );
 
-    function onWindowResize() {
+        }
 
-        SCREEN_WIDTH = window.innerWidth;
-        SCREEN_HEIGHT = window.innerHeight;
-        aspect = SCREEN_WIDTH / SCREEN_HEIGHT;
+        if ( OOI.head && OOI.sphere && conf.turnHead ) {
 
-        renderer.setSize( SCREEN_WIDTH, SCREEN_HEIGHT );
+            // turn head
+            OOI.sphere.getWorldPosition( v0 );
+            OOI.head.lookAt( v0 );
+            OOI.head.rotation.set( OOI.head.rotation.x, OOI.head.rotation.y + Math.PI, OOI.head.rotation.z );
 
-        camera.aspect = 0.5 * aspect;
-        camera.updateProjectionMatrix();
+        }
 
-        cameraPerspective.aspect = 0.5 * aspect;
-        cameraPerspective.updateProjectionMatrix();
+        if ( conf.ik_solver ) {
 
-        cameraOrtho.left = - 0.5 * frustumSize * aspect / 2;
-        cameraOrtho.right = 0.5 * frustumSize * aspect / 2;
-        cameraOrtho.top = frustumSize / 2;
-        cameraOrtho.bottom = - frustumSize / 2;
-        cameraOrtho.updateProjectionMatrix();
+            if ( IKSolver ) IKSolver.update();
 
-    }
+        }
 
-    //
+        orbitControls.update();
+        renderer.render( scene, camera );
 
-    function animate() {
+        stats.update(); // fps stats
 
         requestAnimationFrame( animate );
 
-        render();
-        stats.update();
-
     }
 
+    function onWindowResize() {
 
-    function render() {
+        camera.aspect = window.innerWidth / window.innerHeight;
+        camera.updateProjectionMatrix();
 
-        const r = Date.now() * 0.0005;
-
-        mesh.position.x = 700 * Math.cos( r );
-        mesh.position.z = 700 * Math.sin( r );
-        mesh.position.y = 700 * Math.sin( r );
-
-        mesh.children[ 0 ].position.x = 70 * Math.cos( 2 * r );
-        mesh.children[ 0 ].position.z = 70 * Math.sin( r );
-
-        if ( activeCamera === cameraPerspective ) {
-
-            cameraPerspective.fov = 35 + 30 * Math.sin( 0.5 * r );
-            cameraPerspective.far = mesh.position.length();
-            cameraPerspective.updateProjectionMatrix();
-
-            cameraPerspectiveHelper.update();
-            cameraPerspectiveHelper.visible = true;
-
-            cameraOrthoHelper.visible = false;
-
-        } else {
-
-            cameraOrtho.far = mesh.position.length();
-            cameraOrtho.updateProjectionMatrix();
-
-            cameraOrthoHelper.update();
-            cameraOrthoHelper.visible = true;
-
-            cameraPerspectiveHelper.visible = false;
-
-        }
-
-        cameraRig.lookAt( mesh.position );
-
-        renderer.clear();
-
-        activeHelper.visible = false;
-
-        renderer.setViewport( 0, 0, SCREEN_WIDTH / 2, SCREEN_HEIGHT );
-        renderer.render( scene, activeCamera );
-
-        activeHelper.visible = true;
-
-        renderer.setViewport( SCREEN_WIDTH / 2, 0, SCREEN_WIDTH / 2, SCREEN_HEIGHT );
-        renderer.render( scene, camera );
+        renderer.setSize( window.innerWidth, window.innerHeight );
 
     }
-
-
 </script>
-
 </body>
 </html>

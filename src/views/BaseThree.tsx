@@ -202,6 +202,11 @@ export class BaseThreeClass {
     imagesTexture = new Map<string, Texture>()
 
     /**
+     * 下载的模型资源
+     */
+    gltfs = new Map<string, GLTF>()
+
+    /**
      * 是否渲染
      */
     isRender:boolean = false
@@ -553,8 +558,16 @@ export class BaseThreeClass {
     /**
      * addGLTFLoader
      */
-    addGLTFLoader(url):Promise<GLTF>{
-        return new GLTFLoader().loadAsync(url);
+    async addGLTFLoader(url:string, name?:string):Promise<GLTF>{
+        if(this.gltfs.has(name)){
+            return this.gltfs.get(name)
+        }
+        if(this.gltfs.has(url)){
+            return this.gltfs.get(url)
+        }
+        const gltf = await new GLTFLoader().loadAsync(url);
+        this.gltfs.set(name || url, gltf)
+        return gltf
     }
 
     /**

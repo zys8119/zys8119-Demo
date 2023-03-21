@@ -47,7 +47,6 @@ const load = async (three:BaseThreeClass)=>{
         })
     }
     castShadowInit(gltf.scene)
-
     mixer.value = new THREE.AnimationMixer( gltf.scene );
     const action = mixer.value.clipAction(gltf.animations.find(e=>e.name === 'Walking'))
     action.clampWhenFinished = true
