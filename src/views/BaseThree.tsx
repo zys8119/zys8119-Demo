@@ -1,7 +1,7 @@
 import {
     Scene,
     PerspectiveCamera,
-    WebGLRenderer, Mesh, GridHelper, BoxGeometry, MeshLambertMaterial,
+    WebGLRenderer, Mesh, GridHelper, BoxGeometry, MeshLambertMaterial, Clock
 } from 'three';
 import * as THREE from 'three';
 import {merge} from 'lodash';
@@ -24,6 +24,7 @@ import {Vector2} from "three/src/math/Vector2";
 import {ColorRepresentation} from "three/src/utils";
 import {Texture} from "three/src/textures/Texture";
 import {ComponentInternalInstance} from "@vue/runtime-core";
+import {GLTF} from "three/examples/jsm/loaders/GLTFLoader";
 
 /***
  * 获取字体格式
@@ -204,9 +205,13 @@ export class BaseThreeClass {
 
     /**
      * gui
+     * 开发文档：https://lil-gui.georgealways.com/
      */
     gui:GUI
     guiCallback:()=> void
+
+    clock:Clock
+    clockTime:number
 
 
     constructor(public props:PropsBase, public ctx:SetupContext<typeof emits>) {
@@ -323,8 +328,10 @@ export class BaseThreeClass {
     }
 
     initRender(){
+        this.clock = new Clock()
         this.ctx.emit("load", this)
         this.requestAnimationFrame(()=>{
+            this.clockTime = this.clock.getDelta();
             this.ctx.emit("animation", this)
             this.render()
         })
@@ -420,7 +427,8 @@ export class BaseThreeClass {
             map:map ? map : null
         })
         const mesh = new THREE.Mesh(box, material)
-        mesh.position.set(-200,0,100)
+        mesh.castShadow = true
+        mesh.position.set(-200,0,300)
         this.scene.add(mesh)
         return {
             mesh,
@@ -490,11 +498,11 @@ export class BaseThreeClass {
      */
     watchUpDate(){
         // 全局初始化数据监听
-        watch(computed(()=> this.props.initializationData), ()=>{
+        watchEffect(()=>{
             initializationData.value = merge(initializationData.value, this.props.initializationData)
             // 更新gui数据
-            this.addGUI(true)
-        }, {immediate:true})
+            this.addGUI()
+        })
         this.ctx.emit('update:initialization-data', initializationData.value)
         watch(initializationData, ()=>{
             this.ctx.emit('update:initialization-data', initializationData.value)
@@ -512,30 +520,23 @@ export class BaseThreeClass {
      * 添加GUI
      * 开发文档：https://lil-gui.georgealways.com/
      */
-    addGUI(isUpdate?:boolean):GUI{
-        this.gui = new GUI()
-        if(!isUpdate){
-            this.guiCallback = vm.vnode.props["onGui"]?.( initializationData.value, this)
+    addGUI():GUI{
+        if(this.gui){
+            this.gui.destroy()
         }
+        this.gui = new GUI()
+        this.gui.title("全局数据配置")
+        try {
+            this.guiCallback = vm.vnode.props["onGui"]?.( initializationData.value, this)
+        }catch (e) {}
         return this.gui
     }
 
     /**
      * addGLTFLoader
      */
-    addGLTFLoader(url){
-        const loader = new GLTFLoader();
-        loader.load(url, ( gltf )=> {
-
-            this.scene.add( gltf.scene );
-
-            // createGUI( gltf.scene, gltf.animations );
-
-        }, undefined, function ( e ) {
-
-            console.error( e );
-
-        } );
+    addGLTFLoader(url):Promise<GLTF>{
+        return new GLTFLoader().loadAsync(url);
     }
 
     /**
@@ -547,7 +548,6 @@ export class BaseThreeClass {
             this.setCamera()
             this.setRenderer()
             this.setMouseController()
-            this.addGUI()
             this.setLight()
             this.setCoordinateLine()
             this.initRender()
