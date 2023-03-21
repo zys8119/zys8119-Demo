@@ -33,10 +33,13 @@ const load = async (three:BaseThreeClass)=>{
         scene,
         controls,
     }:BaseThreeClass = three
+    // 正方形
     const {mesh} = three.addBoxGeometry("https://t7.baidu.com/it/u=4036010509,3445021118&fm=193&f=GIF")
     three.transformControls().attach(mesh)
+    // 文字
     await three.downloadFonts(fontUrl, 'aaa')
     await three.addText('智加科技', 'aaa')
+    // 3d模型
     const gltf = await three.addGLTFLoader('http://127.0.0.1:3000/RobotExpressive.glb')
     gltf.scene.position.set(300,0,0)
     gltf.scene.scale.set(50,50,50)
