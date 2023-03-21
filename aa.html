@@ -1,42 +1,24 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <title>three.js webgl - skinning and morphing</title>
+    <title>three.js webgl - cameras</title>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
     <link type="text/css" rel="stylesheet" href="main.css">
     <style>
-        body {
-            color: #222;
-        }
-
-        a {
-            color: #2fa1d6;
-        }
-
-        p {
-            max-width: 600px;
-            margin-left: auto;
-            margin-right: auto;
-            padding: 0 2em;
+        b {
+            color: lightgreen;
         }
     </style>
 </head>
-
 <body>
-<div id="info">
-    <a href="https://threejs.org" target="_blank" rel="noopener">three.js</a> webgl - skinning and morphing<br />
-    <p>
-        The animation system allows 命令行界面ps to be played individually, looped, or crossfaded with other 命令行界面ps. This example shows a character looping in one of several base animation states, then transitioning smoothly to one-time actions. Facial expressions are controlled independently with morph targets.
-    </p>
-    Model by
-    <a href="https://www.patreon.com/quaternius" target="_blank" rel="noopener">Tomás Laulhé</a>,
-    modifications by <a href="https://donmccurdy.com/" target="_blank" rel="noopener">Don McCurdy</a>. CC0.<br />
+<div id="info"><a href="https://threejs.org" target="_blank" rel="noopener">three.js</a> - cameras<br/>
+    <b>O</b> orthographic <b>P</b> perspective
 </div>
 
 <!-- Import maps polyfill -->
 <!-- Remove this when import maps will be widely supported -->
-<script async src="https://unpkg.com/es-module-shims@1.6.3/dist/es-module-shims.js"></script>
+<!--<script async src="https://unpkg.com/es-module-shims@1.6.3/dist/es-module-shims.js"></script>-->
 
 <script type="importmap">
 			{
@@ -52,14 +34,17 @@
     import * as THREE from 'three';
 
     import Stats from 'three/addons/libs/stats.module.js';
-    import { GUI } from 'three/addons/libs/lil-gui.module.min.js';
 
-    import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+    let SCREEN_WIDTH = window.innerWidth;
+    let SCREEN_HEIGHT = window.innerHeight;
+    let aspect = SCREEN_WIDTH / SCREEN_HEIGHT;
 
-    let container, stats, clock, gui, mixer, actions, activeAction, previousAction;
-    let camera, scene, renderer, model, face;
-
-    const api = { state: 'Walking' };
+    let container, stats;
+    let camera, scene, renderer, mesh;
+    let cameraRig, activeCamera, activeHelper;
+    let cameraPerspective, cameraOrtho;
+    let cameraPerspectiveHelper, cameraOrthoHelper;
+    const frustumSize = 600;
 
     init();
     animate();
@@ -69,189 +54,148 @@
         container = document.createElement( 'div' );
         document.body.appendChild( container );
 
-        camera = new THREE.PerspectiveCamera( 45, window.innerWidth / window.innerHeight, 0.25, 100 );
-        camera.position.set( - 5, 3, 10 );
-        camera.lookAt( 0, 2, 0 );
-
         scene = new THREE.Scene();
-        scene.background = new THREE.Color( 0xe0e0e0 );
-        scene.fog = new THREE.Fog( 0xe0e0e0, 20, 100 );
 
-        clock = new THREE.Clock();
+        //
 
-        // lights
+        camera = new THREE.PerspectiveCamera( 50, 0.5 * aspect, 1, 10000 );
+        camera.position.z = 2500;
 
-        const hemiLight = new THREE.HemisphereLight( 0xffffff, 0x444444 );
-        hemiLight.position.set( 0, 20, 0 );
-        scene.add( hemiLight );
+        cameraPerspective = new THREE.PerspectiveCamera( 50, 0.5 * aspect, 150, 1000 );
 
-        const dirLight = new THREE.DirectionalLight( 0xffffff );
-        dirLight.position.set( 0, 20, 10 );
-        scene.add( dirLight );
+        cameraPerspectiveHelper = new THREE.CameraHelper( cameraPerspective );
+        scene.add( cameraPerspectiveHelper );
 
-        // ground
+        //
+        cameraOrtho = new THREE.OrthographicCamera( 0.5 * frustumSize * aspect / - 2, 0.5 * frustumSize * aspect / 2, frustumSize / 2, frustumSize / - 2, 150, 1000 );
 
-        const mesh = new THREE.Mesh( new THREE.PlaneGeometry( 2000, 2000 ), new THREE.MeshPhongMaterial( { color: 0x999999, depthWrite: false } ) );
-        mesh.rotation.x = - 数学.PI / 2;
+        cameraOrthoHelper = new THREE.CameraHelper( cameraOrtho );
+        scene.add( cameraOrthoHelper );
+
+        //
+
+        activeCamera = cameraPerspective;
+        activeHelper = cameraPerspectiveHelper;
+
+
+        // counteract different front orientation of cameras vs rig
+
+        cameraOrtho.rotation.y = Math.PI;
+        cameraPerspective.rotation.y = Math.PI;
+
+        cameraRig = new THREE.Group();
+
+        cameraRig.add( cameraPerspective );
+        cameraRig.add( cameraOrtho );
+
+        scene.add( cameraRig );
+
+        //
+
+        mesh = new THREE.Mesh(
+            new THREE.SphereGeometry( 100, 16, 8 ),
+            new THREE.MeshBasicMaterial( { color: 0xffffff, wireframe: true } )
+        );
         scene.add( mesh );
 
-        const grid = new THREE.GridHelper( 200, 40, 0x000000, 0x000000 );
-        grid.material.opacity = 0.2;
-        grid.material.transparent = true;
-        scene.add( grid );
+        const mesh2 = new THREE.Mesh(
+            new THREE.SphereGeometry( 50, 16, 8 ),
+            new THREE.MeshBasicMaterial( { color: 0x00ff00, wireframe: true } )
+        );
+        mesh2.position.y = 150;
+        mesh.add( mesh2 );
 
-        // model
+        const mesh3 = new THREE.Mesh(
+            new THREE.SphereGeometry( 5, 16, 8 ),
+            new THREE.MeshBasicMaterial( { color: 0x0000ff, wireframe: true } )
+        );
+        mesh3.position.z = 150;
+        cameraRig.add( mesh3 );
 
-        const loader = new GLTFLoader();
-        loader.load( 'models/gltf/RobotExpressive/RobotExpressive.glb', function ( gltf ) {
+        //
 
-            model = gltf.scene;
-            scene.add( model );
-            model.scene.position.set(100,100,100)
-            console.log(model)
+        const geometry = new THREE.BufferGeometry();
+        const vertices = [];
 
-            createGUI( model, gltf.animations );
+        for ( let i = 0; i < 10000; i ++ ) {
 
-        }, undefined, function ( e ) {
+            vertices.push( THREE.MathUtils.randFloatSpread( 2000 ) ); // x
+            vertices.push( THREE.MathUtils.randFloatSpread( 2000 ) ); // y
+            vertices.push( THREE.MathUtils.randFloatSpread( 2000 ) ); // z
 
-            console.error( e );
+        }
 
-        } );
+        geometry.setAttribute( 'position', new THREE.Float32BufferAttribute( vertices, 3 ) );
+
+        const particles = new THREE.Points( geometry, new THREE.PointsMaterial( { color: 0x888888 } ) );
+        scene.add( particles );
+
+        //
 
         renderer = new THREE.WebGLRenderer( { antialias: true } );
         renderer.setPixelRatio( window.devicePixelRatio );
-        renderer.setSize( window.innerWidth, window.innerHeight );
-        renderer.outputEncoding = THREE.sRGBEncoding;
+        renderer.setSize( SCREEN_WIDTH, SCREEN_HEIGHT );
         container.appendChild( renderer.domElement );
 
-        window.addEventListener( 'resize', onWindowResize );
+        renderer.autoClear = false;
 
-        // stats
+        //
+
         stats = new Stats();
         container.appendChild( stats.dom );
 
-    }
+        //
 
-    function createGUI( model, animations ) {
-
-        const states = [ 'Idle', 'Walking', 'Running', 'Dance', 'Death', 'Sitting', 'Standing' ];
-        const emotes = [ 'Jump', 'Yes', 'No', 'Wave', 'Punch', 'ThumbsUp' ];
-
-        gui = new GUI();
-
-        mixer = new THREE.AnimationMixer( model );
-
-        actions = {};
-
-        for ( let i = 0; i < animations.length; i ++ ) {
-
-            const 命令行界面p = animations[ i ];
-            const action = mixer.命令行界面pAction( 命令行界面p );
-            actions[ 命令行界面p.name ] = action;
-
-            if ( emotes.indexOf( 命令行界面p.name ) >= 0 || states.indexOf( 命令行界面p.name ) >= 4 ) {
-
-                action.clampWhenFinished = true;
-                action.loop = THREE.LoopOnce;
-
-            }
-
-        }
-
-        // states
-
-        const statesFolder = gui.addFolder( 'States' );
-
-        const 命令行界面pCtrl = statesFolder.add( api, 'state' ).options( states );
-
-        命令行界面pCtrl.onChange( function () {
-
-            fadeToAction( api.state, 0.5 );
-
-        } );
-
-        statesFolder.open();
-
-        // emotes
-
-        const emoteFolder = gui.addFolder( 'Emotes' );
-
-        function createEmoteCallback( name ) {
-
-            api[ name ] = function () {
-
-                fadeToAction( name, 0.2 );
-
-                mixer.addEventListener( 'finished', restoreState );
-
-            };
-
-            emoteFolder.add( api, name );
-
-        }
-
-        function restoreState() {
-
-            mixer.removeEventListener( 'finished', restoreState );
-
-            fadeToAction( api.state, 0.2 );
-
-        }
-
-        for ( let i = 0; i < emotes.length; i ++ ) {
-
-            createEmoteCallback( emotes[ i ] );
-
-        }
-
-        emoteFolder.open();
-
-        // expressions
-
-        face = model.getObjectByName( 'Head_4' );
-
-        const expressions = Object.keys( face.morphTargetDictionary );
-        const expressionFolder = gui.addFolder( 'Expressions' );
-
-        for ( let i = 0; i < expressions.length; i ++ ) {
-
-            expressionFolder.add( face.morphTargetInfluences, i, 0, 1, 0.01 ).name( expressions[ i ] );
-
-        }
-
-        activeAction = actions[ 'Walking' ];
-        activeAction.play();
-
-        expressionFolder.open();
+        window.addEventListener( 'resize', onWindowResize );
+        document.addEventListener( 'keydown', onKeyDown );
 
     }
 
-    function fadeToAction( name, duration ) {
+    //
 
-        previousAction = activeAction;
-        activeAction = actions[ name ];
+    function onKeyDown( event ) {
 
-        if ( previousAction !== activeAction ) {
+        switch ( event.keyCode ) {
 
-            previousAction.fadeOut( duration );
+            case 79: /*O*/
+
+                activeCamera = cameraOrtho;
+                activeHelper = cameraOrthoHelper;
+
+                break;
+
+            case 80: /*P*/
+
+                activeCamera = cameraPerspective;
+                activeHelper = cameraPerspectiveHelper;
+
+                break;
 
         }
 
-        activeAction
-            .reset()
-            .setEffectiveTimeScale( 1 )
-            .setEffectiveWeight( 1 )
-            .fadeIn( duration )
-            .play();
-
     }
+
+    //
 
     function onWindowResize() {
 
-        camera.aspect = window.innerWidth / window.innerHeight;
-        camera.update专业版jectionMatrix();
+        SCREEN_WIDTH = window.innerWidth;
+        SCREEN_HEIGHT = window.innerHeight;
+        aspect = SCREEN_WIDTH / SCREEN_HEIGHT;
 
-        renderer.setSize( window.innerWidth, window.innerHeight );
+        renderer.setSize( SCREEN_WIDTH, SCREEN_HEIGHT );
+
+        camera.aspect = 0.5 * aspect;
+        camera.updateProjectionMatrix();
+
+        cameraPerspective.aspect = 0.5 * aspect;
+        cameraPerspective.updateProjectionMatrix();
+
+        cameraOrtho.left = - 0.5 * frustumSize * aspect / 2;
+        cameraOrtho.right = 0.5 * frustumSize * aspect / 2;
+        cameraOrtho.top = frustumSize / 2;
+        cameraOrtho.bottom = - frustumSize / 2;
+        cameraOrtho.updateProjectionMatrix();
 
     }
 
@@ -259,17 +203,64 @@
 
     function animate() {
 
-        const dt = clock.getDelta();
-
-        if ( mixer ) mixer.update( dt );
-
         requestAnimationFrame( animate );
 
-        renderer.render( scene, camera );
-
+        render();
         stats.update();
 
     }
+
+
+    function render() {
+
+        const r = Date.now() * 0.0005;
+
+        mesh.position.x = 700 * Math.cos( r );
+        mesh.position.z = 700 * Math.sin( r );
+        mesh.position.y = 700 * Math.sin( r );
+
+        mesh.children[ 0 ].position.x = 70 * Math.cos( 2 * r );
+        mesh.children[ 0 ].position.z = 70 * Math.sin( r );
+
+        if ( activeCamera === cameraPerspective ) {
+
+            cameraPerspective.fov = 35 + 30 * Math.sin( 0.5 * r );
+            cameraPerspective.far = mesh.position.length();
+            cameraPerspective.updateProjectionMatrix();
+
+            cameraPerspectiveHelper.update();
+            cameraPerspectiveHelper.visible = true;
+
+            cameraOrthoHelper.visible = false;
+
+        } else {
+
+            cameraOrtho.far = mesh.position.length();
+            cameraOrtho.updateProjectionMatrix();
+
+            cameraOrthoHelper.update();
+            cameraOrthoHelper.visible = true;
+
+            cameraPerspectiveHelper.visible = false;
+
+        }
+
+        cameraRig.lookAt( mesh.position );
+
+        renderer.clear();
+
+        activeHelper.visible = false;
+
+        renderer.setViewport( 0, 0, SCREEN_WIDTH / 2, SCREEN_HEIGHT );
+        renderer.render( scene, activeCamera );
+
+        activeHelper.visible = true;
+
+        renderer.setViewport( SCREEN_WIDTH / 2, 0, SCREEN_WIDTH / 2, SCREEN_HEIGHT );
+        renderer.render( scene, camera );
+
+    }
+
 
 </script>
 

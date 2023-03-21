@@ -13,6 +13,7 @@ import { VertexNormalsHelper } from 'three/examples/jsm/helpers/VertexNormalsHel
 import { FontLoader, Font as FontLoaderToFont } from 'three/examples/jsm/loaders/FontLoader.js';
 import { TextGeometry } from 'three/examples/jsm/geometries/TextGeometry.js';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
+import Stats from 'three/examples/jsm/libs/stats.module.js';
 import {parse as parseFont, Font, GlyphSet} from 'opentype.js';
 import { SetupContext, Prop, getCurrentInstance } from "vue";
 import cssRender from 'css-render'
@@ -143,6 +144,8 @@ const {
 const { c }: { c:createCNode<CSelector> } = cssr
 const canvas = ref<HTMLCanvasElement>()
 const baseTheeEl = ref<HTMLDivElement>()
+const baseTheeGuiEl = ref<HTMLDivElement>()
+const baseTheeStatsEl = ref<HTMLDivElement>()
 const {width:innerWidth, height:innerHeight} = useWindowSize()
 export interface InitializationData {
     [key:string]:any
@@ -210,8 +213,16 @@ export class BaseThreeClass {
     gui:GUI
     guiCallback:()=> void
 
+    /**
+     * 时间相关
+     */
     clock:Clock
     clockTime:number
+
+    /**
+     * 统计
+     */
+    stats:Stats
 
 
     constructor(public props:PropsBase, public ctx:SetupContext<typeof emits>) {
@@ -340,8 +351,9 @@ export class BaseThreeClass {
     }
 
     render(){
-        this.renderer.render( this.scene, this.camera );
         this.isRender = true
+        this.stats?.update?.()
+        this.renderer.render( this.scene, this.camera );
     }
 
     /**
@@ -500,9 +512,9 @@ export class BaseThreeClass {
         // 全局初始化数据监听
         watchEffect(()=>{
             initializationData.value = merge(initializationData.value, this.props.initializationData)
-            // 更新gui数据
-            this.addGUI()
         })
+        // 更新gui数据
+        this.addGUI()
         this.ctx.emit('update:initialization-data', initializationData.value)
         watch(initializationData, ()=>{
             this.ctx.emit('update:initialization-data', initializationData.value)
@@ -524,7 +536,9 @@ export class BaseThreeClass {
         if(this.gui){
             this.gui.destroy()
         }
-        this.gui = new GUI()
+        this.gui = new GUI({
+            container:baseTheeGuiEl.value
+        })
         this.gui.title("全局数据配置")
         try {
             this.guiCallback = vm.vnode.props["onGui"]?.( initializationData.value, this)
@@ -540,6 +554,16 @@ export class BaseThreeClass {
     }
 
     /**
+     * 设置统计
+     */
+    setStats(){
+        if(!this.stats){
+            this.stats = Stats()
+            baseTheeStatsEl.value.appendChild(this.stats.dom)
+        }
+    }
+
+    /**
      * 重置
      */
     reset(){
@@ -548,6 +572,7 @@ export class BaseThreeClass {
             this.setCamera()
             this.setRenderer()
             this.setMouseController()
+            this.setStats()
             this.setLight()
             this.setCoordinateLine()
             this.initRender()
@@ -619,12 +644,28 @@ export const style = cB(
         cE("panel", {
             position:"absolute",
             left:0,
-            top:0,
+            bottom:0,
             background:"#202124",
             zIndex:3,
             minHeight:"50px",
             width:'100%',
             color:'#fff'
+        }),
+        cE("gui", {
+            position:"absolute",
+            right:0,
+            top:0,
+            background:"#202124",
+            zIndex:3,
+            minHeight:"50px",
+        }),
+        cE("stats", {
+            position:"absolute",
+            left:0,
+            top:0,
+            background:"#202124",
+            zIndex:3,
+            minHeight:"50px",
         })
     ]
 )
@@ -654,6 +695,8 @@ export default defineComponent({
             {slots.panel ? <div class={'base-three__panel'}>
                 {slots.panel?.(initializationData.value)}
             </div> : null}
+            <div class={'base-three__gui'} ref={baseTheeGuiEl}></div>
+            <div class={'base-three__stats'} ref={baseTheeStatsEl}></div>
         </div>)
     }
 })

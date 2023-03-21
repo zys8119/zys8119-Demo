@@ -16,7 +16,7 @@
 <script setup lang="ts">
 import BaseThree, {BaseThreeClass, InitializationData} from "./BaseThree"
 import fontUrl from '@/src/assets/miaozidongmanti-regular.ttf';
-import {AnimationMixer, Clock} from 'three';
+import {AnimationMixer} from 'three';
 import {Object3D} from "three/src/core/Object3D";
 const initializationData = ref<any>({
     camera:{
@@ -24,6 +24,7 @@ const initializationData = ref<any>({
     }
 })
 const mixer = ref<AnimationMixer>()
+const aa = ref<any>([])
 const load = async (three:BaseThreeClass)=>{
     const {
         THREE,
