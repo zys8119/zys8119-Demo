@@ -33,6 +33,7 @@ const load = async (three:BaseThreeClass)=>{
         renderer,
         scene,
         controls,
+        planeGeometryMesh
     }:BaseThreeClass = three
     // 正方形
     const {mesh} = three.addBoxGeometry("https://t7.baidu.com/it/u=4036010509,3445021118&fm=193&f=GIF")

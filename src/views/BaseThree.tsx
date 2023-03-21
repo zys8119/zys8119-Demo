@@ -1,7 +1,15 @@
 import {
     Scene,
     PerspectiveCamera,
-    WebGLRenderer, Mesh, GridHelper, BoxGeometry, MeshLambertMaterial, Clock
+    WebGLRenderer,
+    Mesh,
+    GridHelper,
+    BoxGeometry,
+    MeshLambertMaterial,
+    Clock,
+    DirectionalLight,
+    DirectionalLightHelper,
+    CameraHelper, Line
 } from 'three';
 import * as THREE from 'three';
 import {merge} from 'lodash';
@@ -270,6 +278,9 @@ export class BaseThreeClass {
     /**
      * 设置灯光
      */
+    light:DirectionalLight
+    lightHelper:DirectionalLightHelper
+    cameraHelper:CameraHelper
     setLight(){
         // 环境灯
         const light = new THREE.DirectionalLight(0xffffff, 2)
@@ -283,13 +294,16 @@ export class BaseThreeClass {
         light.shadow.camera.bottom = -d
         light.shadow.camera.near = 0.1
         light.shadow.camera.far = 10000
+        this.light = light
         this.scene.add(light)
         this.scene.add(light.target)
         // 灯光帮助
         const helper = new THREE.DirectionalLightHelper(light)
+        this.lightHelper = helper
         this.scene.add(helper)
 
         const cameraHelper = new THREE.CameraHelper(light.shadow.camera)
+        this.cameraHelper = cameraHelper
         this.scene.add(cameraHelper)
     }
 
@@ -304,6 +318,7 @@ export class BaseThreeClass {
     /**
      * 平面几何
      */
+    planeGeometryMesh:Mesh
     planeGeometry(){
         const size = 1500
         const groundGeometry = new THREE.PlaneGeometry(size, size)
@@ -316,6 +331,7 @@ export class BaseThreeClass {
         groundMesh.rotation.x = Math.PI * -0.5
         groundMesh.receiveShadow = true // 接受阴影
         this.scene.add(groundMesh)
+        this.planeGeometryMesh = groundMesh
         return {
             box:groundGeometry,
             material:groundMaterial,
@@ -373,24 +389,28 @@ export class BaseThreeClass {
         const geometry = new THREE.BufferGeometry().setFromPoints(points);
         const line = new THREE.Line( geometry, material );
         this.scene.add( line );
+        return line
     }
 
     /**
      * 设置坐标线
      */
+    xLine:Line
+    yLine:Line
+    zLine:Line
     setCoordinateLine(lingMax:number = 100){
         // x
-        this.drawLine([
+        this.xLine = this.drawLine([
             new THREE.Vector3( 0, 0, 0 ),
             new THREE.Vector3( lingMax, 0, 0 )
         ], "#ff0000")
         // y
-        this.drawLine([
+        this.yLine = this.drawLine([
             new THREE.Vector3( 0, 0, 0 ),
             new THREE.Vector3( 0, lingMax, 0 )
         ], "#00ff3a")
         // z
-        this.drawLine([
+        this.zLine = this.drawLine([
             new THREE.Vector3( 0, 0, 0 ),
             new THREE.Vector3( 0, 0, lingMax )
         ], "#250bc7")
@@ -449,7 +469,7 @@ export class BaseThreeClass {
         })
         const mesh = new THREE.Mesh(box, material)
         mesh.castShadow = true
-        mesh.position.set(-200,0,300)
+        mesh.position.set(-200,20,300)
         this.scene.add(mesh)
         return {
             mesh,
@@ -588,12 +608,12 @@ export class BaseThreeClass {
             this.setScene()
             this.setCamera()
             this.setRenderer()
-            this.setMouseController()
-            this.setStats()
-            this.setLight()
-            this.setCoordinateLine()
+            if(this.props.mouseController){this.setMouseController()}
+            if(this.props.stats){this.setStats()}
+            if(this.props.light){this.setLight()}
+            if(this.props.coordinateLine){this.setCoordinateLine()}
+            if(this.props.planeGeometry){this.planeGeometry()}
             this.initRender()
-            this.planeGeometry()
         })
     }
 }
@@ -607,6 +627,11 @@ export type PropsBase = {
     sizeWidth:number
     sizeHeight:number
     initializationData:Partial<InitializationData>
+    mouseController:boolean
+    stats:boolean
+    light:boolean
+    coordinateLine:boolean
+    planeGeometry:boolean
 }
 export const propsBaseThree:{
     [key in keyof PropsBase]:Prop<PropsBase[key]>
@@ -619,6 +644,11 @@ export const propsBaseThree:{
     sizeWidth:{} as Prop<number>,
     sizeHeight:{} as Prop<number>,
     initializationData:{} as Prop<Partial<InitializationData>>,
+    mouseController:{default:true} as Prop<boolean>,
+    stats:{default:true} as Prop<boolean>,
+    light:{default:true} as Prop<boolean>,
+    coordinateLine:{default:true} as Prop<boolean>,
+    planeGeometry:{default:true} as Prop<boolean>,
 }
 export const emits = {
     load:(myThee:BaseThreeClass)=>true,
