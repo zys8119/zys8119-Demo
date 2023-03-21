@@ -23,7 +23,7 @@ import { TextGeometry } from 'three/examples/jsm/geometries/TextGeometry.js';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import Stats from 'three/examples/jsm/libs/stats.module.js';
 import {parse as parseFont, Font, GlyphSet} from 'opentype.js';
-import { SetupContext, Prop, getCurrentInstance } from "vue";
+import { SetupContext, Prop, getCurrentInstance, ComponentInternalInstance } from "vue";
 import cssRender from 'css-render'
 import bem from '@css-render/plugin-bem'
 import { useSsrAdapter } from '@css-render/vue3-ssr'
@@ -32,7 +32,6 @@ import {Vector3} from "three/src/math/Vector3";
 import {Vector2} from "three/src/math/Vector2";
 import {ColorRepresentation} from "three/src/utils";
 import {Texture} from "three/src/textures/Texture";
-import {ComponentInternalInstance} from "@vue/runtime-core";
 import {GLTF} from "three/examples/jsm/loaders/GLTFLoader";
 
 /***
