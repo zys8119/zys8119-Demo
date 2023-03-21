@@ -8,6 +8,9 @@ import AutoApi from 'vitejs-plugin-api-auto-import'
 import ReactivityTransform from '@vue-macros/reactivity-transform/vite'
 
 export default defineConfig({
+    build:{
+        outDir:'docs'
+    },
     plugins:[
         Vue(),
         vueJsx(),
