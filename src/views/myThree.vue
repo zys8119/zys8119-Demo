@@ -7,6 +7,7 @@
             :near="0.1"
             :far="1000"
             v-model:initialization-data="initializationData"
+            :plane-geometry="true"
         >
             <template #panel>{{initializationData}}</template>
         </BaseThree>
@@ -27,6 +28,7 @@ const initializationData = ref<any>({
 const mixer = ref<AnimationMixer>()
 const aa = ref<any>([])
 const load = async (three:BaseThreeClass)=>{
+    console.log(555)
     const {
         THREE,
         camera,
