@@ -7,6 +7,7 @@
             :near="0.1"
             :far="1000"
             v-model:initialization-data="initializationData"
+            :gui="true"
             :plane-geometry="true"
         >
             <template #panel>{{initializationData}}</template>
@@ -28,7 +29,6 @@ const initializationData = ref<any>({
 const mixer = ref<AnimationMixer>()
 const aa = ref<any>([])
 const load = async (three:BaseThreeClass)=>{
-    console.log(555)
     const {
         THREE,
         camera,
@@ -71,7 +71,7 @@ const animation = ({scene, THREE, clockTime}:BaseThreeClass)=>{
 }
 const gui = ({camera}:InitializationData, three:BaseThreeClass)=>{
     const cameraFolder = three.gui.addFolder('相机')
-    cameraFolder.add(camera, "x",1, 1000).step(0.01)
+    cameraFolder.add(camera, "x",1, 100).step(0.01)
     cameraFolder.add(camera, "y",1, 1000).step(0.01)
     cameraFolder.add(camera, "z",1, 1000).step(0.01)
     return ()=>{

@@ -187,15 +187,6 @@ export interface InitializationData {
     }>
 }
 
-const initializationData = ref<InitializationData>({
-    camera: {
-        x: 400,
-        y: 400,
-        z: 400,
-        step: 10
-    }
-})
-
 /**
  * Three https://threejs.org/docs/index.html#api/zh
  */
@@ -272,6 +263,7 @@ export class BaseThreeClass {
                 baseTheeEl: Ref<HTMLDivElement>
                 baseTheeGuiEl: Ref<HTMLDivElement>
                 baseTheeStatsEl: Ref<HTMLDivElement>
+                initializationData: Ref<InitializationData>
                 innerWidth: Ref<number>
                 innerHeight: Ref<number>
             }
@@ -302,9 +294,9 @@ export class BaseThreeClass {
         this.camera.lookAt(0, 0, 0)
         // 设置相机位置
         this.camera.position.set(
-            (initializationData.value as any).camera.x,
-            (initializationData.value as any).camera.y,
-            (initializationData.value as any).camera.z
+            (this.vm.exposed.initializationData.value as any).camera.x,
+            (this.vm.exposed.initializationData.value as any).camera.y,
+            (this.vm.exposed.initializationData.value as any).camera.z
         )
     }
 
@@ -635,8 +627,8 @@ export class BaseThreeClass {
 
             // 全局初始化数据监听
             watchEffect(() => {
-                initializationData.value = merge(
-                    initializationData.value,
+                this.vm.exposed.initializationData.value = merge(
+                    this.vm.exposed.initializationData.value,
                     this.props.initializationData
                 )
             })
@@ -646,11 +638,11 @@ export class BaseThreeClass {
                     this.addGUI()
                 }
             })
-            this.ctx.emit('update:initialization-data', initializationData.value)
+            this.ctx.emit('update:initialization-data', this.vm.exposed.initializationData.value)
             watch(
-                initializationData,
+                this.vm.exposed.initializationData,
                 () => {
-                    this.ctx.emit('update:initialization-data', initializationData.value)
+                    this.ctx.emit('update:initialization-data', this.vm.exposed.initializationData.value)
                 },
                 { deep: true }
             )
@@ -668,20 +660,24 @@ export class BaseThreeClass {
      * 添加GUI
      * 开发文档：https://lil-gui.georgealways.com/
      */
+    isGui:boolean = false
     addGUI(): GUI {
-        if (this.gui) {
-            this.gui.destroy()
+        if(!this.isGui){
+            this.isGui = true
+            if (this.gui) {
+                this.gui.destroy()
+            }
+            this.gui = new GUI({
+                container: this.vm.exposed.baseTheeGuiEl.value
+            })
+            this.gui.title('全局数据配置')
+            try {
+                this.guiCallback = (this.vm.vnode.props as any).onGui?.(
+                    this.vm.exposed.initializationData.value,
+                    this
+                )
+            } catch (e) {}
         }
-        this.gui = new GUI({
-            container: this.vm.exposed.baseTheeGuiEl.value
-        })
-        this.gui.title('全局数据配置')
-        try {
-            this.guiCallback = (this.vm.vnode.props as any).onGui?.(
-                initializationData.value,
-                this
-            )
-        } catch (e) {}
         return this.gui
     }
 
@@ -863,6 +859,14 @@ const three3D = defineComponent({
     props: propsBaseThree,
     emits,
     setup(props, ctx) {
+        const initializationData = ref<InitializationData>({
+            camera: {
+                x: 400,
+                y: 400,
+                z: 400,
+                step: 10
+            }
+        })
         const canvas = ref<HTMLCanvasElement>()
         const baseTheeEl = ref<HTMLDivElement>()
         const baseTheeGuiEl = ref<HTMLDivElement>()
@@ -878,6 +882,7 @@ const three3D = defineComponent({
             baseTheeStatsEl,
             innerWidth,
             innerHeight,
+            initializationData,
             vm
         })
         onMounted(() => {
