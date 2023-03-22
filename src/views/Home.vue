@@ -42,7 +42,7 @@ type NavType = Array<Partial<{
 const currDome = ref<NavType>([
     {
         title:"three3D",
-        content:"three3D通用组件组件封装",
+        content:"three3D通用组件组件封装three3D通用组件组件封装three3D通用组件组件封装three3D通用组件组件封装three3D通用组件组件封装three3D通用组件组件封装three3D通用组件组件封装three3D通用组件组件封装three3D通用组件组件封装",
         url:'/myThree'
     },
     {
@@ -401,6 +401,39 @@ onMounted(async ()=>{
 
         }
 
+    }
+    @media screen and (max-width: 576px) {
+        .search{
+            margin-bottom: 0;
+            input{
+                width: 100%;
+            }
+        }
+        .blog-slider{
+            min-height: initial;
+            margin: 0;
+            height: calc(100% - 250px);
+        }
+        .blog-slider__text{
+            margin-bottom: 15px;
+            overflow: hidden;
+            height: 50px;
+            position: relative;
+            width: 100%;
+            &:before{
+                content: "";
+                position: absolute;
+                left: 0;
+                top: 0;
+                width: 100%;
+                height: 100%;
+                background: linear-gradient(#0000, #ffffff 90%);
+            }
+        }
+        .blog-slider__button{
+            position: relative;
+            z-index: 1;
+        }
     }
 }
 </style>
