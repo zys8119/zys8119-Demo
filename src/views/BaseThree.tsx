@@ -32,7 +32,8 @@ import {
     Prop,
     getCurrentInstance,
     ComponentInternalInstance,
-    defineComponent
+    defineComponent,
+    Ref
 } from 'vue'
 import cssRender from 'css-render'
 import bem from '@css-render/plugin-bem'
@@ -54,7 +55,7 @@ export const convertFont = function (
     text?: string,
     outJs?: boolean
 ) {
-    const fintGlyphs:any = (font.glyphs as any).glyphs
+    const fintGlyphs: any = (font.glyphs as any).glyphs
     const scale = (1000 * 100) / ((font.unitsPerEm || 2048) * 72)
     const result: any = {}
     result.glyphs = {}
@@ -82,7 +83,7 @@ export const convertFont = function (
         }
     }
     for (const k in fintGlyphs) {
-        const glyph: any = (fintGlyphs as any)[k]
+        const glyph: any = fintGlyphs[k]
         if (glyph.unicode !== undefined) {
             const glyphCharacter = String.fromCharCode(glyph.unicode)
             let needToExport = true
@@ -169,19 +170,11 @@ export const convertFont = function (
         return result
     }
 }
-let vm: ComponentInternalInstance =
-    getCurrentInstance() as ComponentInternalInstance
 const cssr = cssRender()
 const plugin = bem({})
 cssr.use(plugin) // bind the plugin with the cssr instance
 const { cB, cE } = plugin
 const { c }: { c: createCNode<CSelector> } = cssr
-const canvas = ref<HTMLCanvasElement>()
-const baseTheeEl = ref<HTMLDivElement>()
-const baseTheeGuiEl = ref<HTMLDivElement>()
-const baseTheeStatsEl = ref<HTMLDivElement>()
-const innerWidth = ref(0)
-const innerHeight = ref(0)
 
 export interface InitializationData {
     [key: string]: any
@@ -270,7 +263,20 @@ export class BaseThreeClass {
      */
     stats: Stats = null as unknown as Stats
 
-    constructor(public props: PropsBase, public ctx: SetupContext<typeof emits>) {
+    constructor(
+        public props: PropsBase,
+        public ctx: SetupContext<typeof emits>,
+        public vm: ComponentInternalInstance & {
+            exposed: {
+                canvas: Ref<HTMLCanvasElement>
+                baseTheeEl: Ref<HTMLDivElement>
+                baseTheeGuiEl: Ref<HTMLDivElement>
+                baseTheeStatsEl: Ref<HTMLDivElement>
+                innerWidth: Ref<number>
+                innerHeight: Ref<number>
+            }
+        }
+    ) {
         this.reset()
     }
 
@@ -287,7 +293,8 @@ export class BaseThreeClass {
     setCamera() {
         this.camera = new PerspectiveCamera(
             this.props.fov,
-            this.props.aspect || innerWidth.value / innerHeight.value,
+            this.props.aspect ||
+            this.vm.exposed.innerWidth.value / this.vm.exposed.innerHeight.value,
             this.props.near,
             this.props.far
         )
@@ -306,13 +313,13 @@ export class BaseThreeClass {
      */
     setRenderer() {
         this.renderer = new WebGLRenderer({
-            canvas: canvas.value,
+            canvas: this.vm.exposed.canvas.value,
             alpha: true,
             antialias: true
         })
         this.renderer.setSize(
-            this.props.sizeWidth || innerWidth.value,
-            this.props.sizeHeight || innerHeight.value
+            this.props.sizeWidth || this.vm.exposed.innerWidth.value,
+            this.props.sizeHeight || this.vm.exposed.innerHeight.value
         )
         this.renderer.shadowMap.enabled = true
         this.renderer.shadowMap.type = THREE.PCFSoftShadowMap
@@ -322,7 +329,9 @@ export class BaseThreeClass {
      * 设置灯光
      */
     light?: DirectionalLight = null as unknown as DirectionalLight
-    lightHelper?: DirectionalLightHelper = null as unknown as DirectionalLightHelper
+    lightHelper?: DirectionalLightHelper =
+        null as unknown as DirectionalLightHelper
+
     cameraHelper?: CameraHelper = null as unknown as CameraHelper
 
     setLight() {
@@ -395,7 +404,9 @@ export class BaseThreeClass {
             // Initiate function or other initializations here
             callback()
         } else {
-            ;(baseTheeEl.value as any).appendChild(WebGL.getWebGLErrorMessage())
+            ;(this.vm.exposed.baseTheeEl.value as any).appendChild(
+                WebGL.getWebGLErrorMessage()
+            )
         }
     }
 
@@ -413,7 +424,7 @@ export class BaseThreeClass {
     }
 
     initRender() {
-        if(this.isWatchUpDate){
+        if (this.isWatchUpDate) {
             this.clock = new Clock()
             this.ctx.emit('load', this)
             this.requestAnimationFrame(() => {
@@ -593,25 +604,29 @@ export class BaseThreeClass {
         )
         return texture
     }
-    isWatchUpDate:boolean = false
+
+    isWatchUpDate: boolean = false
     /**
      * 监听数据
      */
     watchUpDate() {
-        if(!this.isWatchUpDate){
+        if (!this.isWatchUpDate) {
             let el = { width: ref(0), height: ref(0) }
             let stop: any = null
             watchEffect(() => {
                 if (this.props.fixed) {
                     el = useWindowSize()
                 } else {
-                    el = useElementSize((vm as any).ctx.$el)
+                    el = useElementSize((this.vm as any).ctx.$el)
                 }
                 stop?.()
                 stop = watchEffect(() => {
-                    innerWidth.value = el.width.value
-                    innerHeight.value = el.height.value
-                    if(innerWidth.value > 0 && innerHeight.value){
+                    this.vm.exposed.innerWidth.value = el.width.value
+                    this.vm.exposed.innerHeight.value = el.height.value
+                    if (
+                        this.vm.exposed.innerWidth.value > 0 &&
+                        this.vm.exposed.innerHeight.value
+                    ) {
                         this.isWatchUpDate = true
                         this.reset()
                     }
@@ -658,11 +673,11 @@ export class BaseThreeClass {
             this.gui.destroy()
         }
         this.gui = new GUI({
-            container: baseTheeGuiEl.value
+            container: this.vm.exposed.baseTheeGuiEl.value
         })
         this.gui.title('全局数据配置')
         try {
-            this.guiCallback = (vm.vnode.props as any).onGui?.(
+            this.guiCallback = (this.vm.vnode.props as any).onGui?.(
                 initializationData.value,
                 this
             )
@@ -691,7 +706,9 @@ export class BaseThreeClass {
     setStats() {
         if (!this.stats) {
             this.stats = Stats() as any
-            ;(baseTheeStatsEl.value as any).appendChild(this.stats.dom)
+            ;(this.vm.exposed.baseTheeStatsEl.value as any).appendChild(
+                this.stats.dom
+            )
         }
     }
 
@@ -753,14 +770,15 @@ export const propsBaseThree: {
     sizeWidth: {} as Prop<number>,
     sizeHeight: {} as Prop<number>,
     initializationData: {} as Prop<Partial<InitializationData>>,
-    mouseController: {default:true} as Prop<boolean>,
+    mouseController: { default: true } as Prop<boolean>,
     stats: {} as Prop<boolean>,
-    light: {default:true} as Prop<boolean>,
+    light: { default: true } as Prop<boolean>,
     coordinateLine: {} as Prop<boolean>,
     planeGeometry: {} as Prop<boolean>,
     fixed: {} as Prop<boolean>,
     gui: {} as Prop<boolean>
 }
+export type ThreeProps = typeof propsBaseThree
 export const emits = {
     load: (myThee: BaseThreeClass) => true,
     animation: (myThee: BaseThreeClass) => true,
@@ -817,18 +835,22 @@ export const style = cB(
             zIndex: 3,
             minHeight: '50px'
         }),
-        cE('stats', {
-            position: 'absolute',
-            left: 0,
-            top: 0,
-            background: '#202124',
-            zIndex: 3,
-            minHeight: '50px'
-        }, [
-            c('div', {
-                position: 'absolute !important' as any
-            })
-        ])
+        cE(
+            'stats',
+            {
+                position: 'absolute',
+                left: 0,
+                top: 0,
+                background: '#202124',
+                zIndex: 3,
+                minHeight: '50px'
+            },
+            [
+                c('div', {
+                    position: 'absolute !important' as any
+                })
+            ]
+        )
     ]
 )
 export const ssr: any = useSsrAdapter()
@@ -841,10 +863,25 @@ const three3D = defineComponent({
     props: propsBaseThree,
     emits,
     setup(props, ctx) {
-        const { slots } = ctx
+        const canvas = ref<HTMLCanvasElement>()
+        const baseTheeEl = ref<HTMLDivElement>()
+        const baseTheeGuiEl = ref<HTMLDivElement>()
+        const baseTheeStatsEl = ref<HTMLDivElement>()
+        const innerWidth = ref(0)
+        const innerHeight = ref(0)
+        const { slots, expose } = ctx
+        const vm = getCurrentInstance() as any
+        expose({
+            canvas,
+            baseTheeEl,
+            baseTheeGuiEl,
+            baseTheeStatsEl,
+            innerWidth,
+            innerHeight,
+            vm
+        })
         onMounted(() => {
-            vm = getCurrentInstance() as any
-            const myThree = new BaseThreeClass(props as any, ctx)
+            const myThree = new BaseThreeClass(props as any, ctx, vm)
             ctx.emit('update:modelValue', myThree)
         })
         return () => (
