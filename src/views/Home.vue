@@ -42,7 +42,7 @@ type NavType = Array<Partial<{
 const currDome = ref<NavType>([
     {
         title:"three3D",
-        content:"three3D通用组件组件封装three3D通用组件组件封装three3D通用组件组件封装three3D通用组件组件封装three3D通用组件组件封装three3D通用组件组件封装three3D通用组件组件封装three3D通用组件组件封装three3D通用组件组件封装",
+        content:"three3D通用组件组件封装",
         url:'/myThree'
     },
     {
