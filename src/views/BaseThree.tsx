@@ -609,7 +609,7 @@ export class BaseThreeClass {
                 if (this.props.fixed) {
                     el = useWindowSize()
                 } else {
-                    el = useElementSize((this.vm as any).ctx.$el)
+                    el = useElementSize((this.vm as any).vnode.el)
                 }
                 stop?.()
                 stop = watchEffect(() => {
