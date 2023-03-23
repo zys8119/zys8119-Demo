@@ -1,1 +1,0 @@
-import{_ as o,o as _,c as t,m as c,p as s}from"./index-beaec655.js";const n={},r={class:"img"};function a(m,p){const e=s("NThree");return _(),t("div",r,[c(e,{"plane-geometry":!0})])}const i=o(n,[["render",a],["__scopeId","data-v-6276361e"]]);export{i as default};
