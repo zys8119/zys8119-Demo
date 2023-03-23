@@ -43,6 +43,7 @@
     },
     "devDependencies": {
         "@vue-macros/reactivity-transform": "^0.2.5",
+        "lil-gui": "^0.18.1",
         "unplugin-auto-import": "^0.15.0"
     }
 }

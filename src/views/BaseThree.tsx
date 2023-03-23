@@ -15,7 +15,7 @@ import {
 import * as THREE from 'three'
 import { merge } from 'lodash'
 import WebGL from 'three/examples/jsm/capabilities/WebGL'
-import { GUI } from 'three/examples/jsm/libs/lil-gui.module.min.js'
+import { GUI } from 'lil-gui'
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls'
 import { TransformControls } from 'three/examples/jsm/controls/TransformControls.js'
 import { VertexNormalsHelper } from 'three/examples/jsm/helpers/VertexNormalsHelper'
