@@ -620,7 +620,9 @@ export class BaseThreeClass {
                         this.vm.exposed.innerHeight.value
                     ) {
                         this.isWatchUpDate = true
-                        this.reset()
+                        nextTick(()=>{
+                            this.reset()
+                        })
                     }
                 })
             })
