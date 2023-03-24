@@ -7,7 +7,7 @@ import 'swiper/css/mousewheel';
 import 'swiper/css/effect-fade';
 import  "@/src/less/style.less"
 route.beforeEach((to, from, next)=>{
-    document.title = to.meta.title || "张云山-个人博客"
+    document.title = `张云山-${to.meta.title || '个人博客'}`
     next()
 })
 const app = createApp(App)
