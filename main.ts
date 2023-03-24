@@ -20,5 +20,6 @@ app.mount('#app')
 declare module "vue-router"{
     interface RouteMeta {
         title:string
+        content:string
     }
 }
