@@ -10,7 +10,7 @@
     </div>
 </template>
 
-<script setup lang="ts">
+<script setup lang="ts" title="判断鼠标进入图片方向" content="根据坐标的相对图片中心点位置的角度判断鼠标进入图片方向">
 const box = ref<HTMLDivElement>()
 const className = ref()
 const mouseenter = async ({offsetX:x,offsetY:y}:MouseEvent)=>{

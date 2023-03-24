@@ -30,6 +30,7 @@
 <script setup lang="ts" path="/">
 import {Swiper, Navigation, Pagination, Mousewheel, EffectFade} from "swiper"
 import {marked} from "marked"
+import route from "@/route"
 const value = ref("")
 type NavType = Array<Partial<{
     img:string
@@ -39,18 +40,11 @@ type NavType = Array<Partial<{
     hideButton:boolean
     url:string
 }>>
-const currDome = ref<NavType>([
-    {
-        title:"three3D",
-        content:"three3D通用组件组件封装",
-        url:'/myThree'
-    },
-    {
-        title:"判断鼠标进入图片方向",
-        content:"根据坐标的相对图片中心点位置的角度判断鼠标进入图片方向",
-        url:'/MouseEntryDirection'
-    }
-])
+const currDome = ref<NavType>(route.options.routes.filter(e=>e.meta?.title).map(e=>({
+    title:e.meta.title,
+    content:e.meta.content || e.meta.title,
+    url:e.path
+})) as NavType)
 const gitHubNavs = ref<NavType>([])
 const reg = computed(()=> new RegExp(value.value, 'img'))
 const navs = computed<NavType>(()=>{
