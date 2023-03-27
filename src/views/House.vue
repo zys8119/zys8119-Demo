@@ -69,7 +69,8 @@ const load = async (three:BaseThreeClass)=>{
             console.log("box", {
                 position:a.position,
                 parameters:a.geometry.parameters,
-                rotation:a.rotation
+                rotation:a.rotation,
+                scale:a.scale
             })
         })
         return a
@@ -77,7 +78,8 @@ const load = async (three:BaseThreeClass)=>{
     three.controls.addEventListener('change', ()=>{
         console.log("camera", {
             position:camera.position,
-            camera:camera.rotation
+            rotation:camera.rotation,
+            scale:camera.scale,
         })
     })
     camera.rotation.set(-0.65, 0.01, 0)
