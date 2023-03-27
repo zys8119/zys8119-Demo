@@ -63,7 +63,29 @@ const load = async (three:BaseThreeClass)=>{
                 color:"#ffffff"
             })
         )
-        a.position.set(44.46,4,-147)
+        a.position.set(44.39,4,-147)
+        a.scale.set(0.94,1,1)
+        tr.attach(a)
+        tr.addEventListener('change', ()=>{
+            console.log("box", {
+                position:a.position,
+                parameters:a.geometry.parameters,
+                rotation:a.rotation,
+                scale:a.scale
+            })
+        })
+        return a
+    })());
+    scene.add((()=>{
+        const a = new THREE.Mesh(
+            new THREE.BoxGeometry(120,10,5),
+            new THREE.MeshLambertMaterial({
+                color:"#ffffff"
+            })
+        )
+        a.position.set(98.19,4 ,-129.23)
+        a.scale.set(0.32,1,1)
+        a.rotation.set(0,1.56,0)
         tr.attach(a)
         tr.addEventListener('change', ()=>{
             console.log("box", {
@@ -82,8 +104,9 @@ const load = async (three:BaseThreeClass)=>{
             scale:camera.scale,
         })
     })
-    camera.rotation.set(-0.65, 0.01, 0)
-    camera.position.set(48, 47, -60.79)
+    camera.position.set(134.46, 5.5, -144.85)
+    camera.rotation.set(-2.33, 1.23, 2.36)
+    camera.scale.set(0.94, 1, 1)
 }
 const gui = (d: typeof data.value, three: BaseThreeClass) => {
     const {THREE} = three
