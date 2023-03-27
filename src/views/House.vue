@@ -1,11 +1,11 @@
 <template>
     <div class="house">
         <BaseThree
-            :plane-geometry="true"
             v-model:initialization-data="data"
             @load="load"
             :gui="true"
             @gui="gui"
+            @animation="animation"
         >
             <template #panel>{{data}}</template>
         </BaseThree>
@@ -15,8 +15,8 @@
 
 <script setup lang="ts" title="房子" content="房子3d效果">
 import BaseThree, {BaseThreeClass, InitializationData} from "../components/BaseThree"
-import bj from "@/src/assets/house/bj.jpeg"
-import {BoxGeometry, Mesh} from "three"
+import bj from "@/src/assets/house/bj2.png"
+import {BoxGeometry, Mesh, Vector2, Raycaster} from "three"
 const data = ref({
     box:{
         position:{
@@ -26,47 +26,74 @@ const data = ref({
         },
         size:{
             width:300,
-            height:300,
-            depth:300,
-        }
-    }
+            height:10,
+            depth:30,
+        },
+        rotate:{
+            rx:0,
+            ry:0,
+            rz:0,
+        },
+    },
+    mode:'translate'
 })
-let testBox:Mesh = null as Mesh
-let box:BoxGeometry = null as BoxGeometry
-const load = async (three:BaseThreeClass)=>{
-    const {THREE, planeGeometryMesh, scene} = three
-    ;(planeGeometryMesh.material as any).map = three.downloadImagesTexture(bj)
-    const b = new THREE.BoxGeometry(300, 10, 30)
-    const m = new THREE.MeshLambertMaterial()
-    const ms = new THREE.Mesh(b, m)
-    ms.position.set(0,0,100)
-    scene.add(ms)
-    testBox = ms
-    box = b
-    // box.parameters.width = 500
+const raycaster = new Raycaster();
+const mouse = new Vector2();
+let tr = null
+const animation = async (three:BaseThreeClass)=>{
+    const {THREE, planeGeometryMesh,scene, camera} = three
 }
-const gui = ({ box:{position, size} }: typeof data.value, three: any) => {
+const load = async (three:BaseThreeClass)=>{
+    const {THREE, planeGeometryMesh,scene, camera} = three
+    const map = three.downloadImagesTexture(bj);
+    const sprite = new THREE.Mesh( new THREE.BoxGeometry(300, 0, 300), new THREE.MeshLambertMaterial({
+        map:map,
+        emissive:"#f00",
+        transparent:true,
+    }));
+    scene.add( sprite );
+    const tr = three.transformControls()
+    watchEffect(()=>{
+        tr.setMode(data.value.mode as any)
+    })
+    scene.add((()=>{
+        const a = new THREE.Mesh(
+            new THREE.BoxGeometry(120,10,5),
+            new THREE.MeshLambertMaterial({
+                color:"#ffffff"
+            })
+        )
+        a.position.set(44.46,4,-147)
+        tr.attach(a)
+        tr.addEventListener('change', ()=>{
+            console.log("box", {
+                position:a.position,
+                parameters:a.geometry.parameters,
+                rotation:a.rotation
+            })
+        })
+        return a
+    })());
+    three.controls.addEventListener('change', ()=>{
+        console.log("camera", {
+            position:camera.position,
+            camera:camera.rotation
+        })
+    })
+    camera.rotation.set(-0.65, 0.01, 0)
+    camera.position.set(48, 47, -60.79)
+}
+const gui = (d: typeof data.value, three: BaseThreeClass) => {
+    const {THREE} = three
     const cameraFolder = three.gui.addFolder('配置参数')
-    cameraFolder.add(position, 'x', 1, 1000).step(0.01)
-    cameraFolder.add(position, 'y', 1, 1000).step(0.01)
-    cameraFolder.add(position, 'z', 1, 1000).step(0.01)
-    cameraFolder.add(size, 'width', 1, 1000).step(0.01)
-    cameraFolder.add(size, 'height', 1, 1000).step(0.01)
-    cameraFolder.add(size, 'depth', 1, 1000).step(0.01)
+    cameraFolder.add(d, 'mode', ['translate', 'rotate', 'scale'])
     return () => {
-        const {x, y, z} = position
-        const {width, height, depth} = size
-        if(testBox){
-            testBox.position.set(x, y, z)
-        }
-        if(box){
-            box.parameters.width = width
-        }
     }
 }
 </script>
 
 <style scoped lang="less">
-.house {
+:global(body){
+    background: #0d9dd3;
 }
 </style>
