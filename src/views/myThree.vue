@@ -16,7 +16,7 @@
 </template>
 
 <script setup lang="ts" title="three3D" content="three3D通用组件组件封装">
-import BaseThree, {BaseThreeClass, InitializationData} from "./BaseThree"
+import BaseThree, {BaseThreeClass, InitializationData} from "../components/BaseThree"
 import fontUrl from '@/src/assets/miaozidongmanti-regular.ttf';
 import RobotExpressiveGlb from '@/src/assets/RobotExpressive.glb?url';
 import {AnimationMixer} from 'three';

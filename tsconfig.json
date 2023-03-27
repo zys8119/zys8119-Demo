@@ -6,9 +6,7 @@
         "moduleResolution": "Node",
         "allowSyntheticDefaultImports": true,
         "paths": {
-            "@/*": [
-                "./*"
-            ]
+            "@/*": ["./*"]
         },
         "types": [
             "vite/client",
