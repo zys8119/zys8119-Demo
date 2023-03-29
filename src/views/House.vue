@@ -111,6 +111,10 @@ const load = async (three:BaseThreeClass)=>{
     await three.downloadFonts(font, 'font')
     const {THREE, planeGeometryMesh,scene, camera, light} = three
     light.position.set(0,500,200)
+    light.intensity = 1
+    const light2 = new THREE.PointLight(0xffffff, 0.5)
+    light2.position.set(0, 80, 0)
+    scene.add(light2)
     // 户型布局底图
     // const map = three.downloadImagesTexture(bj);
     // const sprite = new THREE.Mesh(new THREE.BoxGeometry(300, 1, 300), new THREE.MeshLambertMaterial({
