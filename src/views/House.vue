@@ -11,7 +11,7 @@
             <template #panel>{{data}}</template>
         </BaseThree>
         <img :src="bj" alt="">
-    </div>
+    </div>¡
 </template>
 
 <script setup lang="ts" title="房子" content="房子3d效果">
