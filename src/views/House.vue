@@ -137,8 +137,58 @@ const load = async (three:BaseThreeClass)=>{
         rotation: [0, 1.56],
     })
     addBox(three, tr, {
-        position:[48.26, -74.505],
+        position:[59.56, -52.07],
         scale: [0.1689, 1, 1.491],
+        rotation: [0, 1.56],
+    })
+    addBox(three, tr, {
+        position:[145.86, -14.966],
+        scale: [0.8604, 1, 1.491],
+        rotation: [0, 1.56],
+    })
+    addBox(three, tr, {
+        position:[139.567, -14.966],
+        scale: [0.1279, 1, 1.491],
+        rotation: [0, 0],
+    })
+    addBox(three, tr, {
+        position:[73.202, -14.966],
+        scale: [0.6837, 1, 1.491],
+        rotation: [0, 0],
+    })
+    addBox(three, tr, {
+        position:[110.912, -12.695],
+        scale: [0.098099, 1, 1.491],
+        rotation: [0, 1.56],
+    })
+    addBox(three, tr, {
+        position:[59.151, -4.766],
+        scale: [0.223091, 1, 1.491],
+        rotation: [0, 1.56],
+    })
+    addBox(three, tr, {
+        position:[35.846, -4.766],
+        scale: [0.1566, 1, 1.491],
+        rotation: [0, 1.56],
+    })
+    addBox(three, tr, {
+        position:[35.846, 89.17919],
+        scale: [1.0263, 1, 1.491],
+        rotation: [0, 1.56],
+    })
+    addBox(three, tr, {
+        position:[111.0753, 73.2094],
+        scale: [1.0263, 1, 1.491],
+        rotation: [0, 1.56],
+    })
+    addBox(three, tr, {
+        position:[87.0712, 33.708],
+        scale: [0.467, 1, 1.491],
+        rotation: [0, 0],
+    })
+    addBox(three, tr, {
+        position:[59.151, 33.09617],
+        scale: [0.07228, 1, 1.491],
         rotation: [0, 1.56],
     })
     three.controls.addEventListener('change', ()=>{
