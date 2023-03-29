@@ -65,12 +65,11 @@ const addBox = async (three:BaseThreeClass, tr:TransformControls, data?:Partial<
         scale:[sx, sy, sz],
         rotation:[rx, ry, rz],
     } = merge(addBoxConfig, data)
-    const map = three.downloadImagesTexture("https://img1.baidu.com/it/u=4165515568,3899639356&fm=253&fmt=auto&app=138&f=JPEG?w=500&h=500", 'addBoxTexture');
     const m = new THREE.Mesh(
         new THREE.BoxGeometry(width,height,depth),
         new THREE.MeshLambertMaterial({
-            color:"#ffffff",
-            map
+            // color:"#ffffff",
+            map:three.imagesTexture.get('wall')
         })
     )
     const positionY = py || y
@@ -107,13 +106,21 @@ const addBox = async (three:BaseThreeClass, tr:TransformControls, data?:Partial<
 const modes = ref(['translate', 'scale', 'rotate'])
 const {a,s,d } = useMagicKeys()
 const load = async (three:BaseThreeClass)=>{
+    const {THREE, planeGeometryMesh,scene, camera, light} = three
+    const wall = await three.downloadImagesTexture("https://img0.baidu.com/it/u=1747596165,3790153622&fm=253&fmt=auto&app=138&f=JPG?w=667&h=500", 'wall')
+    wall.repeat.set(3, 2)
+    wall.wrapS = THREE.RepeatWrapping // 水平重复
+    wall.wrapT = THREE.MirroredRepeatWrapping // 垂直镜像重复
     const ground = three.downloadImagesTexture("https://img1.baidu.com/it/u=4165515568,3899639356&fm=253&fmt=auto&app=138&f=JPEG?w=500&h=500", 'addBoxTexture')
     await three.downloadFonts(font, 'font')
-    const {THREE, planeGeometryMesh,scene, camera, light} = three
-    light.position.set(0,500,200)
-    light.intensity = 1
-    const light2 = new THREE.PointLight(0xffffff, 0.5)
-    light2.position.set(0, 80, 0)
+    ground.repeat.set(20, 20)
+    ground.wrapS = THREE.RepeatWrapping // 水平重复
+    ground.wrapT = THREE.MirroredRepeatWrapping // 垂直镜像重复
+    // light.position.set(500,500,1000)
+    light.intensity = 1.5
+    light.color.set("#cb7430")
+    const light2 = new THREE.PointLight("#ffffff", 1)
+    light2.position.set(-100, 100, 300)
     scene.add(light2)
     // 户型布局底图
     // const map = three.downloadImagesTexture(bj);
