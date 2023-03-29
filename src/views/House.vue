@@ -52,7 +52,9 @@ const addBoxConfig = {
     scale:[1, 1, 1],
     rotation:[0, 0, 0],
 }
-const addBox = ({scene, THREE}:BaseThreeClass, tr:TransformControls, data?:Partial<typeof addBoxConfig>)=>{
+const changes = []
+const addBox = (three:BaseThreeClass, tr:TransformControls, data?:Partial<typeof addBoxConfig>)=>{
+    const {scene, THREE} = three
     const height = 80
     const y = height/2
     const {
@@ -62,10 +64,12 @@ const addBox = ({scene, THREE}:BaseThreeClass, tr:TransformControls, data?:Parti
         scale:[sx, sy, sz],
         rotation:[rx, ry, rz],
     } = merge(addBoxConfig, data)
+    const map = three.downloadImagesTexture("https://img1.baidu.com/it/u=4165515568,3899639356&fm=253&fmt=auto&app=138&f=JPEG?w=500&h=500", 'addBoxTexture');
     const m = new THREE.Mesh(
         new THREE.BoxGeometry(width,height,depth),
         new THREE.MeshLambertMaterial({
-            color:"#ffffff"
+            color:"#ffffff",
+            map
         })
     )
     m.position.set(x,y ,z)
@@ -82,14 +86,18 @@ const addBox = ({scene, THREE}:BaseThreeClass, tr:TransformControls, data?:Parti
             scale:m.scale
         })
     }
-    tr.removeEventListener('change', change)
+    changes.forEach(c=>{
+        tr.removeEventListener('change', c)
+    })
     tr.addEventListener('change', change)
+    changes.push(change)
     scene.add(m);
 }
 const load = async (three:BaseThreeClass)=>{
-    const {THREE, planeGeometryMesh,scene, camera} = three
+    const {THREE, planeGeometryMesh,scene, camera, light} = three
+    light.position.set(0,500,200)
     const map = three.downloadImagesTexture(bj);
-    const sprite = new THREE.Mesh( new THREE.BoxGeometry(300, 0, 300), new THREE.MeshLambertMaterial({
+    const sprite = new THREE.Mesh(new THREE.BoxGeometry(300, 0, 300), new THREE.MeshLambertMaterial({
         map:map,
         emissive:"#f00",
         transparent:true,
@@ -119,9 +127,14 @@ const load = async (three:BaseThreeClass)=>{
         rotation: [0, 0],
     })
     addBox(three, tr, {
-        position:[66.70, -63.55],
-        scale: [0.593, 1, 1.491],
+        position:[90.56, -63.55],
+        scale: [0.991, 1, 1.491],
         rotation: [0, 0],
+    })
+    addBox(three, tr, {
+        position:[48.26, -74.505],
+        scale: [0.1689, 1, 1.491],
+        rotation: [0, 1.56],
     })
     addBox(three, tr, {
         position:[48.26, -74.505],
