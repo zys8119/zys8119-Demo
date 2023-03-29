@@ -17,6 +17,8 @@
 import BaseThree, {BaseThreeClass, InitializationData} from "../components/BaseThree"
 import bj from "@/src/assets/house/bj2.png"
 import {BoxGeometry, Mesh, Vector2, Raycaster} from "three"
+import {merge} from "lodash"
+import {TransformControls} from "three/addons/controls/TransformControls.js";
 const data = ref({
     box:{
         position:{
@@ -43,6 +45,47 @@ let tr = null
 const animation = async (three:BaseThreeClass)=>{
     const {THREE, planeGeometryMesh,scene, camera} = three
 }
+const addBoxConfig = {
+    width:120,
+    depth:5,
+    position:[0, 0],
+    scale:[1, 1, 1],
+    rotation:[0, 0, 0],
+}
+const addBox = ({scene, THREE}:BaseThreeClass, tr:TransformControls, data?:Partial<typeof addBoxConfig>)=>{
+    const height = 80
+    const y = height/2
+    const {
+        width,
+        depth,
+        position:[x, z],
+        scale:[sx, sy, sz],
+        rotation:[rx, ry, rz],
+    } = merge(addBoxConfig, data)
+    const m = new THREE.Mesh(
+        new THREE.BoxGeometry(width,height,depth),
+        new THREE.MeshLambertMaterial({
+            color:"#ffffff"
+        })
+    )
+    m.position.set(x,y ,z)
+    m.scale.set(sx, sy, sz)
+    m.rotation.set(rx, ry, rz)
+    m.castShadow = true
+    m.receiveShadow = true
+    tr.attach(m)
+    const change = ()=>{
+        console.log("box", {
+            position:m.position,
+            parameters:m.geometry.parameters,
+            rotation:m.rotation,
+            scale:m.scale
+        })
+    }
+    tr.removeEventListener('change', change)
+    tr.addEventListener('change', change)
+    scene.add(m);
+}
 const load = async (three:BaseThreeClass)=>{
     const {THREE, planeGeometryMesh,scene, camera} = three
     const map = three.downloadImagesTexture(bj);
@@ -56,47 +99,35 @@ const load = async (three:BaseThreeClass)=>{
     watchEffect(()=>{
         tr.setMode(data.value.mode as any)
     })
-    scene.add((()=>{
-        const a = new THREE.Mesh(
-            new THREE.BoxGeometry(120,10,5),
-            new THREE.MeshLambertMaterial({
-                color:"#ffffff"
-            })
-        )
-        a.position.set(44.39,4,-147)
-        a.scale.set(0.94,1,1)
-        tr.attach(a)
-        tr.addEventListener('change', ()=>{
-            console.log("box", {
-                position:a.position,
-                parameters:a.geometry.parameters,
-                rotation:a.rotation,
-                scale:a.scale
-            })
-        })
-        return a
-    })());
-    scene.add((()=>{
-        const a = new THREE.Mesh(
-            new THREE.BoxGeometry(120,10,5),
-            new THREE.MeshLambertMaterial({
-                color:"#ffffff"
-            })
-        )
-        a.position.set(98.19,4 ,-129.23)
-        a.scale.set(0.32,1,1)
-        a.rotation.set(0,1.56,0)
-        tr.attach(a)
-        tr.addEventListener('change', ()=>{
-            console.log("box", {
-                position:a.position,
-                parameters:a.geometry.parameters,
-                rotation:a.rotation,
-                scale:a.scale
-            })
-        })
-        return a
-    })());
+    addBox(three, tr, {
+        position:[44.39, -147],
+        scale: [0.94],
+    })
+    addBox(three, tr, {
+        position:[98.03, -129.23],
+        scale: [0.32],
+        rotation: [0, 1.56],
+    })
+    addBox(three, tr, {
+        position:[-9.112, -76.06],
+        scale: [0.262, 1, 1.491],
+        rotation: [0, 1.56],
+    })
+    addBox(three, tr, {
+        position:[-6.75, -63.55],
+        scale: [0.2768, 1, 1.491],
+        rotation: [0, 0],
+    })
+    addBox(three, tr, {
+        position:[66.70, -63.55],
+        scale: [0.593, 1, 1.491],
+        rotation: [0, 0],
+    })
+    addBox(three, tr, {
+        position:[48.26, -74.505],
+        scale: [0.1689, 1, 1.491],
+        rotation: [0, 1.56],
+    })
     three.controls.addEventListener('change', ()=>{
         console.log("camera", {
             position:camera.position,
@@ -104,9 +135,9 @@ const load = async (three:BaseThreeClass)=>{
             scale:camera.scale,
         })
     })
-    camera.position.set(134.46, 5.5, -144.85)
-    camera.rotation.set(-2.33, 1.23, 2.36)
-    camera.scale.set(0.94, 1, 1)
+    // camera.position.set(134.46, 5.5, -144.85)
+    // camera.rotation.set(-2.33, 1.23, 2.36)
+    // camera.scale.set(0.94, 1, 1)
 }
 const gui = (d: typeof data.value, three: BaseThreeClass) => {
     const {THREE} = three
