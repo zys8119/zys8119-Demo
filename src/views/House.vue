@@ -4,6 +4,7 @@
             v-model:initialization-data="data"
             @load="load"
             :gui="true"
+            :coordinateLine="true"
             @gui="gui"
             @animation="animation"
         >
@@ -16,6 +17,7 @@
 <script setup lang="ts" title="房子" content="房子3d效果">
 import BaseThree, {BaseThreeClass, InitializationData} from "../components/BaseThree"
 import bj from "@/src/assets/house/bj2.png"
+import bjImg from "@/src/assets/house/a.png"
 import font from "@/src/assets/miaozidongmanti-regular.ttf?url"
 import {BoxGeometry, Mesh, Vector2, Raycaster} from "three"
 import {merge} from "lodash"
@@ -111,16 +113,16 @@ const load = async (three:BaseThreeClass)=>{
     wall.repeat.set(3, 2)
     wall.wrapS = THREE.RepeatWrapping // 水平重复
     wall.wrapT = THREE.MirroredRepeatWrapping // 垂直镜像重复
-    const ground = three.downloadImagesTexture("https://img1.baidu.com/it/u=4165515568,3899639356&fm=253&fmt=auto&app=138&f=JPEG?w=500&h=500", 'addBoxTexture')
+    const ground = three.downloadImagesTexture(bjImg, 'addBoxTexture')
     await three.downloadFonts(font, 'font')
     ground.repeat.set(20, 20)
     ground.wrapS = THREE.RepeatWrapping // 水平重复
     ground.wrapT = THREE.MirroredRepeatWrapping // 垂直镜像重复
     // light.position.set(500,500,1000)
-    light.intensity = 1.5
-    light.color.set("#cb7430")
-    const light2 = new THREE.PointLight("#ffffff", 1)
-    light2.position.set(-100, 100, 300)
+    light.intensity = 1
+    light.color.set("#ffefd6")
+    const light2 = new THREE.PointLight("#ffffff", 0.8)
+    light2.position.set(0, 100, 100)
     scene.add(light2)
     // 户型布局底图
     // const map = three.downloadImagesTexture(bj);
