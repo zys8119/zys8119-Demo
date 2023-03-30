@@ -23,9 +23,9 @@ import font from "@/src/assets/miaozidongmanti-regular.ttf?url"
 import yg from "@/src/assets/yg/file.obj?url"
 import ygMtl from "@/src/assets/yg/file.mtl?url"
 import ygWood_bumb from "@/src/assets/yg/wood_bumb.jpg?url"
-import sf from "@/src/assets/sf/a.obj?url"
-import sfmtl from "@/src/assets/sf/a.mtl?url"
-import sfimg from "@/src/assets/sf/a.mtl?url"
+// import sf from "@/src/assets/sf/fs.obj?url"
+// import sfmtl from "@/src/assets/sf/a.mtl?url"
+// import sfimg from "@/src/assets/sf/a.mtl?url"
 import {BoxGeometry, Mesh, Vector2, Raycaster} from "three"
 import {OBJLoader} from "three/examples/jsm/loaders/OBJLoader.js"
 import {merge} from "lodash"
@@ -355,19 +355,22 @@ const load = async (three: BaseThreeClass) => {
     ygm.castShadow = true
     ygm.receiveShadow = true
     scene.add(ygm)
-    const sfms = await new MTLLoader().loadAsync(sfmtl)
-    const sfm = (await new OBJLoader().setMaterials(sfms).loadAsync(sf))
-    sfm.lookAt(100000,0,0)
-    console.log(sfm)
-    scene.add(sfm)
-    tr.addEventListener('change', () => {
-        console.log("ygm", {
-            position: sfm.position,
-            rotation: sfm.rotation,
-            scale: sfm.scale
-        })
-    })
-    tr.attach(sfm.children[1])
+    // 沙发
+    // const sfm = (await new OBJLoader().loadAsync(sf))
+    // scene.add(sfm)
+    // sfm.scale.set(3.2368, 16.2201, 69.5232)
+    // sfm.rotation.set(-1.5, 0, -1.5)
+    // sfm.position.set(0.3785, 0.3785, 0.3785)
+    // sfm.castShadow = true
+    // sfm.receiveShadow = true
+    // tr.addEventListener('change', () => {
+    //     console.log("ygm", {
+    //         position: sfm.position,
+    //         rotation: sfm.rotation,
+    //         scale: sfm.scale
+    //     })
+    // })
+    // tr.attach(sfm)
 }
 const gui = (d: typeof data.value, three: BaseThreeClass) => {
     const {THREE} = three
