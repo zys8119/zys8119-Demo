@@ -21,10 +21,16 @@ import bj from "@/src/assets/house/bj2.png"
 import bjImg from "@/src/assets/house/a.png"
 import font from "@/src/assets/miaozidongmanti-regular.ttf?url"
 import yg from "@/src/assets/yg/file.obj?url"
+import ygMtl from "@/src/assets/yg/file.mtl?url"
+import ygWood_bumb from "@/src/assets/yg/wood_bumb.jpg?url"
+import sf from "@/src/assets/sf/a.obj?url"
+import sfmtl from "@/src/assets/sf/a.mtl?url"
+import sfimg from "@/src/assets/sf/a.mtl?url"
 import {BoxGeometry, Mesh, Vector2, Raycaster} from "three"
 import {OBJLoader} from "three/examples/jsm/loaders/OBJLoader.js"
 import {merge} from "lodash"
 import {TransformControls} from "three/addons/controls/TransformControls.js";
+import {MTLLoader} from "three/examples/jsm/loaders/MTLLoader";
 
 const data = ref({
     box: {
@@ -340,20 +346,28 @@ const load = async (three: BaseThreeClass) => {
     //     })
     // })
     // 衣柜
-    const ygm = await new OBJLoader().loadAsync(yg)
-    console.log(ygm);
+    const ygms = await new MTLLoader().loadAsync(ygMtl)
+    ygms.loadTexture(ygWood_bumb)
+    const ygm = await new OBJLoader().setMaterials(ygms).loadAsync(yg)
     ygm.scale.set(0.2627, 0.3166, 0.2949)
     ygm.rotation.set(0, Math.PI, 0)
-    ygm.position.set(81.7755, 0, 49.12)
-    // tr.addEventListener('change', () => {
-    //     console.log("ygm", {
-    //         position: ygm.position,
-    //         rotation: ygm.rotation,
-    //         scale: ygm.scale
-    //     })
-    // })
-    tr.attach(ygm)
+    ygm.position.set(81.7755, 0, 49.5)
+    ygm.castShadow = true
+    ygm.receiveShadow = true
     scene.add(ygm)
+    const sfms = await new MTLLoader().loadAsync(sfmtl)
+    const sfm = (await new OBJLoader().setMaterials(sfms).loadAsync(sf))
+    sfm.lookAt(100000,0,0)
+    console.log(sfm)
+    scene.add(sfm)
+    tr.addEventListener('change', () => {
+        console.log("ygm", {
+            position: sfm.position,
+            rotation: sfm.rotation,
+            scale: sfm.scale
+        })
+    })
+    tr.attach(sfm.children[1])
 }
 const gui = (d: typeof data.value, three: BaseThreeClass) => {
     const {THREE} = three
