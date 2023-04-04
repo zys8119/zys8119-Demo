@@ -4,6 +4,7 @@
         "target": "esNext",
         "sourceMap": true,
         "moduleResolution": "Node",
+        "resolveJsonModule": true,
         "allowSyntheticDefaultImports": true,
         "paths": {
             "@/*": ["./*"]
