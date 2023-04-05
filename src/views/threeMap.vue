@@ -87,6 +87,9 @@ const addPillar = (THREE, province, x, y, z, size = 0.1,depth = 1, color = "#f00
     ms.receiveShadow = e.receiveShadow
     ms.position.set(e.x, e.y, 0)
     ms.scale.set(1, 1, 0)
+    ms.on('hover', e=>{
+        console.log(e)
+    })
     e.province.add(ms)
     pillars.value.push({
         ...e,
@@ -182,9 +185,6 @@ const load = async (three: BaseThreeClass) => {
             addPillar(THREE, province, cx+0.2, cy+0.2, depth.value, 0.1, 0.1, "#ff0", 1, 1000, 1000)
         }
 
-        province.on('hover', e=>{
-            console.log(e)
-        })
         map.add(province)
     }))
     const scale = 100

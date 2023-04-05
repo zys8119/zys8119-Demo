@@ -203,3 +203,9 @@ export default class onEvent {
         }
     }
 }
+
+// declare module 'three' {
+//     interface Event {
+//         on(event:'hover' | 'click'  | 'gaze', callback:(object3d:Object3D)=>void):void
+//     }
+// }
