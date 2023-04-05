@@ -62,7 +62,12 @@ const readMore = (item)=>{
     }
 }
 onMounted(async ()=>{
-    const md = await fetch('https://raw.githubusercontent.com/zys8119/Blog/master/README.md').then(e=>e.text())
+    let md = ''
+    try {
+        md = await fetch('https://raw.githubusercontent.com/zys8119/Blog/master/README.md').then(e=>e.text())
+    }catch (e) {
+        md = ''
+    }
     gitHubNavs.value = marked.lexer(md).map((e:any)=>e.tokens?.find(ee=>ee.type == 'link')).filter(e=>e).map((e:{
         type:string
         raw:string
