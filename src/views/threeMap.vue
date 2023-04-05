@@ -17,8 +17,7 @@ import {geoMercator} from "d3-geo"
 import font from "@/src/assets/miaozidongmanti-regular.ttf?url"
 import { TextGeometry } from 'three/examples/jsm/geometries/TextGeometry.js'
 import { Object3D, BoxGeometry, Mesh, MeshLambertMaterial} from 'three'
-
-console.log(mapJson)
+import onEvent from "./onEvent"
 const data = ref({
     box: {
         position: {
@@ -95,7 +94,8 @@ const addPillar = (THREE, province, x, y, z, size = 0.1,depth = 1, color = "#f00
     })
 }
 const load = async (three: BaseThreeClass) => {
-    const {scene, THREE, planeGeometryMesh} = three;
+    const {scene, THREE, planeGeometryMesh, camera} = three;
+    new onEvent(scene, camera)
     pillars.value = []
     await three.downloadFonts(font, 'font');
     const map = new THREE.Object3D()
@@ -182,7 +182,9 @@ const load = async (three: BaseThreeClass) => {
             addPillar(THREE, province, cx+0.2, cy+0.2, depth.value, 0.1, 0.1, "#ff0", 1, 1000, 1000)
         }
 
-
+        province.on('hover', e=>{
+            console.log(e)
+        })
         map.add(province)
     }))
     const scale = 100
@@ -295,6 +297,8 @@ watchEffect(async ()=>{
     })
 })
 const animation = async (three: BaseThreeClass) => {
+    const {scene, THREE, planeGeometryMesh, camera} = three;
+
 }
 
 </script>
