@@ -17,7 +17,7 @@ import {geoMercator} from "d3-geo"
 import font from "@/src/assets/miaozidongmanti-regular.ttf?url"
 import { TextGeometry } from 'three/examples/jsm/geometries/TextGeometry.js'
 import { Object3D, BoxGeometry, Mesh, MeshLambertMaterial} from 'three'
-import onEvent from "./onEvent"
+import onEvent from "three-onevent-esm"
 const data = ref({
     box: {
         position: {
@@ -300,7 +300,6 @@ const animation = async (three: BaseThreeClass) => {
     const {scene, THREE, planeGeometryMesh, camera} = three;
 
 }
-
 </script>
 
 <style scoped lang="less">
