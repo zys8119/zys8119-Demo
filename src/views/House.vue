@@ -354,7 +354,29 @@ const load = async (three: BaseThreeClass) => {
     ygm.position.set(81.7755, 0, 49.5)
     ygm.castShadow = true
     ygm.receiveShadow = true
+    ygm.children.forEach(e=>{
+        e.material = new THREE.MeshLambertMaterial({
+            // color:"#f00",
+            map:new THREE.TextureLoader().load('https://img1.baidu.com/it/u=2177459011,1010874807&fm=253&fmt=auto&app=138&f=JPEG?w=749&h=500')
+        })
+    })
     scene.add(ygm)
+    // 床
+    const chuang = await new MTLLoader().loadAsync((await import('@/src/assets/chuang/橙色大方床.mtl?url')).default)
+    chuang.loadTexture(ygWood_bumb)
+    const chaungm = await new OBJLoader().setMaterials(chuang).loadAsync((await import('@/src/assets/chuang/橙色大方床.obj?url')).default)
+    chaungm.scale.set(0.2627, 0.3166, 0.2949)
+    // chaungm.rotation.set(0, Math.PI, 0)
+    chaungm.position.set(81.7755, 0, 49.5)
+    chaungm.castShadow = true
+    chaungm.receiveShadow = true
+    // chaungm.children.forEach(e=>{
+    //     e.material = new THREE.MeshLambertMaterial({
+    //         // color:"#f00",
+    //         map:new THREE.TextureLoader().load('https://img1.baidu.com/it/u=2177459011,1010874807&fm=253&fmt=auto&app=138&f=JPEG?w=749&h=500')
+    //     })
+    // })
+    scene.add(chaungm)
     // 沙发
     // const sfm = (await new OBJLoader().loadAsync(sf))
     // scene.add(sfm)
