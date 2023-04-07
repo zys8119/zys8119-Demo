@@ -1,7 +1,7 @@
 <template>
     <div class="Home">
         <div class="user">
-            <img src="https://avatars.githubusercontent.com/u/19203342?v=4">
+            <img src="@/src/assets/picture.jpeg">
             <h1>张云山</h1>
         </div>
         <div class="search">
@@ -12,13 +12,20 @@
             <div class="blog-slider__wrp swiper-wrapper">
                 <div class="blog-slider__item swiper-slide" v-for="(item, key) in navs" :key="key">
                     <div class="blog-slider__img">
-                        <img :src="item.img || 'https://res.cloudinary.com/muhammederdem/image/upload/q_60/v1535759872/kuldar-kalvik-799168-unsplash.webp'" alt="">
+                        <img :src="item.img || 'https://res.cloudinary.com/muhammederdem/image/upload/q_60/v1535759872/kuldar-kalvik-799168-unsplash.webp'"
+                             alt="">
                     </div>
                     <div class="blog-slider__content">
                         <span class="blog-slider__code" v-if="item.time">{{ item.time }}</span>
                         <div class="blog-slider__title" v-if="item.title">{{ item.title }}</div>
-                        <div class="blog-slider__text" v-if="item.content">{{item.content}}</div>
-                        <div class="blog-slider__button" v-if="!item.hideButton && item.url" @click="readMore(item)">阅读更多</div>
+                        <div class="blog-slider__text" v-if="item.content">
+                            <div class="blog-slider__text_content">
+                                {{ item.content }}
+                            </div>
+                        </div>
+                        <div class="blog-slider__button" v-if="!item.hideButton && item.url" @click="readMore(item)">
+                            阅读更多
+                        </div>
                     </div>
                 </div>
             </div>
@@ -31,79 +38,89 @@
 import {Swiper, Navigation, Pagination, Mousewheel, EffectFade} from "swiper"
 import {marked} from "marked"
 import route from "@/route"
+
 const value = ref("")
-type NavType = Array<Partial<{
-    img:string
-    time:string
-    title:string
-    content:string
-    hideButton:boolean
-    url:string
-}>>
-const currDome = ref<NavType>(route.options.routes.filter(e=>e.meta?.title).map(e=>({
-    title:e.meta.title,
-    content:e.meta.content || e.meta.title,
-    url:e.path
+type NavTypeConfig = Partial<{
+    img: string
+    time: string
+    title: string
+    content: string
+    hideButton: boolean
+    url: string
+}>
+type NavType = Array<NavTypeConfig>
+const currDome = ref<NavType>(route.options.routes.filter(e => e.meta?.title).map(e => ({
+    title: e.meta.title,
+    content: e.meta.content || e.meta.title,
+    url: e.path
 })) as NavType)
 const gitHubNavs = ref<NavType>([])
-const reg = computed(()=> new RegExp(value.value, 'img'))
-const navs = computed<NavType>(()=>{
-    return currDome.value.concat(gitHubNavs.value).filter(e=>reg.value.test(e.title) || reg.value.test(e.content)).slice(0,10)
+const reg = computed(() => new RegExp(value.value, 'img'))
+const navs = computed<NavType>(() => {
+    return [
+        {
+            title: "勿忘初心，敬这一刻的自己",
+            content: "【马云】：我一直觉得填补空白这句话是有问题的，不是因为欧美的就是先进的，就是我们要去填补的。其实今天我们不应该要和哪个东西接轨，适应哪国的标准，填补哪个空白，今天我们要思考的是怎么和未来接轨，怎么适应未来的标准，怎么弥补未来的空白，我们要想明白未来是如何的，以及自己到底要做成一个什么样的体系，然后再去看看别人怎么做，如果永远重复别人的语言，讨论别人设定的主题，我们不但会迷失现在，而且会错失未来。"
+        } as NavTypeConfig
+    ]
+    .concat(currDome.value)
+    .concat(gitHubNavs.value)
+    .filter(e => reg.value.test(e.title) || reg.value.test(e.content))
+    .slice(0, 10)
 })
 const router = useRouter()
-const readMore = (item)=>{
-    if(!item.url){
+const readMore = (item) => {
+    if (!item.url) {
         return console.error("文章不存在！")
     }
-    if(/^\//.test(item.url)){
+    if (/^\//.test(item.url)) {
         router.push(item.url.toLocaleLowerCase())
-    }else{
+    } else {
         window.open(/^(http(s*):)*\/\//.test(item.url) ? item.url : `https://github.com/zys8119/Blog/blob/master/${item.url.replace(/^\.*\/*/, "")}`)
     }
 }
-onMounted(async ()=>{
+onMounted(async () => {
     let md = ''
     try {
-        md = await fetch('https://raw.githubusercontent.com/zys8119/Blog/master/README.md').then(e=>e.text())
-    }catch (e) {
+        md = await fetch('https://raw.githubusercontent.com/zys8119/Blog/master/README.md').then(e => e.text())
+    } catch (e) {
         md = ''
     }
-    gitHubNavs.value = marked.lexer(md).map((e:any)=>e.tokens?.find(ee=>ee.type == 'link')).filter(e=>e).map((e:{
-        type:string
-        raw:string
-        href:string
-        title:string
-        text:string
-        tokens:any[]
-    })=>{
+    gitHubNavs.value = marked.lexer(md).map((e: any) => e.tokens?.find(ee => ee.type == 'link')).filter(e => e).map((e: {
+        type: string
+        raw: string
+        href: string
+        title: string
+        text: string
+        tokens: any[]
+    }) => {
         return {
-            title:e.text,
-            content:e.text,
-            url:e.href,
+            title: e.text,
+            content: e.text,
+            url: e.href,
         }
     })
-    watch(navs, ()=>{
+    watch(navs, () => {
         new Swiper(".blog-slider", {
             spaceBetween: 30,
             effect: 'fade',
             loop: true,
-            modules:[Navigation, Pagination, Mousewheel, EffectFade],
+            modules: [Navigation, Pagination, Mousewheel, EffectFade],
             mousewheel: {
                 invert: false,
             },
             autoHeight: true,
             pagination: {
                 el: ".blog-slider__pagination",
-                clickable: true,
-            },
+            }
         });
-    }, {immediate:true})
+    }, {immediate: true})
 
 })
 
 </script>
 
-<style  lang="scss">
+<style lang="scss">
 .Home {
     background-color: #FFE53B;
     background-image: linear-gradient(147deg, #FFE53B 0%, #fd3838 74%);
@@ -119,34 +136,40 @@ onMounted(async ()=>{
     top: 0;
     width: 100%;
     height: 100%;
+
     * {
         box-sizing: border-box;
     }
-    .user{
+
+    .user {
         display: flex;
         justify-content: center;
         align-items: center;
         gap: 15px;
-        img{
+
+        img {
             width: 70px;
             height: 70px;
             border-radius: 100%;
             overflow: hidden;
             box-shadow: 5px 5px 10px #000000;
         }
-        h1{
+
+        h1 {
             color: #ffffff;
             text-shadow: 5px 5px 10px #000000;
         }
     }
-    .search{
+
+    .search {
         display: flex;
         justify-content: center;
         align-items: center;
         flex-direction: column;
         gap: 15px;
         margin-bottom: 40px;
-        h4{
+
+        h4 {
             margin: 0;
             padding: 0;
             background-color: #ffffff;
@@ -156,13 +179,15 @@ onMounted(async ()=>{
             align-items: center;
             gap: 10px;
             padding-right: 15px;
-            span{
+
+            span {
                 background-color: #fb333b;
                 padding: 0 10px;
                 color: #ffffff;
             }
         }
-        input{
+
+        input {
             border: 1px solid #ffffff;
             line-height: 50px;
             padding: 0 10px;
@@ -215,17 +240,18 @@ onMounted(async ()=>{
                         transition-delay: .3s;
                     }
                 }
+
                 .blog-slider__content {
                     > * {
 
                         opacity: 1;
                         transform: none;
 
-                    @for $i from 0 to 15 {
-                        &:nth-child(#{$i + 1}) {
-                            transition-delay: $i * 0.1 + 0.3s;
+                        @for $i from 0 to 15 {
+                            &:nth-child(#{$i + 1}) {
+                                transition-delay: $i * 0.1 + 0.3s;
+                            }
                         }
-                    }
 
                     }
                 }
@@ -284,7 +310,7 @@ onMounted(async ()=>{
         }
 
         &__content {
-            // width: 60%;
+            width: 100%;
             padding-right: 25px;
             @media screen and (max-width: 992px) {
                 // width: 55%;
@@ -298,6 +324,7 @@ onMounted(async ()=>{
             @media screen and (max-width: 576px) {
                 padding: 0
             }
+
             > * {
                 opacity: 0;
                 transform: translateY(25px);
@@ -346,31 +373,34 @@ onMounted(async ()=>{
             }
 
         }
-        .swiper-container-horizontal>.swiper-pagination-bullets, .swiper-pagination-custom, .swiper-pagination-fraction {
+
+        .swiper-container-horizontal > .swiper-pagination-bullets, .swiper-pagination-custom, .swiper-pagination-fraction {
             bottom: 10px;
             left: 0;
             width: 100%;
 
         }
+
         &__pagination {
             position: absolute;
             z-index: 21;
             right: 20px;
-            width: 11px!important;
+            width: 11px !important;
             text-align: center;
-            left: auto!important;
+            left: auto !important;
             top: 50%;
-            bottom: auto!important;
+            bottom: auto !important;
             transform: translateY(-50%);
             @media screen and (max-width: 768px) {
                 transform: translateX(-50%);
-                left: 50%!important;
+                left: 50% !important;
                 top: 205px;
-                width: 100%!important;
+                width: 100% !important;
                 display: flex;
                 justify-content: center;
                 align-items: center;
             }
+
             &.swiper-pagination-bullets .swiper-pagination-bullet {
                 margin: 8px 0;
                 @media screen and (max-width: 768px) {
@@ -386,6 +416,7 @@ onMounted(async ()=>{
                 background: #062744;
                 opacity: 0.2;
                 transition: all .3s;
+
                 &-active {
                     opacity: 1;
                     background: #fd3838;
@@ -401,25 +432,41 @@ onMounted(async ()=>{
         }
 
     }
+
     @media screen and (max-width: 576px) {
-        .search{
+        .search {
             margin-bottom: 0;
-            input{
+
+            input {
                 width: 100%;
             }
         }
-        .blog-slider{
+        .blog-slider {
             min-height: initial;
             margin: 0;
             height: calc(100% - 250px);
         }
-        .blog-slider__text{
+        .blog-slider__text {
             margin-bottom: 15px;
-            overflow: hidden;
             height: 50px;
             position: relative;
             width: 100%;
-            &:before{
+
+            .blog-slider__text_content {
+                position: absolute;
+                left: 0;
+                top: 0;
+                width: 100%;
+                height: 100%;
+                overflow-x: hidden;
+                z-index: 1;
+
+                &::-webkit-scrollbar {
+                    width: 0;
+                }
+            }
+
+            &:before {
                 content: "";
                 position: absolute;
                 left: 0;
@@ -427,12 +474,15 @@ onMounted(async ()=>{
                 width: 100%;
                 height: 100%;
                 background: linear-gradient(#0000, #ffffff 90%);
+                z-index: 2;
+                pointer-events: none;
             }
         }
-        .blog-slider__button{
+        .blog-slider__button {
             position: relative;
             z-index: 1;
         }
     }
+
 }
 </style>
