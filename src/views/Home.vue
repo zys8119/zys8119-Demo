@@ -112,6 +112,7 @@ onMounted(async () => {
             autoHeight: true,
             pagination: {
                 el: ".blog-slider__pagination",
+                clickable: true,
             }
         });
     }, {immediate: true})
