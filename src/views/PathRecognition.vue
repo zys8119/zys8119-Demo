@@ -1,49 +1,59 @@
 <template>
     <div class="PathRecognition">
-        <canvas ref="canvas" @click="aa"></canvas>
-        <input type="number" v-model="offset">
+        <canvas ref="canvas"></canvas>
     </div>
 </template>
 
 <script setup lang="ts" title="canvas 路径识别" content="可用于纯色图片的路径矢量图路径获取">
-import useCanvasImage from "use-canvas-image"
-import bj2 from "@/src/assets/house/aa.jpg"
-const canvas = ref() as Ref<HTMLCanvasElement>
-const {elementX, elementY, isOutside} = useMouseInElement(canvas)
-const imageData = ref(new Map())
-const ctx = ref() as Ref<CanvasRenderingContext2D>
-onMounted(async ()=>{
-    ctx.value = canvas.value.getContext('2d')
-    await useCanvasImage(bj2, (e)=>{
-        if(e.isStart){
-            canvas.value.width = e.canvasWidth
-            canvas.value.height = e.canvasHeight
-        }
-        imageData.value.set([e.x, e.y].map(e=>e.toFixed(0)).join(),e)
-        ctx.value.fillStyle = e.rgba
-        ctx.value.fillRect(e.x, e.y, 2,2)
+const canvas = $ref() as HTMLCanvasElement
+const ctx = $computed(() => canvas.getContext('2d'))
+const {width, height} = useWindowSize()
+const rects = ref([])
+const {x, y} = useMouseInElement(canvas)
+watchEffect(() => {
+    rects.value.filter(e => e.isInside()).forEach(e=>{
+        e.x
     })
 })
-const offset = ref(0)
-const aa = ()=>{
-    const key = [elementX.value, elementY.value].map(e=>e.toFixed(0)).join()
-    const info = imageData.value.get(key)
-    for (const [k, v] of imageData.value){
-        if(
-            v.r <= info.r + offset.value && v.r > info.r - offset.value ||
-            v.g <= info.g + offset.value && v.g > info.g - offset.value ||
-            v.b <= info.b + offset.value && v.b > info.b - offset.value
-        ){
-            ctx.value.clearRect(v.x,v.y, 2, 2)
-        }
+
+class Rect {
+    constructor(public color: string, public x: number, public y: number, public w: number, public h: number) {
+        this.draw()
+    }
+
+    draw() {
+        ctx.fillStyle = this.color
+        ctx.fillRect(this.x, this.y, this.w, this.h)
+        rects.value.push(this)
+    }
+
+    isInside() {
+        const sx = x.value - this.x
+        const sy = y.value - this.y
+        return sx > 0 && sx < this.w && sy > 0 && sy < this.h
     }
 }
+const render = ()=>{
+    ctx.clearRect(0, 0, canvas.width, canvas.height)
+    rects.value = []
+    new Rect("#f00", 50, 60, 100, 100)
+    requestAnimationFrame(render)
+}
+onMounted(() => {
+    canvas.width = width.value
+    canvas.height = height.value
+
+
+    render()
+})
 </script>
 
 <style scoped lang="less">
 .PathRecognition {
-   background: #0d9dd3;
-    input{
+    canvas {
+        //width: 100%;
+        //height: 100%;
+        border: 1px;
         position: absolute;
         left: 0;
         top: 0;

@@ -38,10 +38,10 @@
         "swiper": "^9.1.1",
         "three": "^0.150.1",
         "three-onevent-esm": "^0.0.4",
-        "use-canvas-image": "^0.0.1",
+        "use-canvas-image": "^0.0.7",
         "vite": "^4.1.1",
         "vitejs-plugin-api-auto-import": "^0.0.3",
-        "vitejs-plugin-vue-route-auto-import": "^0.0.15",
+        "vitejs-plugin-vue-route-auto-import": "^0.0.18",
         "vue": "^3.2.47",
         "vue-router": "^4.1.6",
         "winframe": "^0.0.3"
