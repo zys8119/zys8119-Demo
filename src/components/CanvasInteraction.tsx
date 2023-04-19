@@ -13,6 +13,7 @@ export const style = cB("CanvasInteraction",[
         position:'absolute',
         left:0,
         top:0,
+        cursor:'default'
     })
 ])
 export const ssr: any = useSsrAdapter()
@@ -34,11 +35,12 @@ export interface ObjectBaseType {
     readonly left?:number
     readonly top?:number
     readonly gapSize?:number
+    readonly gapSizeBlank?:number
+    readonly position?:string | void
     x?:number
     y?:number
     w?:number
     h?:number
-    position?:string
 }
 
 const CanvasInteraction = defineComponent({
@@ -53,6 +55,10 @@ const CanvasInteraction = defineComponent({
         gapLineWidth: {
             type: Number,
             default: 2
+        },
+        showHelp: {
+            type: Boolean,
+            default: true
         },
     },
     setup(props,{emit}) {
@@ -69,6 +75,38 @@ const CanvasInteraction = defineComponent({
                 canvas.height = height.value
             }
         })
+        const positionMap = ref({
+            top_left:{
+                cursor:'nw-resize'
+            },
+            top_center:{
+                cursor:'n-resize'
+            },
+            top_right:{
+                cursor:'ne-resize'
+            },
+            bottom_left:{
+                cursor:'sw-resize'
+            },
+            bottom_center:{
+                cursor:'s-resize'
+            },
+            bottom_right:{
+                cursor:'se-resize'
+            },
+            left_center:{
+                cursor:'w-resize'
+            },
+            right_center:{
+                cursor:'e-resize'
+            },
+            content:{
+                cursor:'move'
+            },
+            blank:{
+                cursor:'pointer'
+            },
+        })
 
         class ObjectBase implements ObjectBaseType {
             constructor(public x: number, public y: number, public w?: number, public h?: number) {
@@ -78,13 +116,16 @@ const CanvasInteraction = defineComponent({
                 if (this.w && this.h) {
                     const sx = x.value - this.x
                     const sy = y.value - this.y
-                    return sx > -this.gapSize && sx < this.w + this.gapSize && sy > -this.gapSize && sy < this.h + this.gapSize
+                    return sx > -this.gapSizeBlank && sx < this.w + this.gapSizeBlank && sy > -this.gapSize && sy < this.h + this.gapSizeBlank
                 }
                 return false
             }
 
             get gapSize(){
-                return (props.gap+props.gapLineWidth*2)*1.5
+                return props.gap+props.gapLineWidth*2
+            }
+            get gapSizeBlank(){
+                return this.gapSize*1.5
             }
 
             get width() {
@@ -106,8 +147,37 @@ const CanvasInteraction = defineComponent({
             get position(){
                 const sx = x.value - this.x
                 const sy = y.value - this.y
-                console.log(x.value);
-                return ''
+                const isTop = sy>= -this.gapSizeBlank && sy <= this.gapSize - this.gapSizeBlank
+                const isBottom = sy>= this.height+this.gapSize*0.5 && sy <= this.height  + this.gapSizeBlank
+                const isLeft = sx >= -this.gapSizeBlank && sx <= this.gapSize - this.gapSizeBlank
+                const isRight = sx >= this.width + this.gapSize*0.5 && sx <= this.width + this.gapSize*1.5
+                const isWidthCenter = sx >= this.width / 2 - this.gapSize*0.5 && sx <= this.width / 2 + this.gapSize*0.5
+                const isHeightCenter = sy >= this.height / 2 - this.gapSize*0.5 && sy <= this.height / 2 + this.gapSize*0.5
+                if(isLeft && isTop){
+                    return 'top_left'
+                }
+                if(isWidthCenter && isTop){
+                    return 'top_center'
+                }
+                if(isRight && isTop){
+                    return 'top_right'
+                }
+                if(isLeft &&  isBottom){
+                    return 'bottom_left'
+                }
+                if(isWidthCenter && isBottom){
+                    return 'bottom_center'
+                }
+                if(isRight && isBottom){
+                    return 'bottom_right'
+                }
+                if(isLeft && isHeightCenter){
+                    return 'left_center'
+                }
+                if(isRight && isHeightCenter){
+                    return 'right_center'
+                }
+                return sx > 0 && sx < this.w && sy > 0 && sy < this.h ? 'content' : 'blank'
             }
         }
 
@@ -156,7 +226,7 @@ const CanvasInteraction = defineComponent({
             override isInside(): boolean {
                 const sx = x.value - (this.dx || this.x)
                 const sy = y.value - (this.dy || this.y)
-                return sx > -this.gapSize && sx < (this.dw || this.w) + this.gapSize && sy > -this.gapSize && sy < (this.dh || this.h) + this.gapSize
+                return sx > -this.gapSizeBlank && sx < (this.dw || this.w) + this.gapSizeBlank && sy > -this.gapSizeBlank && sy < (this.dh || this.h) + this.gapSizeBlank
             }
 
             panstart(event: any): [xName: string, yName: string] {
@@ -205,12 +275,7 @@ const CanvasInteraction = defineComponent({
 
         const canvasStyle = computed(() => {
             return {
-                cursor: (()=>{
-                    if(currObject.value){
-                        console.log(currObject.value.position)
-                    }
-                    return currObject.value ? 'move' : 'pointer'
-                })()
+                cursor: props.showHelp && currObject.value ? positionMap.value[currObject.value.position]?.cursor : null
             }
         })
 
@@ -221,7 +286,7 @@ const CanvasInteraction = defineComponent({
             let object = null
             hammer.on('panstart', (event) => {
                 object = currObject.value
-                if (object) {
+                if (object && object.position === 'content') {
                     if (object.panstart) {
                         const [k1, k2] = object.panstart(event)
                         x = object[k1]
@@ -233,7 +298,7 @@ const CanvasInteraction = defineComponent({
                 }
             })
             hammer.on('panmove', (event) => {
-                if (object) {
+                if (object && object.position === 'content') {
                     if (object.panmove) {
                         const [k1, k2] = object.panmove(event)
                         object[k1] = x + event.deltaX
@@ -256,22 +321,22 @@ const CanvasInteraction = defineComponent({
             ctx.strokeStyle = '#f00'
             ctx.lineWidth = props.gapLineWidth
             ctx.strokeRect(object.left - mapOffset, object.top - mapOffset, object.width + mapOffset * 2, object.height + mapOffset * 2)
-            // left_top
+            // top_left
             await drawVertex(object.left - mapOffset, object.top - mapOffset)
             // top_center
             await drawVertex(object.left + object.width / 2, object.top - mapOffset)
-            // right_top
+            // top_right
             await drawVertex(object.left + object.width + mapOffset, object.top - mapOffset)
             // right_center
-            await drawVertex(object.left + object.width + mapOffset, object.top - mapOffset + object.height / 2)
-            // right_bottom
+            await drawVertex(object.left + object.width + mapOffset, object.top + object.height / 2)
+            // bottom_right
             await drawVertex(object.left + object.width + mapOffset, object.top + object.height + mapOffset)
             // bottom_center
             await drawVertex(object.left + object.width / 2, object.top + object.height + mapOffset)
-            // left_top
+            // bottom_left
             await drawVertex(object.left - mapOffset, object.top + object.height + mapOffset)
             // left_center
-            await drawVertex(object.left - mapOffset, object.top - mapOffset + object.height / 2)
+            await drawVertex(object.left - mapOffset, object.top + object.height / 2)
         }
         const render = async () => {
             await init();
@@ -282,7 +347,7 @@ const CanvasInteraction = defineComponent({
                     const object = objectCache.value[k]
                     if (object) {
                         await object.draw(ctx, canvas)
-                        if (currObject.value === object) {
+                        if (props.showHelp && currObject.value === object) {
                             await drawAuxiliaryLine(object)
                         }
                     }
