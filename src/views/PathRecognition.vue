@@ -12,6 +12,16 @@ const ctx = $computed(() => canvas.getContext('2d'))
 const {width, height} = useWindowSize()
 const objectCache = ref([])
 const {x, y} = useMouseInElement(canvas)
+const props = defineProps({
+    gap:{
+        type:Number,
+        default:10
+    },
+    gapLineWidth:{
+        type:Number,
+        default:2
+    },
+})
 watchEffect(()=>{
     if(canvas){
         canvas.width = width.value
@@ -34,6 +44,18 @@ class ObjectBase implements ObjectBaseType{
             return sx > 0 && sx < this.w && sy > 0 && sy < this.h
         }
         return  false
+    }
+    get width(){
+        return this.w
+    }
+    get height(){
+        return this.h
+    }
+    get left(){
+        return this.x
+    }
+    get top(){
+        return this.y
     }
 }
 class createRect extends ObjectBase{
@@ -97,7 +119,7 @@ class createImage extends ObjectBase{
 
 const init = async ()=>{
     objectCache.value.push(new createRect("#f00", 50, 60, 100, 100))
-    objectCache.value.push(new createRect("#0032ff", 90, 60, 500, 300))
+    objectCache.value.push(new createRect("#0032ff", 500, 300, 500, 300))
     objectCache.value.push(new createRect("#f500d5", 90, 60, 200, 100))
     objectCache.value.push(new createImage(picture, 100, 10, 100, 100))
     await hammerInit()
@@ -136,7 +158,6 @@ const hammerInit = async ()=>{
                 y = object.y
             }
         }
-
     })
     hammer.on('panmove', (event)=>{
         if(object){
@@ -151,11 +172,46 @@ const hammerInit = async ()=>{
         }
     })
 }
+const drawVertex = async (x, y)=>{
+    const vertexOffset = props.gap/2;
+    ctx.fillStyle = '#ffffff'
+    ctx.fillRect(x - vertexOffset, y - vertexOffset, props.gap,props.gap)
+    ctx.strokeRect(x - vertexOffset, y - vertexOffset, props.gap,props.gap)
+}
+const drawAuxiliaryLine = async (object:ObjectBase)=>{
+    const mapOffset = props.gap + props.gapLineWidth;
+    ctx.strokeStyle = '#f00'
+    ctx.lineWidth = props.gapLineWidth
+    ctx.strokeRect(object.left - mapOffset, object.top - mapOffset, object.width + mapOffset*2, object.height + mapOffset*2)
+    // left_top
+    await drawVertex(object.left - mapOffset, object.top - mapOffset)
+    // top_center
+    await drawVertex(object.left + object.width/ 2 , object.top - mapOffset)
+    // right_top
+    await drawVertex(object.left + object.width + mapOffset, object.top - mapOffset)
+    // right_center
+    await drawVertex(object.left + object.width + mapOffset, object.top - mapOffset + object.height / 2)
+    // right_bottom
+    await drawVertex(object.left + object.width + mapOffset, object.top + object.height + mapOffset)
+    // bottom_center
+    await drawVertex(object.left + object.width/ 2, object.top + object.height + mapOffset)
+    // left_top
+    await drawVertex(object.left - mapOffset, object.top + object.height + mapOffset)
+    // left_center
+    await drawVertex(object.left - mapOffset, object.top - mapOffset + object.height / 2)
+}
 const render = async ()=>{
     await init();
     await (async function _render(){
         ctx.clearRect(0, 0, canvas.width, canvas.height)
-        await Promise.all(objectCache.value.map(e=>e.draw(ctx, canvas)))
+        await Promise.all(objectCache.value.map((e)=>{
+            return (async ()=>{
+                await e.draw(ctx, canvas)
+                if(currObject.value === e){
+                    await drawAuxiliaryLine(e)
+                }
+            })()
+        }))
         requestAnimationFrame(_render)
     })()
 }
