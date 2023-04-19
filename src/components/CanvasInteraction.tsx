@@ -283,30 +283,47 @@ const CanvasInteraction = defineComponent({
             const hammer = new Hammerjs(canvas)
             let x = 0
             let y = 0
+            let w = 0
+            let h = 0
             let object = null
             hammer.on('panstart', (event) => {
                 object = currObject.value
-                if (object && object.position === 'content') {
-                    if (object.panstart) {
-                        const [k1, k2] = object.panstart(event)
-                        x = object[k1]
-                        y = object[k2]
-                    } else {
-                        x = object.x
-                        y = object.y
-                    }
+                if (object.panstart) {
+                    const [k1, k2] = object.panstart(event)
+                    x = object[k1]
+                    y = object[k2]
+                } else {
+                    x = object.x
+                    y = object.y
                 }
+                w = object.w
+                h = object.h
             })
             hammer.on('panmove', (event) => {
-                if (object && object.position === 'content') {
-                    if (object.panmove) {
-                        const [k1, k2] = object.panmove(event)
-                        object[k1] = x + event.deltaX
-                        object[k2] = y + event.deltaY
-                    } else {
-                        object.x = x + event.deltaX
-                        object.y = y + event.deltaY
+                if (object) {
+                    switch (object.position) {
+                        case 'content':
+                            if (object.panmove) {
+                                const [k1, k2] = object.panmove(event)
+                                object[k1] = x + event.deltaX
+                                object[k2] = y + event.deltaY
+                            } else {
+                                object.x = x + event.deltaX
+                                object.y = y + event.deltaY
+                            }
+                            break
+                        case 'bottom_right':
+                            object.w = w + event.deltaX
+                            object.h = h + event.deltaY
+                            break
+                        case 'bottom_center':
+                            object.h = h + event.deltaX
+                            break
+                        case 'right_center':
+                            object.w = w + event.deltaX
+                            break
                     }
+
                 }
             })
         }
