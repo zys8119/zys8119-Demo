@@ -1,58 +1,173 @@
 <template>
     <div class="PathRecognition">
-        <canvas ref="canvas"></canvas>
+        <canvas ref="canvas" :style="canvasStyle"></canvas>
     </div>
 </template>
 
 <script setup lang="ts" title="canvas 路径识别" content="可用于纯色图片的路径矢量图路径获取">
+import picture from "@/src/assets/picture.jpeg"
+import Hammerjs from "hammerjs"
 const canvas = $ref() as HTMLCanvasElement
 const ctx = $computed(() => canvas.getContext('2d'))
 const {width, height} = useWindowSize()
-const rects = ref([])
+const objectCache = ref([])
 const {x, y} = useMouseInElement(canvas)
-watchEffect(() => {
-    rects.value.filter(e => e.isInside()).forEach(e=>{
-        e.x
-    })
+watchEffect(()=>{
+    if(canvas){
+        canvas.width = width.value
+        canvas.height = height.value
+    }
 })
-
-class Rect {
+interface ObjectBaseType {
+    isInside?():boolean
+    draw?(ctx:CanvasRenderingContext2D, canvas:HTMLCanvasElement):Promise<any> | void
+    panstart?(event:any):[xName:string, yName:string]
+    panmove?(event:any):[xName:string, yName:string]
+}
+class ObjectBase implements ObjectBaseType{
+    constructor(public x: number, public y: number, public w?: number, public h?: number) {
+    }
+    isInside() {
+        if(this.w && this.h){
+            const sx = x.value - this.x
+            const sy = y.value - this.y
+            return sx > 0 && sx < this.w && sy > 0 && sy < this.h
+        }
+        return  false
+    }
+}
+class createRect extends ObjectBase{
     constructor(public color: string, public x: number, public y: number, public w: number, public h: number) {
-        this.draw()
+        super(x, y, w, h)
     }
 
-    draw() {
+    async draw(ctx) {
         ctx.fillStyle = this.color
         ctx.fillRect(this.x, this.y, this.w, this.h)
-        rects.value.push(this)
-    }
-
-    isInside() {
-        const sx = x.value - this.x
-        const sy = y.value - this.y
-        return sx > 0 && sx < this.w && sy > 0 && sy < this.h
     }
 }
-const render = ()=>{
-    ctx.clearRect(0, 0, canvas.width, canvas.height)
-    rects.value = []
-    new Rect("#f00", 50, 60, 100, 100)
-    requestAnimationFrame(render)
+class createImage extends ObjectBase{
+    image:CanvasImageSource
+    constructor(public src: string | CanvasImageSource, public x: number, public y: number, public w?: number, public h?: number, public dx?: number, public dy?: number, public dw?: number, public dh?: number) {
+        super(x, y, w, h)
+    }
+    async draw(ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement){
+        if(!this.image){
+            if(typeof this.src === 'string'){
+                this.image = await new Promise<HTMLImageElement>((resolve, reject) => {
+                    const img = new Image()
+                    img.src = this.src as string
+                    img.onload = ()=>{
+                        resolve(img)
+                    }
+                    img.onerror = reject
+                })
+            }else {
+                this.image = this.src
+            }
+        }
+        if(this.w && this.h && this.dx && this.dy && this.dw && this.dh){
+            ctx.drawImage(this.image, this.x, this.y, this.w, this.h, this.dx, this.dy, this.dw, this.dh)
+        }else if(this.w && this.h){
+            ctx.drawImage(this.image, this.x, this.y, this.w, this.h)
+        }else {
+            ctx.drawImage(this.image, this.x, this.y)
+        }
+    }
+    override isInside(): boolean {
+        const sx = x.value - (this.dx || this.x)
+        const sy = y.value - (this.dy || this.y)
+        return sx > 0 && sx < (this.dw || this.w) && sy > 0 && sy < (this.dh || this.h)
+    }
+
+    panstart(event: any): [xName: string, yName: string] {
+        if(this.dx && this.dy){
+            return ['dx', 'dy']
+        }
+        return ['x', 'y']
+    }
+
+    panmove(event: any): [xName: string, yName: string] {
+        if(this.dx && this.dy){
+            return ['dx', 'dy']
+        }
+        return ['x', 'y']
+    }
 }
-onMounted(() => {
-    canvas.width = width.value
-    canvas.height = height.value
 
+const init = async ()=>{
+    objectCache.value.push(new createRect("#f00", 50, 60, 100, 100))
+    objectCache.value.push(new createRect("#0032ff", 90, 60, 500, 300))
+    objectCache.value.push(new createRect("#f500d5", 90, 60, 200, 100))
+    objectCache.value.push(new createImage(picture, 100, 10, 100, 100))
+    await hammerInit()
+}
+const currObject = computed(()=>{
+    let object = null
+    for(let lng = objectCache.value.length - 1, k = lng; k >= 0; k--){
+        if(objectCache.value[k].isInside()){
+            object = objectCache.value[k]
+            break
+        }
+    }
+    return object
+})
 
-    render()
+const canvasStyle = computed(()=>{
+    return {
+        cursor: currObject.value ? 'move' : 'pointer'
+    }
+})
+
+const hammerInit = async ()=>{
+    const hammer = new Hammerjs(canvas)
+    let x = 0
+    let y = 0
+    let object = null
+    hammer.on('panstart', (event)=>{
+        object = currObject.value
+        if(object){
+            if(object.panstart){
+                const [k1, k2] = object.panstart(event)
+                x = object[k1]
+                y = object[k2]
+            }else {
+                x = object.x
+                y = object.y
+            }
+        }
+
+    })
+    hammer.on('panmove', (event)=>{
+        if(object){
+            if(object.panmove){
+                const [k1, k2] = object.panmove(event)
+                object[k1] = x + event.deltaX
+                object[k2] = y + event.deltaY
+            }else {
+                object.x = x + event.deltaX
+                object.y = y + event.deltaY
+            }
+        }
+    })
+}
+const render = async ()=>{
+    await init();
+    await (async function _render(){
+        ctx.clearRect(0, 0, canvas.width, canvas.height)
+        await Promise.all(objectCache.value.map(e=>e.draw(ctx, canvas)))
+        requestAnimationFrame(_render)
+    })()
+}
+
+onMounted(async () => {
+    await render()
 })
 </script>
 
 <style scoped lang="less">
 .PathRecognition {
     canvas {
-        //width: 100%;
-        //height: 100%;
         border: 1px;
         position: absolute;
         left: 0;
