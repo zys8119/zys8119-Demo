@@ -50,6 +50,8 @@ const CanvasInteraction = defineComponent({
         load: () => void 0,
         pen: (event:any) => void 0,
         penStart: (object:any, event:any) => void 0,
+        penMove: (object:any, event:any) => void 0,
+        penEnd: (object:any, event:any) => void 0,
     },
     props: {
         gap: {
@@ -358,6 +360,7 @@ const CanvasInteraction = defineComponent({
                             object = null
                             position = null
                             isPan.value = false
+                            emit('penEnd',object,  event)
                         } else {
                             if (object) {
                                 switch (position) {
@@ -456,6 +459,7 @@ const CanvasInteraction = defineComponent({
                                 }
 
                             }
+                            emit('penMove',object,  event)
                         }
                     }
                     return true
