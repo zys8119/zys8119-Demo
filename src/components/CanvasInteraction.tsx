@@ -37,6 +37,8 @@ export interface ObjectBaseType {
     readonly gapSize?:number
     readonly gapSizeBlank?:number
     readonly position?:string | void
+    readonly centerX?:number
+    readonly centerY?:number
     x?:number
     y?:number
     w?:number
@@ -109,14 +111,14 @@ const CanvasInteraction = defineComponent({
         })
 
         class ObjectBase implements ObjectBaseType {
-            constructor(public x: number, public y: number, public w?: number, public h?: number) {
+            constructor(public x: number = 0, public y: number = 0, public w?: number, public h?: number) {
             }
 
             isInside() {
                 if (this.w && this.h) {
                     const sx = x.value - this.x
                     const sy = y.value - this.y
-                    return sx > -this.gapSizeBlank && sx < this.w + this.gapSizeBlank && sy > -this.gapSize && sy < this.h + this.gapSizeBlank
+                    return sx > -this.gapSizeBlank && sx < this.w + this.gapSizeBlank && sy > -this.gapSizeBlank && sy < this.h + this.gapSizeBlank
                 }
                 return false
             }
@@ -142,6 +144,14 @@ const CanvasInteraction = defineComponent({
 
             get top() {
                 return this.y
+            }
+
+            get centerX() {
+                return this.x + this.w / 2
+            }
+
+            get centerY() {
+                return this.y + this.h / 2
             }
 
             get position(){
@@ -279,6 +289,7 @@ const CanvasInteraction = defineComponent({
             }
         })
 
+
         const hammerInit = async () => {
             const hammer = new Hammerjs(canvas)
             let x = 0
@@ -286,45 +297,91 @@ const CanvasInteraction = defineComponent({
             let w = 0
             let h = 0
             let object = null
-            hammer.on('panstart', (event) => {
-                object = currObject.value
-                if (object.panstart) {
-                    const [k1, k2] = object.panstart(event)
-                    x = object[k1]
-                    y = object[k2]
-                } else {
-                    x = object.x
-                    y = object.y
+            let position = null
+            hammer.get('pan').set({
+                enable(a, event){
+                    if(event){
+                        if(event.isFirst){
+                            object = currObject.value
+                            if (object) {
+                                if (object?.panstart) {
+                                    const [k1, k2] = object.panstart?.(event)
+                                    x = object[k1]
+                                    y = object[k2]
+                                } else {
+                                    x = object.x
+                                    y = object.y
+                                }
+                                w = object.w
+                                h = object.h
+                                position = object.position
+                            }
+                        } else if(event.isFinal){
+                            object = null
+                            position = null
+                        } else {
+                            if (object) {
+                                switch (position) {
+                                    case 'top_left':
+                                        object.x = x + event.deltaX
+                                        object.y = y + event.deltaY
+                                        object.w = w - event.deltaX
+                                        object.h = h - event.deltaY
+                                        break
+                                    case 'top_center':
+                                        object.y = y + event.deltaY
+                                        object.h = h - event.deltaY
+                                        break
+                                    case 'top_right':
+                                        object.y = y + event.deltaY
+                                        object.w = w + event.deltaX
+                                        object.h = h - event.deltaY
+                                        break
+                                    case 'right_center':
+                                        object.w = w + event.deltaX
+                                        break
+                                    case 'bottom_right':
+                                        object.w = w + event.deltaX
+                                        object.h = h + event.deltaY
+                                        break
+                                    case 'bottom_center':
+                                        object.h = h + event.deltaY
+                                        break
+                                    case 'bottom_left':
+                                        object.x = x + event.deltaX
+                                        object.w = w - event.deltaX
+                                        object.h = h + event.deltaY
+                                        break
+                                    case 'left_center':
+                                        object.x = x + event.deltaX
+                                        object.w = w - event.deltaX
+                                        break
+                                    default:
+                                        if (object.panmove) {
+                                            const [k1, k2] = object.panmove(event)
+                                            object[k1] = x + event.deltaX
+                                            object[k2] = y + event.deltaY
+                                        } else {
+                                            object.x = x + event.deltaX
+                                            object.y = y + event.deltaY
+                                        }
+                                        break
+                                }
+
+                            }
+                        }
+                    }
+                    return true
                 }
-                w = object.w
-                h = object.h
+            });
+            watchEffect(()=>{
+                console.log(currObject.value?.position)
             })
             hammer.on('panmove', (event) => {
-                if (object) {
-                    switch (object.position) {
-                        case 'content':
-                            if (object.panmove) {
-                                const [k1, k2] = object.panmove(event)
-                                object[k1] = x + event.deltaX
-                                object[k2] = y + event.deltaY
-                            } else {
-                                object.x = x + event.deltaX
-                                object.y = y + event.deltaY
-                            }
-                            break
-                        case 'bottom_right':
-                            object.w = w + event.deltaX
-                            object.h = h + event.deltaY
-                            break
-                        case 'bottom_center':
-                            object.h = h + event.deltaX
-                            break
-                        case 'right_center':
-                            object.w = w + event.deltaX
-                            break
-                    }
+                nextTick(()=>{
 
-                }
+                })
+
             })
         }
         const drawVertex = async (x, y) => {
