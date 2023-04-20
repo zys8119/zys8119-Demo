@@ -71,6 +71,11 @@ const CanvasInteraction = defineComponent({
         const {width, height} = useWindowSize()
         const objectCache = ref([])
         const {x, y} = useMouseInElement(canvas)
+        const {Shift} = useMagicKeys({
+            onEventFired(e){
+                console.log(e.key)
+            }
+        })
         watchEffect(() => {
             if (canvas) {
                 canvas.width = width.value
@@ -320,6 +325,9 @@ const CanvasInteraction = defineComponent({
                             object = null
                             position = null
                         } else {
+                            if(Shift.value){
+                                event.deltaY = event.deltaX
+                            }
                             if (object) {
                                 switch (position) {
                                     case 'top_left':
@@ -374,15 +382,6 @@ const CanvasInteraction = defineComponent({
                     return true
                 }
             });
-            watchEffect(()=>{
-                console.log(currObject.value?.position)
-            })
-            hammer.on('panmove', (event) => {
-                nextTick(()=>{
-
-                })
-
-            })
         }
         const drawVertex = async (x, y) => {
             const vertexOffset = props.gap / 2;

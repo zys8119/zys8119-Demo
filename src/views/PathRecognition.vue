@@ -5,9 +5,8 @@
 </template>
 
 <script setup lang="ts" title="canvas 交互">
-import picture from "@/src/assets/picture.jpeg"
+import picture from "@/src/assets/house/bj2.png"
 import CanvasInteraction from "../components/CanvasInteraction"
-import winframe from "winframe"
 
 const load = async ({ObjectsClass, scene, ObjectBase})=>{
     scene.push(new ObjectsClass.Rect("#f00", 50, 60, 100, 100))
