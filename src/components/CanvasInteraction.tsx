@@ -47,7 +47,9 @@ export interface ObjectBaseType {
 
 const CanvasInteraction = defineComponent({
     emits: {
-        load: () => void 0
+        load: () => void 0,
+        pen: (event:any) => void 0,
+        penStart: (object:any, event:any) => void 0,
     },
     props: {
         gap: {
@@ -332,7 +334,8 @@ const CanvasInteraction = defineComponent({
             let object = null
             let position = null
             hammer.get('pan').set({
-                enable(a, event) {
+                enable(r, event) {
+                    emit('pen', event)
                     if (event) {
                         if (event.isFirst) {
                             isPan.value = true
@@ -350,6 +353,7 @@ const CanvasInteraction = defineComponent({
                                 h = object.h
                                 position = object.position
                             }
+                            emit('penStart',object,  event)
                         } else if (event.isFinal) {
                             object = null
                             position = null
