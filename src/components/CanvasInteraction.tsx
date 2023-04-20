@@ -47,11 +47,11 @@ export interface ObjectBaseType {
 
 const CanvasInteraction = defineComponent({
     emits: {
-        load: () => void 0,
-        pen: (event:any) => void 0,
-        penStart: (object:any, event:any) => void 0,
-        penMove: (object:any, event:any) => void 0,
-        penEnd: (object:any, event:any) => void 0,
+        load: () => true,
+        pen: (event:any) => true,
+        penStart: (object:any, event:any) => true,
+        penMove: (object:any, event:any) => true,
+        penEnd: (object:any, event:any) => true,
     },
     props: {
         gap: {
