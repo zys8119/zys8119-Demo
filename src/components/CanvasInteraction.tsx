@@ -325,9 +325,6 @@ const CanvasInteraction = defineComponent({
                             object = null
                             position = null
                         } else {
-                            if(Shift.value){
-                                event.deltaY = event.deltaX
-                            }
                             if (object) {
                                 switch (position) {
                                     case 'top_left':
