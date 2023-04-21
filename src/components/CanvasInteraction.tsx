@@ -568,20 +568,20 @@ const CanvasInteraction = defineComponent({
                                             }
                                             return
                                         }
-                                        if (object.panmove) {
-                                            const [k1, k2] = object.panmove(event)
-                                            object[k1] = x + event.deltaX
-                                            object[k2] = y + event.deltaY
-                                        } else {
-                                            moveX = x + event.deltaX
-                                            moveY = y + event.deltaY
-                                        }
+                                        moveX = x + event.deltaX
+                                        moveY = y + event.deltaY
                                         break
                                 }
                                 // 限制缩放最小值
                                 if(moveW > 0 && moveH > 0){
-                                    object.x = moveX
-                                    object.y = moveY
+                                    if (object.panmove) {
+                                        const [k1, k2] = object.panmove(event)
+                                        object[k1] = moveX
+                                        object[k2] = moveY
+                                    }else {
+                                        object.x = moveX
+                                        object.y = moveY
+                                    }
                                     object.w = moveW
                                     object.h = moveH
                                 }
