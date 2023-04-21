@@ -12,7 +12,12 @@ const {c}: { c: createCNode<CSelector> } = cssr
 export const style = cB("CanvasInteraction", [
     c('canvas', {
         cursor: 'default',
-        border:'1px '
+        border:'1px ',
+        position:'absolute',
+        left:0,
+        top:0,
+        width:'100%',
+        height:'100%',
     })
 ])
 export const ssr: any = useSsrAdapter()
@@ -158,8 +163,8 @@ const CanvasInteraction = defineComponent({
 
         watchEffect(() => {
             if (canvas) {
-                canvas.width = props.width || width.value
-                canvas.height = props.height || height.value
+                canvas.width = (props.width || width.value)
+                canvas.height = (props.height || height.value)
             }
         })
         const positionMap = computed(()=>({
@@ -196,7 +201,7 @@ const CanvasInteraction = defineComponent({
         }))
 
         class ObjectBase implements ObjectBaseType {
-            rotationAngle = 0
+            rotationAngle = 30
             constructor(public x: number = 0, public y: number = 0, public w?: number, public h?: number) {
             }
 
@@ -619,6 +624,7 @@ const CanvasInteraction = defineComponent({
                             await object.drawRotation?.(ctx, canvas)
                         }
                         ctx.restore()
+                        await object.draw(ctx, canvas)
                     }
                     k += 1
                 }
