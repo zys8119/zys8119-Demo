@@ -92,6 +92,7 @@ export interface ObjectBaseType {
     y?: number
     w?: number
     h?: number
+    rotationAngle?: number
 }
 
 const CanvasInteraction = defineComponent({
@@ -195,6 +196,7 @@ const CanvasInteraction = defineComponent({
         }))
 
         class ObjectBase implements ObjectBaseType {
+            rotationAngle = 90
             constructor(public x: number = 0, public y: number = 0, public w?: number, public h?: number) {
             }
 
