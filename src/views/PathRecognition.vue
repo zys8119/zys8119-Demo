@@ -15,6 +15,7 @@ const load = async ({ObjectsClass, scene, ObjectBase})=>{
     scene.push(new ObjectsClass.Rect("#f500d5", 90, 300, 200, 500))
     scene.push(new ObjectsClass.Image(picture, 100, 10, 100, 100))
 }
+
 </script>
 
 <style scoped lang="less">

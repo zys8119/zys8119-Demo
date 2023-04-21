@@ -52,6 +52,8 @@ const CanvasInteraction = defineComponent({
         penStart: (object:any, event:any) => true,
         penMove: (object:any, event:any) => true,
         penEnd: (object:any, event:any) => true,
+        leave: (object:any) => true,
+        enter: (object:any) => true,
     },
     props: {
         gap: {
@@ -303,6 +305,18 @@ const CanvasInteraction = defineComponent({
                     }
                 }
                 return object
+            }
+        })
+        watch(currObject,(a, b)=>{
+            if(a){
+                if(a !== b){
+                    emit('leave', b)
+                    emit('enter', a)
+                }else {
+                    emit('leave', b)
+                }
+            }else {
+                emit('leave', b)
             }
         })
 
