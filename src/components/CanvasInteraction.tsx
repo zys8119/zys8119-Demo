@@ -499,21 +499,24 @@ const CanvasInteraction = defineComponent({
                                             moveH = h * ratio;
                                             moveX = x + w * (1-ratio)
                                             moveY = y + h * (1-ratio)
-                                            return
+                                        }else {
+                                            moveX = x + event.deltaX
+                                            moveY = y + event.deltaY
+                                            moveW = w - event.deltaX
+                                            moveH = h - event.deltaY
                                         }
-                                        moveX = x + event.deltaX
-                                        moveY = y + event.deltaY
-                                        moveW = w - event.deltaX
-                                        moveH = h - event.deltaY
                                         break
                                     case 'top_center':
                                         if (Shift.value) {
                                             const ratio = getScaleRatio(w, h, w, h - event.deltaY)
                                             moveX = x + x * (1 - ratio) / 2
                                             moveW = w * ratio;
+                                            moveY = y + event.deltaY
+                                            moveH = h - event.deltaY
+                                        }else {
+                                            moveY = y + event.deltaY
+                                            moveH = h - event.deltaY
                                         }
-                                        moveY = y + event.deltaY
-                                        moveH = h - event.deltaY
                                         break
                                     case 'top_right':
                                         if (Shift.value) {
@@ -521,37 +524,41 @@ const CanvasInteraction = defineComponent({
                                             moveW = w * ratio;
                                             moveH = h * ratio;
                                             moveY = y + h * (1-ratio)
-                                            return
+                                        }else {
+                                            moveY = y + event.deltaY
+                                            moveW = w + event.deltaX
+                                            moveH = h - event.deltaY
                                         }
-                                        moveY = y + event.deltaY
-                                        moveW = w + event.deltaX
-                                        moveH = h - event.deltaY
                                         break
                                     case 'right_center':
                                         if (Shift.value) {
                                             const ratio = getScaleRatio(w, h, w + event.deltaX, h)
                                             moveY = y + y * (1 - ratio) / 2
                                             moveH = h * ratio;
+                                            moveW = w + event.deltaX
+                                        }else {
+                                            moveW = w + event.deltaX
                                         }
-                                        moveW = w + event.deltaX
                                         break
                                     case 'bottom_right':
                                         if (Shift.value) {
                                             const ratio = getScaleRatio(w, h, w + event.deltaX, h + event.deltaY)
                                             moveW = w * ratio;
                                             moveH = h * ratio;
-                                            return
+                                        }else {
+                                            moveW = w + event.deltaX
+                                            moveH = h + event.deltaY
                                         }
-                                        moveW = w + event.deltaX
-                                        moveH = h + event.deltaY
                                         break
                                     case 'bottom_center':
                                         if (Shift.value) {
                                             const ratio = getScaleRatio(w, h, w, h + event.deltaY)
                                             moveX = x + x * (1 - ratio) / 2
                                             moveW = w * ratio;
+                                            moveH = h + event.deltaY
+                                        }else {
+                                            moveH = h + event.deltaY
                                         }
-                                        moveH = h + event.deltaY
                                         break
                                     case 'bottom_left':
                                         if (Shift.value) {
@@ -559,20 +566,23 @@ const CanvasInteraction = defineComponent({
                                             moveW = w * ratio;
                                             moveH = h * ratio;
                                             moveX = x + x * (1 - ratio)
-                                            return
+                                        }else {
+                                            moveX = x + event.deltaX
+                                            moveW = w - event.deltaX
+                                            moveH = h + event.deltaY
                                         }
-                                        moveX = x + event.deltaX
-                                        moveW = w - event.deltaX
-                                        moveH = h + event.deltaY
                                         break
                                     case 'left_center':
                                         if (Shift.value) {
                                             const ratio = getScaleRatio(w, h, w - event.deltaX, h)
                                             moveY = y + y * (1 - ratio) / 2
                                             moveH = h * ratio;
+                                            moveX = x + event.deltaX
+                                            moveW = w - event.deltaX
+                                        }else {
+                                            moveX = x + event.deltaX
+                                            moveW = w - event.deltaX
                                         }
-                                        moveX = x + event.deltaX
-                                        moveW = w - event.deltaX
                                         break
                                     default:
                                         if(position === 'content' && Alt.value){
@@ -581,10 +591,10 @@ const CanvasInteraction = defineComponent({
                                             }else {
                                                 object.rotationAngle = (rotationAngle + event.deltaY) % 360
                                             }
-                                            return
+                                        }else {
+                                            moveX = x + event.deltaX
+                                            moveY = y + event.deltaY
                                         }
-                                        moveX = x + event.deltaX
-                                        moveY = y + event.deltaY
                                         break
                                 }
                                 // 限制缩放最小值
