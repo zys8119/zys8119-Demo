@@ -201,7 +201,7 @@ const CanvasInteraction = defineComponent({
         }))
 
         class ObjectBase implements ObjectBaseType {
-            rotationAngle = 30
+            rotationAngle = 0
             constructor(public x: number = 0, public y: number = 0, public w?: number, public h?: number) {
             }
 
@@ -472,88 +472,92 @@ const CanvasInteraction = defineComponent({
                             emit('penEnd',object,  event)
                         } else {
                             if (object) {
+                                let moveW = w
+                                let moveH = h
+                                let moveX = x
+                                let moveY = y
                                 switch (position) {
                                     case 'top_left':
                                         if (Shift.value) {
                                             const ratio = getScaleRatio(w, h, w - event.deltaX, h - event.deltaY)
-                                            object.w = w * ratio;
-                                            object.h = h * ratio;
-                                            object.x = x + w * (1-ratio)
-                                            object.y = y + h * (1-ratio)
+                                            moveW = w * ratio;
+                                            moveH = h * ratio;
+                                            moveX = x + w * (1-ratio)
+                                            moveY = y + h * (1-ratio)
                                             return
                                         }
-                                        object.x = x + event.deltaX
-                                        object.y = y + event.deltaY
-                                        object.w = w - event.deltaX
-                                        object.h = h - event.deltaY
+                                        moveX = x + event.deltaX
+                                        moveY = y + event.deltaY
+                                        moveW = w - event.deltaX
+                                        moveH = h - event.deltaY
                                         break
                                     case 'top_center':
                                         if (Shift.value) {
                                             const ratio = getScaleRatio(w, h, w, h - event.deltaY)
-                                            object.x = x + x * (1 - ratio) / 2
-                                            object.w = w * ratio;
+                                            moveX = x + x * (1 - ratio) / 2
+                                            moveW = w * ratio;
                                         }
-                                        object.y = y + event.deltaY
-                                        object.h = h - event.deltaY
+                                        moveY = y + event.deltaY
+                                        moveH = h - event.deltaY
                                         break
                                     case 'top_right':
                                         if (Shift.value) {
                                             const ratio = getScaleRatio(w, h, w + event.deltaX, h - event.deltaY)
-                                            object.w = w * ratio;
-                                            object.h = h * ratio;
-                                            object.y = y + h * (1-ratio)
+                                            moveW = w * ratio;
+                                            moveH = h * ratio;
+                                            moveY = y + h * (1-ratio)
                                             return
                                         }
-                                        object.y = y + event.deltaY
-                                        object.w = w + event.deltaX
-                                        object.h = h - event.deltaY
+                                        moveY = y + event.deltaY
+                                        moveW = w + event.deltaX
+                                        moveH = h - event.deltaY
                                         break
                                     case 'right_center':
                                         if (Shift.value) {
                                             const ratio = getScaleRatio(w, h, w + event.deltaX, h)
-                                            object.y = y + y * (1 - ratio) / 2
-                                            object.h = h * ratio;
+                                            moveY = y + y * (1 - ratio) / 2
+                                            moveH = h * ratio;
                                         }
-                                        object.w = w + event.deltaX
+                                        moveW = w + event.deltaX
                                         break
                                     case 'bottom_right':
                                         if (Shift.value) {
                                             const ratio = getScaleRatio(w, h, w + event.deltaX, h + event.deltaY)
-                                            object.w = w * ratio;
-                                            object.h = h * ratio;
+                                            moveW = w * ratio;
+                                            moveH = h * ratio;
                                             return
                                         }
-                                        object.w = w + event.deltaX
-                                        object.h = h + event.deltaY
+                                        moveW = w + event.deltaX
+                                        moveH = h + event.deltaY
                                         break
                                     case 'bottom_center':
                                         if (Shift.value) {
                                             const ratio = getScaleRatio(w, h, w, h + event.deltaY)
-                                            object.x = x + x * (1 - ratio) / 2
-                                            object.w = w * ratio;
+                                            moveX = x + x * (1 - ratio) / 2
+                                            moveW = w * ratio;
                                         }
-                                        object.h = h + event.deltaY
+                                        moveH = h + event.deltaY
                                         break
                                     case 'bottom_left':
                                         if (Shift.value) {
                                             const ratio = getScaleRatio(w, h, w - event.deltaX, h + event.deltaY)
-                                            object.w = w * ratio;
-                                            object.h = h * ratio;
-                                            object.x = x + x * (1 - ratio)
+                                            moveW = w * ratio;
+                                            moveH = h * ratio;
+                                            moveX = x + x * (1 - ratio)
                                             return
                                         }
-                                        object.x = x + event.deltaX
-                                        object.w = w - event.deltaX
-                                        object.h = h + event.deltaY
+                                        moveX = x + event.deltaX
+                                        moveW = w - event.deltaX
+                                        moveH = h + event.deltaY
                                         break
                                     case 'left_center':
                                         if (Shift.value) {
                                             const ratio = getScaleRatio(w, h, w - event.deltaX, h)
-                                            object.y = y + y * (1 - ratio) / 2
-                                            object.h = h * ratio;
+                                            moveY = y + y * (1 - ratio) / 2
+                                            moveH = h * ratio;
                                         }
-                                        object.x = x + event.deltaX
-                                        object.w = w - event.deltaX
+                                        moveX = x + event.deltaX
+                                        moveW = w - event.deltaX
                                         break
                                     default:
                                         if(position === 'content' && Alt.value){
@@ -569,10 +573,17 @@ const CanvasInteraction = defineComponent({
                                             object[k1] = x + event.deltaX
                                             object[k2] = y + event.deltaY
                                         } else {
-                                            object.x = x + event.deltaX
-                                            object.y = y + event.deltaY
+                                            moveX = x + event.deltaX
+                                            moveY = y + event.deltaY
                                         }
                                         break
+                                }
+                                // 限制缩放最小值
+                                if(moveW > 0 && moveH > 0){
+                                    object.x = moveX
+                                    object.y = moveY
+                                    object.w = moveW
+                                    object.h = moveH
                                 }
                             }
                             emit('penMove',object,  event)
