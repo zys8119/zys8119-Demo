@@ -557,7 +557,11 @@ const CanvasInteraction = defineComponent({
                                         break
                                     default:
                                         if(position === 'content' && Alt.value){
-                                            object.rotationAngle = rotationAngle + event.deltaY
+                                            if(Shift.value){
+                                                object.rotationAngle = (rotationAngle + (Math.fround(event.deltaY % 50) + 1)*15) % 360
+                                            }else {
+                                                object.rotationAngle = (rotationAngle + event.deltaY) % 360
+                                            }
                                             return
                                         }
                                         if (object.panmove) {
