@@ -196,7 +196,7 @@ const CanvasInteraction = defineComponent({
         }))
 
         class ObjectBase implements ObjectBaseType {
-            rotationAngle = 90
+            rotationAngle = 0
             constructor(public x: number = 0, public y: number = 0, public w?: number, public h?: number) {
             }
 
@@ -437,6 +437,7 @@ const CanvasInteraction = defineComponent({
             let h = 0
             let object = null
             let position = null
+            let rotationAngle = 0
             hammer.get('pan').set({
                 enable(r, event) {
                     emit('pen', event)
@@ -455,6 +456,7 @@ const CanvasInteraction = defineComponent({
                                 }
                                 w = object.w
                                 h = object.h
+                                rotationAngle = object.rotationAngle
                                 position = object.position
                             }
                             emit('penStart',object,  event)
@@ -549,6 +551,10 @@ const CanvasInteraction = defineComponent({
                                         object.w = w - event.deltaX
                                         break
                                     default:
+                                        if(position === 'content' && Alt.value){
+                                            object.rotationAngle = rotationAngle + event.deltaY
+                                            return
+                                        }
                                         if (object.panmove) {
                                             const [k1, k2] = object.panmove(event)
                                             object[k1] = x + event.deltaX
@@ -559,7 +565,6 @@ const CanvasInteraction = defineComponent({
                                         }
                                         break
                                 }
-
                             }
                             emit('penMove',object,  event)
                         }
@@ -604,11 +609,16 @@ const CanvasInteraction = defineComponent({
                 while (k < objectCache.value.length) {
                     const object = objectCache.value[k]
                     if (object) {
+                        ctx.save()
+                        ctx.translate(object.centerX, object.centerY)
+                        ctx.rotate(Math.PI/180*(object.rotationAngle || 0))
+                        ctx.translate(-object.centerX, -object.centerY)
                         await object.draw(ctx, canvas)
                         if (props.showHelp && currObject.value === object) {
                             await drawAuxiliaryLine(object)
                             await object.drawRotation?.(ctx, canvas)
                         }
+                        ctx.restore()
                     }
                     k += 1
                 }
