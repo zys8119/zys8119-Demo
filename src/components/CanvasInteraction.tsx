@@ -140,7 +140,7 @@ const CanvasInteraction = defineComponent({
         const {width, height} = useWindowSize()
         const objectCache = ref([])
         const {x, y} = useMouseInElement(canvas)
-        const {Shift, Alt} = useMagicKeys({
+        const {Shift, Alt, Shift_keyX, Shift_keyY} = useMagicKeys({
             onEventFired(e) {
                 console.log(e.key)
             }
@@ -199,7 +199,7 @@ const CanvasInteraction = defineComponent({
                 cursor:Alt.value ? 'ns-resize' : 'move'
             },
             blank: {
-                cursor: 'pointer'
+                cursor:Alt.value ? 'ns-resize' :  'pointer'
             },
         }))
 
@@ -593,15 +593,24 @@ const CanvasInteraction = defineComponent({
                                         }
                                         break
                                     default:
-                                        if(position === 'content' && Alt.value){
-                                            if(Shift.value){
-                                                object.rotationAngle = (rotationAngle + (Math.fround(event.deltaY % 50) + 1)*15) % 360
-                                            }else {
-                                                object.rotationAngle = (rotationAngle + event.deltaY) % 360
+                                        if(['blank', 'content'].includes(position)){
+                                            console.log(Shift_keyX.value)
+                                            if(Alt.value){
+                                                if(Shift.value){
+                                                    object.rotationAngle = (rotationAngle + (Math.fround(event.deltaY % 50) + 1)*15) % 360
+                                                }else {
+                                                    object.rotationAngle = (rotationAngle + event.deltaY) % 360
+                                                }
                                             }
-                                        }else {
-                                            moveX = x + event.deltaX
-                                            moveY = y + event.deltaY
+                                            else
+                                            if(Shift_keyX.value){
+                                                moveX = x + event.deltaX
+                                            }else if(Shift_keyY.value){
+                                                moveY = y + event.deltaY
+                                            }else {
+                                                moveX = x + event.deltaX
+                                                moveY = y + event.deltaY
+                                            }
                                         }
                                         break
                                 }
