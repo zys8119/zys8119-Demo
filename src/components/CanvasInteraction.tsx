@@ -508,11 +508,13 @@ const CanvasInteraction = defineComponent({
                                         break
                                     case 'top_center':
                                         if (Shift.value) {
-                                            const ratio = getScaleRatio(w, h, w, h - event.deltaY)
-                                            moveX = x + x * (1 - ratio) / 2
+                                            const mh = h - event.deltaY
+                                            const mw = w * (mh / h)
+                                            const ratio = getScaleRatio(w, h, mw, mh)
                                             moveW = w * ratio;
-                                            moveY = y + event.deltaY
-                                            moveH = h - event.deltaY
+                                            moveH = h * ratio;
+                                            moveX = x + (w - mw)/2
+                                            moveY = y + h - mh
                                         }else {
                                             moveY = y + event.deltaY
                                             moveH = h - event.deltaY
@@ -532,10 +534,12 @@ const CanvasInteraction = defineComponent({
                                         break
                                     case 'right_center':
                                         if (Shift.value) {
-                                            const ratio = getScaleRatio(w, h, w + event.deltaX, h)
-                                            moveY = y + y * (1 - ratio) / 2
+                                            const mw = w + event.deltaX
+                                            const mh = h * (mw / w)
+                                            const ratio = getScaleRatio(w, h, mw, mh)
+                                            moveW = w * ratio;
                                             moveH = h * ratio;
-                                            moveW = w + event.deltaX
+                                            moveY = y + (h - mh)/2
                                         }else {
                                             moveW = w + event.deltaX
                                         }
@@ -552,10 +556,12 @@ const CanvasInteraction = defineComponent({
                                         break
                                     case 'bottom_center':
                                         if (Shift.value) {
-                                            const ratio = getScaleRatio(w, h, w, h + event.deltaY)
-                                            moveX = x + x * (1 - ratio) / 2
+                                            const mh = h + event.deltaY
+                                            const mw = w * (mh / h)
+                                            const ratio = getScaleRatio(w, h, mw, mh)
                                             moveW = w * ratio;
-                                            moveH = h + event.deltaY
+                                            moveH = h * ratio;
+                                            moveX = x + (w - mw)/2
                                         }else {
                                             moveH = h + event.deltaY
                                         }
@@ -574,11 +580,13 @@ const CanvasInteraction = defineComponent({
                                         break
                                     case 'left_center':
                                         if (Shift.value) {
-                                            const ratio = getScaleRatio(w, h, w - event.deltaX, h)
-                                            moveY = y + y * (1 - ratio) / 2
+                                            const mw = w - event.deltaX
+                                            const mh = h * (mw / w)
+                                            const ratio = getScaleRatio(w, h, mw, mh)
+                                            moveW = w * ratio;
                                             moveH = h * ratio;
-                                            moveX = x + event.deltaX
-                                            moveW = w - event.deltaX
+                                            moveX = x + (w - mw)
+                                            moveY = y + (h - mh)/2
                                         }else {
                                             moveX = x + event.deltaX
                                             moveW = w - event.deltaX
