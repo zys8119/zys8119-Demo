@@ -594,7 +594,6 @@ const CanvasInteraction = defineComponent({
                                         break
                                     default:
                                         if(['blank', 'content'].includes(position)){
-                                            console.log(Shift_keyX.value)
                                             if(Alt.value){
                                                 if(Shift.value){
                                                     object.rotationAngle = (rotationAngle + (Math.fround(event.deltaY % 50) + 1)*15) % 360
