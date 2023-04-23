@@ -93,6 +93,7 @@ export interface ObjectBaseType {
     readonly position?: string | void
     readonly centerX?: number
     readonly centerY?: number
+    readonly mousePoint?: number[]
     x?: number
     y?: number
     w?: number
@@ -204,14 +205,14 @@ const CanvasInteraction = defineComponent({
         }))
 
         class ObjectBase implements ObjectBaseType {
-            rotationAngle = 0
+            rotationAngle = 45
             constructor(public x: number = 0, public y: number = 0, public w?: number, public h?: number) {
             }
 
             isInside() {
                 if (this.w && this.h) {
-                    const sx = x.value - this.x
-                    const sy = y.value - this.y
+                    const sx = this.mousePoint[0] - this.x
+                    const sy = this.mousePoint[1] - this.y
                     return sx > -this.gapSizeBlank && sx < this.w + this.gapSizeBlank && sy > -this.gapSizeBlank && sy < this.h + this.gapSizeBlank
                 }
                 return false
@@ -249,40 +250,56 @@ const CanvasInteraction = defineComponent({
                 return this.y + this.h / 2
             }
 
+            get mousePoint(){
+                if(this.x === 500){
+                    const a = Math.floor(x.value - this.centerX)
+                    const b = Math.floor(this.centerY - y.value)
+                    const r = Math.floor(Math.sqrt(Math.pow(Math.abs(a), 2) + Math.pow(Math.abs(b), 2)))
+                    const o = this.rotationAngle * Math.PI / 180
+                    const mouseX = Math.floor(r * Math.cos(o))
+                    const mouseY = Math.floor(r * Math.sin(o))
+
+                    console.log([a, b, r ,mouseX, mouseY]);
+                    return [mouseX, mouseY]
+                }
+                return [x.value, y.value]
+            }
+
             get position() {
-                const sx = x.value - this.x
-                const sy = y.value - this.y
+                const sx = this.mousePoint[0] - this.x
+                const sy = this.mousePoint[1] - this.y
                 const isTop = sy >= -this.gapSizeBlank && sy <= this.gapSize - this.gapSizeBlank
                 const isBottom = sy >= this.height + this.gapSize * 0.5 && sy <= this.height + this.gapSizeBlank
                 const isLeft = sx >= -this.gapSizeBlank && sx <= this.gapSize - this.gapSizeBlank
                 const isRight = sx >= this.width + this.gapSize * 0.5 && sx <= this.width + this.gapSize * 1.5
                 const isWidthCenter = sx >= this.width / 2 - this.gapSize * 0.5 && sx <= this.width / 2 + this.gapSize * 0.5
                 const isHeightCenter = sy >= this.height / 2 - this.gapSize * 0.5 && sy <= this.height / 2 + this.gapSize * 0.5
-                if (isLeft && isTop) {
-                    return 'top_left'
-                }
-                if (isWidthCenter && isTop) {
-                    return 'top_center'
-                }
-                if (isRight && isTop) {
-                    return 'top_right'
-                }
-                if (isLeft && isBottom) {
-                    return 'bottom_left'
-                }
-                if (isWidthCenter && isBottom) {
-                    return 'bottom_center'
-                }
-                if (isRight && isBottom) {
-                    return 'bottom_right'
-                }
-                if (isLeft && isHeightCenter) {
-                    return 'left_center'
-                }
-                if (isRight && isHeightCenter) {
-                    return 'right_center'
-                }
-                return sx > 0 && sx < this.w && sy > 0 && sy < this.h ? 'content' : 'blank'
+                // if (isLeft && isTop) {
+                //     return 'top_left'
+                // }
+                // if (isWidthCenter && isTop) {
+                //     return 'top_center'
+                // }
+                // if (isRight && isTop) {
+                //     return 'top_right'
+                // }
+                // if (isLeft && isBottom) {
+                //     return 'bottom_left'
+                // }
+                // if (isWidthCenter && isBottom) {
+                //     return 'bottom_center'
+                // }
+                // if (isRight && isBottom) {
+                //     return 'bottom_right'
+                // }
+                // if (isLeft && isHeightCenter) {
+                //     return 'left_center'
+                // }
+                // if (isRight && isHeightCenter) {
+                //     return 'right_center'
+                // }
+                // return sx > 0 && sx < this.w && sy > 0 && sy < this.h ? 'content' : 'blank'
+                return 'default'
             }
 
             async drawRotation(ctx:CanvasRenderingContext2D, canvas:HTMLCanvasElement){
@@ -680,6 +697,24 @@ const CanvasInteraction = defineComponent({
                             await object.drawRotation?.(ctx, canvas)
                         }
                         ctx.restore()
+                        if(object.x === 500){
+                            await object.draw(ctx, canvas)
+                            ctx.beginPath();
+                            ctx.arc(object.centerX, object.centerY, 2, 0, Math.PI*2)
+                            ctx.fillStyle = '#fff'
+                            ctx.fill()
+                            ctx.strokeStyle = '#aa00ff'
+                            ctx.beginPath();
+                            ctx.moveTo(0, object.centerY);
+                            ctx.lineTo(canvas.width, object.centerY);
+                            ctx.closePath();
+                            ctx.stroke();
+                            ctx.beginPath();
+                            ctx.moveTo(object.centerX, 0);
+                            ctx.lineTo(object.centerX, canvas.height);
+                            ctx.closePath();
+                            ctx.stroke();
+                        }
                     }
                     k += 1
                 }
