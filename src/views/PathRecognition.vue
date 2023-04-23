@@ -14,17 +14,6 @@ const load = async ({ObjectsClass, scene, ObjectBase})=>{
     scene.push(new ObjectsClass.Rect("#f500d5", 90, 60, 200, 100))
     scene.push(new ObjectsClass.Rect("#f500d5", 90, 300, 200, 500))
     scene.push(new ObjectsClass.Image(picture, 100, 10, 100, 100))
-    class aa extends ObjectBase{
-        x = 0
-        y = 0
-        w = 100
-        h = 100
-        draw(ctx:CanvasRenderingContext2D){
-            // ctx.fillStyle = "#ff0"
-            // ctx.fillRect(this.x, this.y, this.w, this.h)
-        }
-    }
-    scene.push(new aa)
 }
 
 </script>
