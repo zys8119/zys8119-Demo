@@ -93,6 +93,7 @@ export interface ObjectBaseType {
     readonly position?: string | void
     readonly centerX?: number
     readonly centerY?: number
+    readonly mousePoint?: number[]
     x?: number
     y?: number
     w?: number
@@ -204,14 +205,22 @@ const CanvasInteraction = defineComponent({
         }))
 
         class ObjectBase implements ObjectBaseType {
-            rotationAngle = 0
+            rotationAngle = -30
             constructor(public x: number = 0, public y: number = 0, public w?: number, public h?: number) {
             }
-
+            get mousePoint(){
+                const a = x.value - this.centerX
+                const b = this.centerY - y.value
+                // const r = Math.sqrt(Math.pow(Math.abs(a), 2) + Math.pow(Math.abs(b), 2))
+                const o = this.rotationAngle * Math.PI / 180
+                const mouseX = a * Math.cos(o) - b * Math.sin(o)
+                const mouseY = b * Math.cos(o) + a * Math.sin(o)
+                return [mouseX+this.centerX, this.centerY - mouseY]
+            }
             isInside() {
                 if (this.w && this.h) {
-                    const sx = x.value - this.x
-                    const sy = y.value - this.y
+                    const sx = this.mousePoint[0] - this.x
+                    const sy = this.mousePoint[1] - this.y
                     return sx > -this.gapSizeBlank && sx < this.w + this.gapSizeBlank && sy > -this.gapSizeBlank && sy < this.h + this.gapSizeBlank
                 }
                 return false
@@ -249,8 +258,8 @@ const CanvasInteraction = defineComponent({
                 return this.y + this.h / 2
             }
             get position() {
-                const sx = x.value - this.x
-                const sy = y.value - this.y
+                const sx = this.mousePoint[0] - this.x
+                const sy = this.mousePoint[1] - this.y
                 const isTop = sy >= -this.gapSizeBlank && sy <= this.gapSize - this.gapSizeBlank
                 const isBottom = sy >= this.height + this.gapSize * 0.5 && sy <= this.height + this.gapSizeBlank
                 const isLeft = sx >= -this.gapSizeBlank && sx <= this.gapSize - this.gapSizeBlank
