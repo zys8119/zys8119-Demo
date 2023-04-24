@@ -211,7 +211,6 @@ const CanvasInteraction = defineComponent({
             get mousePoint(){
                 const a = x.value - this.centerX
                 const b = this.centerY - y.value
-                // const r = Math.sqrt(Math.pow(Math.abs(a), 2) + Math.pow(Math.abs(b), 2))
                 const o = this.rotationAngle * Math.PI / 180
                 const mouseX = a * Math.cos(o) - b * Math.sin(o)
                 const mouseY = b * Math.cos(o) + a * Math.sin(o)
