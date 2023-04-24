@@ -143,11 +143,18 @@ const CanvasInteraction = defineComponent({
         const {width, height} = useWindowSize()
         const objectCache = ref([])
         const {x, y} = useMouseInElement(canvas)
-        const {Shift, Alt, Shift_keyX, Shift_keyY} = useMagicKeys({
+        const {Shift,
+            Alt,
+            Shift_keyX,
+            Space,
+            Shift_keyY
+        } = useMagicKeys({
             onEventFired(e) {
-                console.log(e.key)
+                console.log(e.code, 5555)
             }
         })
+        const ctxTranslate = ref([0,0])
+        const ctxScale = ref(1)
         const isPan = ref(false)
         const iconRotationRef = ref<HTMLImageElement>(null)
 
@@ -207,16 +214,21 @@ const CanvasInteraction = defineComponent({
         }))
 
         class ObjectBase implements ObjectBaseType {
-            rotationAngle = -20
+            rotationAngle = -0
             constructor(public x: number = 0, public y: number = 0, public w?: number, public h?: number) {
             }
             mousePointCalc(rotationAngle, isReverse?:boolean){
-                const a = x.value - this.centerX
-                const b = this.centerY - y.value
+                const mx = (x.value - ctxTranslate.value[0]) / (canvas.width * ctxScale.value) * canvas.width
+                const my = (y.value - ctxTranslate.value[1]) / (canvas.height * ctxScale.value) * canvas.height
+                const a = mx - this.centerX
+                const b = this.centerY - my
                 const o = rotationAngle * Math.PI / 180
                 const mouseX = isReverse ? a * Math.cos(o) + b * Math.sin(o) : a * Math.cos(o) - b * Math.sin(o)
                 const mouseY = isReverse ? b * Math.cos(o) - a * Math.sin(o) : b * Math.cos(o) + a * Math.sin(o)
-                return [mouseX+this.centerX, this.centerY - mouseY]
+                return [
+                    mouseX + this.centerX,
+                    this.centerY - mouseY
+                ]
             }
             get mousePoint(){
                 return this.mousePointCalc(this.rotationAngle, false)
@@ -375,8 +387,8 @@ const CanvasInteraction = defineComponent({
             }
 
             override isInside(): boolean {
-                const sx = x.value - (this.dx || this.x)
-                const sy = y.value - (this.dy || this.y)
+                const sx = this.mousePoint[0] - (this.dx || this.x)
+                const sy = this.mousePoint[1] - (this.dy || this.y)
                 return sx > -this.gapSizeBlank && sx < (this.dw || this.w) + this.gapSizeBlank && sy > -this.gapSizeBlank && sy < (this.dh || this.h) + this.gapSizeBlank
             }
 
@@ -470,13 +482,23 @@ const CanvasInteraction = defineComponent({
             let object = null
             let position = null
             let rotationAngle = 0
+            let ctxTranslateCache = [0, 0]
+            Hammerjs.on(canvas,"wheel, mousewheel", function(ev) {
+                ctxScale.value +=  ev.deltaY * -0.001
+                ctxScale.value = Math.min(Math.max(.125, ctxScale.value), 4);
+            });
             hammer.get('pan').set({
                 enable(r, event) {
                     emit('pen', event)
                     if (event) {
+                        const [deltaX, deltaY] = [
+                            event.deltaX/(ctxScale.value*canvas.width)*canvas.width,
+                            event.deltaY/(ctxScale.value*canvas.height)*canvas.height
+                        ]
                         if (event.isFirst) {
                             isPan.value = true
                             object = currObject.value
+                            ctxTranslateCache = ctxTranslate.value
                             if (object) {
                                 if (object?.panstart) {
                                     const [k1, k2] = object.panstart?.(event)
@@ -496,17 +518,25 @@ const CanvasInteraction = defineComponent({
                             object = null
                             position = null
                             isPan.value = false
+                            if(Space.value) {
+                                ctxTranslate.value = [
+                                    ctxTranslateCache[0] + event.deltaX,
+                                    ctxTranslateCache[1] + event.deltaY,
+                                ]
+                            }
                             emit('penEnd',object,  event)
                         } else {
-                            if (object) {
+                            if(Space.value){
+                                ctxTranslate.value = [
+                                    ctxTranslateCache[0]+event.deltaX,
+                                    ctxTranslateCache[1]+event.deltaY,
+                                ]
+                            }
+                            else if (object) {
                                 let moveW = w
                                 let moveH = h
                                 let moveX = x
                                 let moveY = y
-                                const [deltaX, deltaY] = [event.deltaX, event.deltaY]
-                                // const [deltaX, deltaY] = object.mousePointCalc(0, true)
-                                console.log(deltaX, deltaY)
-                                // object.rotationAngle = 0
                                 switch (position) {
                                     case 'top_left':
                                         if (Shift.value) {
@@ -681,7 +711,10 @@ const CanvasInteraction = defineComponent({
         const render = async () => {
             await init();
             await (async function _render() {
+                ctx.save()
                 ctx.clearRect(0, 0, canvas.width, canvas.height)
+                ctx.translate(ctxTranslate.value[0],ctxTranslate.value[1])
+                ctx.scale(ctxScale.value, ctxScale.value);
                 let k = 0;
                 while (k < objectCache.value.length) {
                     const object = objectCache.value[k]
@@ -699,6 +732,8 @@ const CanvasInteraction = defineComponent({
                     }
                     k += 1
                 }
+                ctx.translate(-ctxTranslate.value[0],-ctxTranslate.value[1])
+                ctx.restore()
                 requestAnimationFrame(_render)
             })()
         }
