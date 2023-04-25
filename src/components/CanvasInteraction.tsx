@@ -215,7 +215,7 @@ const CanvasInteraction = defineComponent({
         }))
 
         class ObjectBase implements ObjectBaseType {
-            rotationAngle = -0
+            rotationAngle = 0
             constructor(public x: number = 0, public y: number = 0, public w?: number, public h?: number) {
             }
             mousePointCalc(rotationAngle, isReverse?:boolean){
