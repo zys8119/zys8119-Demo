@@ -59,19 +59,26 @@ const load = async ({ObjectsClass, scene, ObjectBase}) => {
             return Math.sqrt(Math.pow(a,2)+Math.pow(b,2));
         }
         async getPoint() {
+            const offset = 1
             const [x, y] = [
-                [this.sx, this.sy - 1],
-                [this.sx + 1, this.sy],
-                [this.sx, this.sy+1],
-                [this.sx-1, this.sy],
+                [this.sx, this.sy - offset],
+                [this.sx + offset, this.sy],
+                [this.sx, this.sy+offset],
+                [this.sx- offset, this.sy],
             ].reduce((a:any, b:any)=>{
-                if(this.getDistance(b) < a){
-                    return b
+                const index = this.getDistance(b)
+                if(index < a[2]){
+                    return [b[0], b[1], index]
                 }else {
                     return a
                 }
-            }, Infinity)
+            }, [0, 0, Infinity])
+            this.sx = x
+            this.sy = y
             this.ctx.moveTo(x, y)
+            if(this.getDistance([x, y]) <= 0){
+                return
+            }
             await this.getPoint()
         }
 
