@@ -74,6 +74,7 @@ class svgToBezierCurve {
 }
 
 export interface ObjectBaseType {
+    type?:string
     isInside?(): boolean
 
     draw?(ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement): Promise<any> | void
@@ -345,6 +346,7 @@ const CanvasInteraction = defineComponent({
         }
 
         class createRect extends ObjectBase {
+            type = 'rect'
             constructor(public color: string, public x: number, public y: number, public w: number, public h: number) {
                 super(x, y, w, h)
             }
@@ -356,6 +358,7 @@ const CanvasInteraction = defineComponent({
         }
 
         class createImage extends ObjectBase {
+            type = 'image'
             image: CanvasImageSource
 
             constructor(public src: string | CanvasImageSource, public x: number, public y: number, public w?: number, public h?: number, public dx?: number, public dy?: number, public dw?: number, public dh?: number) {
