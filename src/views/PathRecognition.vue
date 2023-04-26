@@ -59,7 +59,7 @@ const load = async ({ObjectsClass, scene, ObjectBase}) => {
             return Math.sqrt(Math.pow(a,2)+Math.pow(b,2));
         }
         async getPoint(sx, sy, index = 0) {
-            const offset = 10
+            const offset = 5
             const [x, y] = [
                 [sx, sy - offset],
                 [sx + offset, sy],
@@ -83,19 +83,19 @@ const load = async ({ObjectsClass, scene, ObjectBase}) => {
         async draw(ctx: CanvasRenderingContext2D, canvas) {
             this.ctx = ctx
             ctx.beginPath()
-            ctx.strokeStyle = "#f00"
+            ctx.strokeStyle = "#00a6ff"
             ctx.lineJoin = "round"
             ctx.lineWidth = this.lineWidth
             this.sx = a.x + a.w / 2
             this.sy = a.y + a.h
-            this.ex = this.mousePoint[0]
-            this.ey = this.mousePoint[1]
+            this.ex = a.x + a.w / 2
+            this.ey = a.y
             ctx.moveTo(this.sx, this.sy)
             try {
                 await this.getPoint(this.sx, this.sy)
             }catch (e) {
             }
-            ctx.lineTo(this.mousePoint[0], this.mousePoint[1])
+            ctx.lineTo(this.ex, this.ey)
             ctx.stroke()
         }
     }
