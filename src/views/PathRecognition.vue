@@ -59,7 +59,7 @@ const load = async ({ObjectsClass, scene, ObjectBase}) => {
             return Math.sqrt(Math.pow(a,2)+Math.pow(b,2));
         }
         async getPoint(sx, sy, index = 0) {
-            const offset = 2
+            const offset = 10
             const [x, y] = [
                 [sx, sy - offset],
                 [sx + offset, sy],
@@ -73,7 +73,7 @@ const load = async ({ObjectsClass, scene, ObjectBase}) => {
                     return a
                 }
             }, [0, 0, Infinity])
-            if(index > 100 && x === this.ex && y === this.ey){
+            if(Math.floor(this.getDistance([x,y])) <= offset){
                 return
             }
             this.ctx.lineTo(x, y)
@@ -91,7 +91,10 @@ const load = async ({ObjectsClass, scene, ObjectBase}) => {
             this.ex = this.mousePoint[0]
             this.ey = this.mousePoint[1]
             ctx.moveTo(this.sx, this.sy)
-            await this.getPoint(this.sx, this.sy)
+            try {
+                await this.getPoint(this.sx, this.sy)
+            }catch (e) {
+            }
             ctx.lineTo(this.mousePoint[0], this.mousePoint[1])
             ctx.stroke()
         }
