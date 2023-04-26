@@ -58,14 +58,14 @@ const load = async ({ObjectsClass, scene, ObjectBase}) => {
             const b = Math.abs(y-this.ey);
             return Math.sqrt(Math.pow(a,2)+Math.pow(b,2));
         }
-        async getPoint(sx, sy, index = 0) {
+        async getPoint(sx, sy, cache = new Map(), index = 0) {
             const offset = 10
             const points = [
                 [sx, sy - offset],
                 [sx + offset, sy],
                 [sx, sy+offset],
                 [sx- offset, sy],
-            ].filter(e=> !isInScene(e))
+            ].filter(e=> !isInScene(e) && !cache.get(e.join()))
             const pointsLength = points.map(e=> this.getDistance(e))
             const {point} = pointsLength.reduce((a,b, index)=>{
                 if(b < a.value){
@@ -74,26 +74,13 @@ const load = async ({ObjectsClass, scene, ObjectBase}) => {
                     return a
                 }
             }, {index:0, value:Infinity, point:null})
-            if(index > 10 || !point){
+            if(!point || Math.floor(this.getDistance(point)) <= offset+1){
                 return
             }
             const [x, y]:any = point
-            // let x = 0
-            // let y = 0
-            //
-            // const [x, y] = .reduce((a:any, b:any)=>{
-            //     const index = this.getDistance(b)
-            //     if(!isInScene(b[0], b[1]) && index < a[2]){
-            //         return [b[0], b[1], index]
-            //     }else {
-            //         return a
-            //     }
-            // }, [0, 0, Infinity])
-            // if(Math.floor(this.getDistance([x,y])) <= offset+1){
-            //     return
-            // }
+            cache.set(point.join(), true)
             this.ctx.lineTo(x, y)
-            await this.getPoint(x,y, index + 1)
+            await this.getPoint(x,y, cache, index + 1)
         }
 
         async draw(ctx: CanvasRenderingContext2D, canvas) {
@@ -104,8 +91,10 @@ const load = async ({ObjectsClass, scene, ObjectBase}) => {
             ctx.lineWidth = this.lineWidth
             this.sx = a.x + a.w / 2
             this.sy = a.y + a.h
-            this.ex = a.x + a.w / 2
-            this.ey = a.y
+            // this.ex = a.x + a.w / 2
+            // this.ey = a.y
+            this.ex = this.mousePoint[0]
+            this.ey = this.mousePoint[1]
             ctx.moveTo(this.sx, this.sy)
             try {
                 await this.getPoint(this.sx, this.sy)
