@@ -27,7 +27,7 @@ const load = async ({ObjectsClass, scene, ObjectBase}) => {
     scene.push(new ObjectsClass.Rect("#f500d5", 90, 200, 200, 500))
     scene.push(new ObjectsClass.Rect("#f500d5", 500, 100, 200, 500))
     const sceneObjs = scene.filter(e => e.type !== 'line')
-    const isInScene = (x, y)=> sceneObjs.find(e=> containsPoint(e, x, y))
+    const isInScene = ([x, y]:any)=> sceneObjs.find(e=> containsPoint(e, x, y))
     class Line extends ObjectBase {
         type = 'line'
         x = 0
@@ -53,31 +53,47 @@ const load = async ({ObjectsClass, scene, ObjectBase}) => {
         }
 
         ctx: CanvasRenderingContext2D
-        getDistance([x,y]){
+        getDistance([x,y]:any){
             const a = Math.abs(x-this.ex);
             const b = Math.abs(y-this.ey);
             return Math.sqrt(Math.pow(a,2)+Math.pow(b,2));
         }
         async getPoint(sx, sy, index = 0) {
-            const offset = 5
-            const [x, y] = [
+            const offset = 10
+            const points = [
                 [sx, sy - offset],
                 [sx + offset, sy],
                 [sx, sy+offset],
                 [sx- offset, sy],
-            ].reduce((a:any, b:any)=>{
-                const index = this.getDistance(b)
-                if(!isInScene(b[0], b[1]) && index < a[2]){
-                    return [b[0], b[1], index]
+            ].filter(e=> !isInScene(e))
+            const pointsLength = points.map(e=> this.getDistance(e))
+            const {point} = pointsLength.reduce((a,b, index)=>{
+                if(b < a.value){
+                    return {index, value:b, point:points[index]}
                 }else {
                     return a
                 }
-            }, [0, 0, Infinity])
-            if(Math.floor(this.getDistance([x,y])) <= offset){
+            }, {index:0, value:Infinity, point:null})
+            if(index > 10 || !point){
                 return
             }
+            const [x, y]:any = point
+            // let x = 0
+            // let y = 0
+            //
+            // const [x, y] = .reduce((a:any, b:any)=>{
+            //     const index = this.getDistance(b)
+            //     if(!isInScene(b[0], b[1]) && index < a[2]){
+            //         return [b[0], b[1], index]
+            //     }else {
+            //         return a
+            //     }
+            // }, [0, 0, Infinity])
+            // if(Math.floor(this.getDistance([x,y])) <= offset+1){
+            //     return
+            // }
             this.ctx.lineTo(x, y)
-            await this.getPoint(x,y, index+1)
+            await this.getPoint(x,y, index + 1)
         }
 
         async draw(ctx: CanvasRenderingContext2D, canvas) {
