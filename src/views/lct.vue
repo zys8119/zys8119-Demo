@@ -4,7 +4,7 @@
     </div>
 </template>
 
-<script setup lang="ts" title="避障" title="寻路算法">
+<script setup lang="ts" title="避障" content="寻路算法">
 onMounted(() => {
     // JS 部分
     const canvas = document.getElementById("canvas");
