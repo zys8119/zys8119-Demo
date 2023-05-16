@@ -58,29 +58,27 @@ const load = async ({ObjectsClass, scene, ObjectBase}) => {
             const b = Math.abs(y-this.ey);
             return Math.sqrt(Math.pow(a,2)+Math.pow(b,2));
         }
-        async getPoint(sx, sy, cache = new Map(), index = 0) {
+        async getPoint(sx, sy, key = -1) {
+            if(sx >= this.ex || sy >= this.ey){return}
             const offset = 10
             const points = [
                 [sx, sy - offset],
                 [sx + offset, sy],
                 [sx, sy+offset],
                 [sx- offset, sy],
-            ].filter(e=> !isInScene(e) && !cache.get(e.join()))
-            const pointsLength = points.map(e=> this.getDistance(e))
-            const {point} = pointsLength.reduce((a,b, index)=>{
-                if(b < a.value){
-                    return {index, value:b, point:points[index]}
-                }else {
-                    return a
-                }
-            }, {index:0, value:Infinity, point:null})
-            if(!point || Math.floor(this.getDistance(point)) <= offset+1){
-                return
+            ]
+            let point:any = [sx, sy]
+            let direction = -1
+            if(points[key] && !isInScene(points[key])){
+                point = points[key]
+                direction = key
+            }else {
+                point = points.find(e=> !isInScene(e))
+                direction = points.indexOf(point)
             }
-            const [x, y]:any = point
-            cache.set(point.join(), true)
+            const [x, y] = point
             this.ctx.lineTo(x, y)
-            await this.getPoint(x,y, cache, index + 1)
+            await this.getPoint(x, y, direction)
         }
 
         async draw(ctx: CanvasRenderingContext2D, canvas) {
