@@ -22,8 +22,8 @@ const load = async ({ObjectsClass, scene, ObjectBase}) => {
   scene.push(a)
   const b = new ObjectsClass.Rect("#0032ff", 500, 500, 500, 500)
   scene.push(b)
-  scene.push(new ObjectsClass.Rect("#f500d5", 90, 200, 200, 500))
-  scene.push(new ObjectsClass.Rect("#f500d5", 500, 100, 200, 500))
+  scene.push(new ObjectsClass.Rect("#0ab700", 200, 100, 150, 200))
+  scene.push(new ObjectsClass.Rect("#f500d5", 400, 100, 200, 500))
   const sceneObjs = scene.filter(e => e.type !== 'line')
   const isInScene = ([x, y]: any) => sceneObjs.find(e => containsPoint(e, x, y))
 
@@ -57,7 +57,7 @@ const load = async ({ObjectsClass, scene, ObjectBase}) => {
       return Math.sqrt(Math.pow(a, 2) + Math.pow(b, 2));
     }
 
-    async getPoint(resultPoint: Array<[x: number, y: number]> = [], sx = this.sx, sy = this.sy, direction = -1, cache = new Map()) {
+    async getPoint(resultPoint: Array<[x: number, y: number]> = [], sx = this.sx, sy = this.sy, direction = -1, cache = new Map(), prePoints:Array<any> = []) {
       const offset = 1
       const points = [
         [sx, sy - offset],
@@ -66,15 +66,20 @@ const load = async ({ObjectsClass, scene, ObjectBase}) => {
         [sx - offset, sy],
       ]
       let point = points[direction]
+      const prePointsIsIn = prePoints.some(e=>isInScene(e))
       const effective = points.filter(e=>!isInScene(e) && !cache.has(e.toString()))
       const lengthsAll = points.map(e => this.getDistance(e))
-      if (direction === -1 || sx === this.ex || sy === this.ey) {
-        const minLength = Math.min.apply(null, lengthsAll)
-        const index = lengthsAll.indexOf(minLength)
+      const minLength = Math.min.apply(null, lengthsAll)
+      const index = lengthsAll.indexOf(minLength)
+      // 第一次
+      if (direction === -1) {
         point = points[index]
         direction = index
       }
-      if(direction !== -1 && isInScene(point) && !isInScene([sx, sy])){
+      if (sx === this.ex && sy === this.ey) {
+          return resultPoint
+      }
+      if(direction !== -1 && isInScene(point) && !isInScene([sx, sy]) || (prePointsIsIn && effective.length === 3) || (!isInScene(points[index]) && (sx === this.ex || sy === this.ey))){
         const lengths = effective.map(e => this.getDistance(e))
         const minLength = Math.min.apply(null, lengths)
         const index = lengthsAll.indexOf(minLength)
@@ -84,26 +89,26 @@ const load = async ({ObjectsClass, scene, ObjectBase}) => {
       const [x, y] = point
       cache.set(point.toString(), true)
       resultPoint.push(point as any)
-      if (sx === this.ex && sy === this.ey) {
-        return resultPoint
+      try {
+          await this.getPoint(resultPoint, x, y, direction, cache, points)
+      }catch (e){
+          setTimeout(()=>{
+              this.getPoint(resultPoint, x, y, direction, cache, points)
+          })
+          return resultPoint
       }
-      await this.getPoint(resultPoint, x, y, direction, cache)
       return resultPoint
     }
-
     async updatePoints() {
-      this.points = await this.getPoint()
+        this.points = await this.getPoint()
     }
 
     async draw(ctx: CanvasRenderingContext2D, canvas) {
       this.ctx = ctx
       ctx.beginPath()
-      ctx.strokeStyle = "#00a6ff"
+      ctx.strokeStyle = "#ff8000"
       ctx.lineJoin = "round"
       ctx.lineWidth = this.lineWidth
-      this.ex = this.mousePoint[0]
-      this.ey = this.mousePoint[1]
-      await this.updatePoints()
       ctx.moveTo(this.sx, this.sy)
       this.points.forEach(([x, y]) => {
         ctx.lineTo(x, y)
@@ -114,6 +119,8 @@ const load = async ({ObjectsClass, scene, ObjectBase}) => {
   }
 
   scene.push(new Line(100, 150, 805, 457))
+
+
 }
 
 </script>
