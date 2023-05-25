@@ -1,9 +1,16 @@
 <template>
     <div class="css-animation-frame">
-        动画时间：{{range}}
+        总时间：3000ms， 动画过度时间：{{range}}
         <div class="arc"></div>
         <svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" fill="currentColor" class="bi bi-arrow-down-up" viewBox="0 0 16 16">
             <path ref="path" d="M11.5 15a.5.5 0 0 0 .5-.5V2.707l3.146 3.147a.5.5 0 0 0 .708-.708l-4-4a.5.5 0 0 0-.708 0l-4 4a.5.5 0 1 0 .708.708L11 2.707V14.5a.5.5 0 0 0 .5.5zm-7-14a.5.5 0 0 1 .5.5v11.793l3.146-3.147a.5.5 0 0 1 .708.708l-4 4a.5.5 0 0 1-.708 0l-4-4a.5.5 0 0 1 .708-.708L4 13.293V1.5a.5.5 0 0 1 .5-.5z"/>
+        </svg>
+        <svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" fill="currentColor" class="bi bi-arrow-up-square-fill" viewBox="0 0 16 16">
+            <path d="M2 16a2 2 0 0 1-2-2V2a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H2zm6.5-4.5V5.707l2.146 2.147a.5.5 0 0 0 .708-.708l-3-3a.5.5 0 0 0-.708 0l-3 3a.5.5 0 1 0 .708.708L7.5 5.707V11.5a.5.5 0 0 0 1 0z"/>
+        </svg>
+        <svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" fill="currentColor" class="bi bi-badge-8k" viewBox="0 0 16 16">
+            <path d="M4.837 11.114c1.406 0 2.333-.725 2.333-1.766 0-.945-.712-1.38-1.256-1.49v-.053c.496-.15 1.02-.55 1.02-1.331 0-.914-.831-1.587-2.084-1.587-1.257 0-2.087.673-2.087 1.587 0 .773.51 1.177 1.02 1.331v.053c-.546.11-1.258.54-1.258 1.494 0 1.042.906 1.762 2.312 1.762zm.013-3.643c-.545 0-.95-.356-.95-.866s.405-.852.95-.852c.545 0 .945.343.945.852 0 .51-.4.866-.945.866zm0 2.786c-.65 0-1.142-.395-1.142-.984S4.2 8.28 4.85 8.28c.646 0 1.143.404 1.143.993s-.497.984-1.143.984zM13.408 5h-1.306L9.835 7.685h-.057V5H8.59v5.998h1.187V9.075l.615-.699 1.679 2.623H13.5l-2.232-3.414L13.408 5z"/>
+            <path d="M14 3a1 1 0 0 1 1 1v8a1 1 0 0 1-1 1H2a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h12zM2 2a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2H2z"/>
         </svg>
     </div>
 </template>
@@ -14,7 +21,7 @@ const range = ref(0)
 const rangeCalc = computed(()=> `-${range.value}s`)
 winframe((p)=>{
     range.value = p
-}, 2000)
+}, 3000)
 const path = ref()
 /**
  * getTotalLength
@@ -24,20 +31,20 @@ const pathOffset = computed(()=> path.value?.getTotalLength() || 0)
 </script>
 
 <style scoped lang="less">
-@keyframes css-animation-frame {
-    100%{
-        transform: translateX(500px);
-        background-color: #17b900;
-    }
-}
 .css-animation-frame {
     @a: 1s v-bind(rangeCalc) linear forwards paused;
     .arc{
-        background: #0d9dd3;
+        background: #ff0000;
         width: 50px;
         height: 50px;
         border-radius: 100%;
         animation: css-animation-frame @a;
+        @keyframes css-animation-frame {
+            100%{
+                transform: translateX(500px) scale(2);
+                background-color: #17b900;
+            }
+        }
     }
     path {
         /**
@@ -60,11 +67,14 @@ const pathOffset = computed(()=> path.value?.getTotalLength() || 0)
         fill: transparent;
         stroke: #000000;
     }
+    svg{
+        margin-right: 10px;
+    }
 
     @keyframes dash {
         to {
             stroke-dashoffset: 0;
-            fill: #0d9dd3;
+            fill: #ff00d3;
         }
     }
 
