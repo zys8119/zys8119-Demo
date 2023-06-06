@@ -53,5 +53,9 @@ export default defineConfig({
         alias:{
             "@":process.cwd()
         }
+    },
+    server:{
+        port:8899,
+        strictPort:true
     }
 })
