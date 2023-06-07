@@ -8,7 +8,7 @@
     </div>
 </template>
 
-<script setup lang="ts" title="windicss" content="windicss 演示，用户class的快捷样式">
+<script setup lang="ts" title="windicss" content="windicss 演示，用户class的快捷样式, vite建议使用 UnoCss">
 const size = ref(0)
 </script>
 
