@@ -6,13 +6,16 @@ import AutoRoute from 'vitejs-plugin-vue-route-auto-import'
 import AutoApi from 'vitejs-plugin-api-auto-import'
 // vite.config.ts
 import ReactivityTransform from '@vue-macros/reactivity-transform/vite'
-
+import WindiCSS from 'vite-plugin-windicss'
 export default defineConfig({
     base:"",
     build:{
         outDir:'docs'
     },
     plugins:[
+        WindiCSS({
+
+        }),
         Vue(),
         vueJsx(),
         ReactivityTransform(),
