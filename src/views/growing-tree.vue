@@ -4,7 +4,7 @@
     </div>
 </template>
 
-<script setup lang="ts">
+<script setup lang="ts" title="growing-tree" content="生长树">
 import winframe from "winframe"
 const canvas = $ref() as HTMLCanvasElement
 const ctx = $computed(()=> canvas.getContext('2d')) as CanvasRenderingContext2D
