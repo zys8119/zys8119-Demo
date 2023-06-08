@@ -38,7 +38,7 @@ onMounted(async ()=>{
                     if(p >= 1){
                         resolve()
                     }
-                }, 500)
+                }, getRandomInt(500, 1000))
             })
         }))
         if(index < max ){
