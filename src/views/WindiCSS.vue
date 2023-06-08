@@ -1,6 +1,6 @@
 <template>
     <div class="WindiCSS">
-        <div class="abs w-1/1 h-1/1 box-border grid grid-cols-2 gap-10px">
+        <div class="absolute w-1/1 h-1/1 box-border grid grid-cols-2 gap-10px">
             <div class="box row-span-2">1</div>
             <div class="box flex-1">2</div>
             <div class="box flex-1">3</div>
@@ -15,7 +15,7 @@ const size = ref(0)
 <style scoped lang="less">
 .WindiCSS {
     .box {
-        background-color: theme("colors.blue.800");
+        background-color: #0033ff;
     }
 }
 </style>

@@ -1,15 +1,14 @@
 <template>
     <div class="aa">
-        撒打算大
+        <div :class="`p-15 text-hex-$a`">asdasda</div>
     </div>
 </template>
 
 <script setup lang="ts">
-import {createTemplatePromise} from "@vueuse/core"
+const a = ref('f00')
 </script>
 
-<style scoped lang="less">
+<style  lang="less">
 .aa {
-
 }
 </style>

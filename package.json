@@ -41,6 +41,7 @@
         "swiper": "^9.1.1",
         "three": "^0.150.1",
         "three-onevent-esm": "^0.0.4",
+        "unocss": "^0.53.1",
         "use-canvas-image": "^0.0.7",
         "vitejs-plugin-api-auto-import": "^0.0.3",
         "vitejs-plugin-vue-route-auto-import": "^0.0.18",
@@ -49,6 +50,7 @@
         "winframe": "^0.0.3"
     },
     "devDependencies": {
+        "@unocss/preset-wind": "^0.53.1",
         "@vue-macros/reactivity-transform": "^0.2.5",
         "lil-gui": "^0.18.1",
         "unplugin-auto-import": "^0.15.0",

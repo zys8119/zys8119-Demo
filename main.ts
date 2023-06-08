@@ -6,8 +6,7 @@ import 'swiper/css/pagination';
 import 'swiper/css/mousewheel';
 import 'swiper/css/effect-fade';
 import  "@/src/less/style.less"
-import 'virtual:windi.css'
-import 'virtual:windi-devtools'
+import 'virtual:uno.css'
 route.beforeEach((to, from, next)=>{
     document.title = import.meta.env.DEV ? '本地测试' :`张云山-${to.meta.title || '个人博客'}`
     next()
