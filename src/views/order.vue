@@ -6,6 +6,7 @@
 
 <script setup lang="ts">
 import CanvasInteraction, {ObjectBaseType} from "../components/CanvasInteraction"
+// 节点分组数据
 const node = ref<any>([
   {id:1, name:"1-1", type:1},
   {id:2, name:"1-2", type:1},
@@ -20,54 +21,42 @@ const node = ref<any>([
   {id:11, name:"3-4", type:3},
   {id:12, name:"3-5", type:3},
   {id:13, name:"5-1", type:5},
+  {id:14, name:"6-1", type:6},
+  {id:15, name:"6-2", type:6},
+  {id:16, name:"7-1", type:7},
 ])
-
+// 连线数据关系
 const lines = ref([
-  {
-    start:1,
-    end:3
-  },
-  {
-    start:3,
-    end:12
-  },
-  {
-    start:12,
-    end:7
-  },
-  {
-    start:2,
-    end:4
-  },
-  {
-    start:4,
-    end:9
-  },
-  {
-    start:9,
-    end:8
-  },
-  {
-    start:7,
-    end:13
-  }
+  { start:1, end:3 },
+  { start:3, end:12 },
+  { start:12, end:7 },
+  { start:2, end:4 },
+  { start:4, end:9 },
+  { start:9, end:8 },
+  { start:7, end:13 },
+  { start:13, end:15 },
+  { start:15, end:16 },
 ])
-const nodeMap = computed(()=>{
+// 节点id映射
+const nodeMap = computed<any>(()=>{
   return node.value.reduce((a, b) => {
     a[b.id] = b
     return a
   }, {})
 })
-const group = computed(()=>{
+// 分组
+const group = computed<any>(()=>{
   return Object.entries(node.value.reduce((a, b) => {
     a[b.type] = a[b.type] || [];
     a[b.type].push(b)
     return a
   }, {})).map(([, v]) => v)
 })
-const groupMax = computed(()=>{
+// 最大的分组数量
+const groupMax = computed<number>(()=>{
   return Math.max.apply(null, group.value.map((v: any) => v.length))
 })
+// 高亮节点递归查询
 const highlightByNode = (data:any, cache = new WeakMap())=>{
   cache.set(data, true)
   data.strokeStyle = '#f00'
@@ -87,6 +76,7 @@ const highlightByNode = (data:any, cache = new WeakMap())=>{
     }
   })
 }
+// 鼠标高亮处理
 const highlight = (data:any, isIn:boolean)=> {
   lines.value.forEach((l:any)=>{
     l.strokeStyle = '#000'
@@ -99,17 +89,20 @@ const highlight = (data:any, isIn:boolean)=> {
   }
   highlightByNode(data)
 }
+// 鼠标进入
 const enter = (o)=>{
   if(o){
     highlight(o.data, true)
   }
 }
+// 鼠标离开
 const leave = (o)=>{
   if(o){
     highlight(o.data, false)
   }
 }
 const load = async ({ scene, ObjectBase, width, height, ctx}) => {
+  // 联线对象
   class Line extends ObjectBase implements ObjectBaseType {
     type = 'line'
     get strokeStyle(){
@@ -144,7 +137,7 @@ const load = async ({ scene, ObjectBase, width, height, ctx}) => {
   }
 
 
-
+  // 节点对象
   class NodeObject extends ObjectBase implements ObjectBaseType{
     type = 'node'
     get strokeStyle(){
@@ -167,26 +160,41 @@ const load = async ({ scene, ObjectBase, width, height, ctx}) => {
       ctx.closePath()
     }
   }
-
-  const nw = 120
-  const nh = 50
-  const wOffset = 100
-  const hOffset = 30
-  const startX = 0
-  const startY = 0
-
+  // 绘制
+  const nw = 120 // 节点宽度
+  const nh = 50 // 节点高度
+  const wOffset = 100 // 节点水平间距
+  const hOffset = 30 // 节点垂直间距
+  const startX = 0 // 起始点
+  const startY = 0 // 起始点
+  // 绘制节点
   group.value.forEach((e: any, cols:number) => {
     const offsetY = ((groupMax.value - e.length) * (nh +hOffset))/2
     e.forEach((item, k) => {
       scene.push(new NodeObject(startX + (nw + wOffset)*cols, startY + (nh +hOffset) *k + offsetY , nw, nh, item))
     })
   })
+  // 绘制连线
   lines.value.forEach(l=>{
-    scene.push(new Line(
-        scene.find(n=>n.data.id === l.start),
-        scene.find(n=>n.data.id === l.end),
-        l
-    ))
+    const startNode = scene.find(n=>n.data.id === l.start)
+    const endNode = scene.find(n=>n.data.id === l.end)
+    if(startNode && endNode){
+      scene.push(new Line(startNode, endNode, l))
+    }
+  })
+  // 中心点纠正
+  // const maxNode = group.value.find((e:any)=>e.length === groupMax.value) // 以最大分组长度为中心点
+  // const maxNodeCenter = maxNode[Math.floor(groupMax.value/2)]
+  const maxNode = group.value[Math.floor(group.value.length/2)] // 以分组中心点
+  const maxNodeCenter = maxNode[Math.floor(maxNode.length/2)]
+  const centerNode = scene.find(e=>e.data.id === maxNodeCenter.id)
+  watchEffect(()=>{
+    const [cx,cy] = [ width.value/2 - centerNode.w / 2,  height.value/2 - centerNode.h / 2]
+    const [cxLen, cyLen] = [ cx - centerNode.x,  cy - centerNode.y]
+    scene.forEach(n=>{
+      n.x += cxLen
+      n.y += cyLen
+    })
   })
 }
 
