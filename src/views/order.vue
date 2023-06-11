@@ -4,7 +4,7 @@
   </div>
 </template>
 
-<script setup lang="ts">
+<script setup lang="ts" title="canvas订单流转图" content="用于对订单分组流转走向的可视化图">
 import CanvasInteraction, {ObjectBaseType} from "../components/CanvasInteraction"
 // 节点分组数据
 const node = ref<any>([
