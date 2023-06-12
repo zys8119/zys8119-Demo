@@ -14,7 +14,6 @@
 const box = ref<HTMLDivElement>()
 const className = ref()
 
-const store = useSto
 const mouseenter = async ({offsetX:x,offsetY:y}:MouseEvent)=>{
     const w = box.value.clientWidth
     const h = box.value.clientHeight
