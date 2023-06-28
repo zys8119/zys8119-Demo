@@ -39,6 +39,7 @@ specifiers:
   vitejs-plugin-vue-route-auto-import: ^0.0.18
   vue: ^3.2.47
   vue-router: ^4.1.6
+  web-auto-deploy: ^0.0.2
   windicss: ^3.5.6
   winframe: ^0.0.3
 
@@ -84,6 +85,7 @@ devDependencies:
   unplugin-auto-import: 0.15.3_@vueuse+core@10.1.2
   vite: 4.3.1_etc753u4mmvjwrmepfk4l4fa6e
   vite-plugin-windicss: 1.9.0_vite@4.3.1
+  web-auto-deploy: 0.0.2
   windicss: 3.5.6
 
 packages:
@@ -2380,6 +2382,10 @@ packages:
       '@vue/runtime-dom': 3.2.47
       '@vue/server-renderer': 3.2.47_vue@3.2.47
       '@vue/shared': 3.2.47
+
+  /web-auto-deploy/0.0.2:
+    resolution: {integrity: sha512-qTZ37pv5rYiM8G12h543jbWMQDbgIFC1AS9hYfMx0491+a4rZL7KF1y3R+tQch0+xguu4Rm/xfrMYScMAS9OSA==}
+    dev: true
 
   /webpack-sources/3.2.3:
     resolution: {integrity: sha512-/DyMEOrDgLKKIG0fmvtz+4dUX/3Ghozwgm6iPp8KRhvn+eQf9+Q7GWxVNMk3+uCPWfdXYC4ExGBckIXdFEfH1w==}

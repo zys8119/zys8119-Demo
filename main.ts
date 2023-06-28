@@ -24,3 +24,6 @@ declare module "vue-router"{
         content:string
     }
 }
+window.$webAutoDeploy = function (){
+    console.log(1113333)
+}
