@@ -218,8 +218,6 @@ const load = async ({sceneRef, ObjectBase}:any) => {
             sceneRef.value.push(prev.p1)
             sceneRef.value.push(prev.p2)
             sceneRef.value.push(prev)
-            prev.p1.visible = false
-            prev.p2.visible = false
         })
     })
 
