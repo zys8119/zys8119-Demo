@@ -36,7 +36,7 @@ const load = async ({sceneRef, ObjectBase}:any) => {
         type = 'rect'
         offsetX = 0
         offsetY = 0
-        constructor(public color: string,  public x1: number,  public y1: number, public w: number, public h: number) {
+        constructor(public color: string,  public x1: number,  public y1: number, public w: number, public h: number, public id?:any) {
             super(x1, y1, w, h)
         }
         get x(){
@@ -61,6 +61,7 @@ const load = async ({sceneRef, ObjectBase}:any) => {
         }
     }
     class Line  extends ObjectBase implements ObjectBaseType{
+        type = 'line'
         startInitInfo = {
             x:0,
             y:0,
@@ -69,7 +70,7 @@ const load = async ({sceneRef, ObjectBase}:any) => {
             x:0,
             y:0,
         }
-        constructor(public start:createRect, public p1:createRect, public p2:createRect, public end:createRect) {
+        constructor(public start:createRect, public p1:createRect, public p2:createRect, public end:createRect, public id?:any) {
             super();
             this.startInitInfo.x = start.x
             this.startInitInfo.y = start.y
@@ -117,6 +118,44 @@ const load = async ({sceneRef, ObjectBase}:any) => {
             }
         }
 
+        toJson(){
+            return {
+                id:this.id,
+                start:{
+                    type:this.start.type,
+                    id:this.start.id,
+                    x:this.start.x,
+                    y:this.start.y,
+                    w:this.start.w,
+                    z:this.start.h,
+                },
+                end:{
+                    type:this.end.type,
+                    id:this.end.id,
+                    x:this.end.x,
+                    y:this.end.y,
+                    w:this.end.w,
+                    z:this.end.h,
+                },
+                p1:{
+                    type:this.p1.type,
+                    id:this.p1.id,
+                    x:this.p1.x,
+                    y:this.p1.y,
+                    w:this.p1.w,
+                    z:this.p1.h,
+                },
+                p2:{
+                    type:this.p2.type,
+                    id:this.p2.id,
+                    x:this.p2.x,
+                    y:this.p2.y,
+                    w:this.p2.w,
+                    z:this.p2.h,
+                }
+            }
+        }
+
         async draw(ctx:CanvasRenderingContext2D){
             ///**
             // line
@@ -146,36 +185,41 @@ const load = async ({sceneRef, ObjectBase}:any) => {
         }
     }
     watch(points, ()=>{
+        const sceneRefMap = sceneRef.value.filter(e=>e.type === 'line').map(e=>e.toJson()).reduce((a, b)=>{
+            a[b.id] = b
+            return a
+        }, {})
         sceneRef.value = []
         if(points.value.length === 1){
             sceneRef.value.push( new createRect('#f00', points.value[0].x, points.value[0].y, w, h))
         }
         let prev:Line = null
         lines.value.forEach(({start, end}, k)=>{
+            const cache = sceneRefMap[start.id]
             if(k === 0){
                 prev = new Line(
-                    new createRect('#f00', start.x, start.y, w, h),
-                    new createRect('#09f', start.x, start.y, w, h),
-                    new createRect('#09f', end.x, end.y, w, h),
-                    new createRect('#f00', end.x, end.y, w, h),
+                    new createRect('#f00', cache?.start.x || start.x, cache?.start.y || start.y, w, h, start.id),
+                    new createRect('#09f', cache?.p1.x || start.x, cache?.p1.y || start.y, w, h, start.id),
+                    new createRect('#09f', cache?.p2.x || end.x, cache?.p2.y || end.y, w, h, end.id),
+                    new createRect('#f00', cache?.end.x || end.x, cache?.end.y || end.y, w, h, end.id),
+                    start.id,
                 )
                 sceneRef.value.push(prev.start)
-                sceneRef.value.push(prev.end)
-                sceneRef.value.push(prev.p1)
-                sceneRef.value.push(prev.p2)
-                sceneRef.value.push(prev)
             }else {
                 prev = new Line(
                     prev.end,
-                    new createRect('#09f', start.x, start.y, w, h),
-                    new createRect('#09f', end.x, end.y, w, h),
-                    new createRect('#f00', end.x, end.y, w, h),
+                    new createRect('#09f', cache?.p1.x || start.x, cache?.p1.y || start.y, w, h, start.id),
+                    new createRect('#09f', cache?.p2.x || end.x, cache?.p2.y || end.y, w, h, end.id),
+                    new createRect('#f00', cache?.end.x || end.x, cache?.end.y || end.y, w, h, end.id),
+                    start.id,
                 )
-                sceneRef.value.push(prev.end)
-                sceneRef.value.push(prev.p1)
-                sceneRef.value.push(prev.p2)
-                sceneRef.value.push(prev)
             }
+            sceneRef.value.push(prev.end)
+            sceneRef.value.push(prev.p1)
+            sceneRef.value.push(prev.p2)
+            sceneRef.value.push(prev)
+            prev.p1.visible = false
+            prev.p2.visible = false
         })
     })
 
