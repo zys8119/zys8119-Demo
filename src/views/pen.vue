@@ -4,7 +4,7 @@
     </div>
 </template>
 
-<script setup lang="ts">
+<script setup lang="ts" title="钢笔贝塞尔曲线在线编辑">
 import CanvasInteraction, {ObjectBaseType} from "../components/CanvasInteraction"
 const points = ref([])
 const w = 10
