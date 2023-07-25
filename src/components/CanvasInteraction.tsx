@@ -87,6 +87,7 @@ export interface ObjectBaseType {
 
     mousePointCalc?(rotationAngle: number, isReverse?:boolean): number[]
 
+    visible?: boolean
     readonly width?: number
     readonly height?: number
     readonly left?: number
@@ -215,6 +216,7 @@ const CanvasInteraction = defineComponent({
         }))
 
         class ObjectBase implements ObjectBaseType {
+            visible = true
             rotationAngle = 0
             constructor(public x: number = 0, public y: number = 0, public w?: number, public h?: number) {
             }
@@ -418,6 +420,7 @@ const CanvasInteraction = defineComponent({
                 },
                 ObjectBase,
                 scene: objectCache.value,
+                sceneRef: objectCache,
                 x,
                 y,
                 width,
@@ -722,16 +725,18 @@ const CanvasInteraction = defineComponent({
                 while (k < objectCache.value.length) {
                     const object = objectCache.value[k]
                     if (object) {
-                        ctx.save()
-                        ctx.translate(object.centerX, object.centerY)
-                        ctx.rotate(Math.PI/180*(object.rotationAngle || 0))
-                        ctx.translate(-object.centerX, -object.centerY)
-                        await object.draw(ctx, canvas)
-                        if (props.showHelp && currObject.value === object) {
-                            await drawAuxiliaryLine(object)
-                            await object.drawRotation?.(ctx, canvas)
+                        if(object.visible){
+                            ctx.save()
+                            ctx.translate(object.centerX, object.centerY)
+                            ctx.rotate(Math.PI/180*(object.rotationAngle || 0))
+                            ctx.translate(-object.centerX, -object.centerY)
+                            await object.draw(ctx, canvas)
+                            if (props.showHelp && currObject.value === object) {
+                                await drawAuxiliaryLine(object)
+                                await object.drawRotation?.(ctx, canvas)
+                            }
+                            ctx.restore()
                         }
-                        ctx.restore()
                     }
                     k += 1
                 }
