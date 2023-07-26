@@ -18,3 +18,8 @@ prepend-rules:
   - DOMAIN-SUFFIX,snssdk.com,🔰 选择节点
   - DOMAIN-SUFFIX,byteimg.com,🔰 选择节点
   - DOMAIN-SUFFIX,qq.com,🔰 选择节点
+  - DOMAIN-SUFFIX,youku.com,🔰 选择节点
+  - DOMAIN-SUFFIX,iqiyi.com,🔰 选择节点
+  - DOMAIN-SUFFIX,bilibili.com,🔰 选择节点
+  - DOMAIN-SUFFIX,hdslb.com,🔰 选择节点
+  - DOMAIN-SUFFIX,bilivideo.com,🔰 选择节点
