@@ -1,12 +1,25 @@
 <template>
     <div class="pen">
-        <CanvasInteraction @load="load" :gap="0" @penStart="penStart"></CanvasInteraction>
+        <CanvasInteraction @load="load" :gap="0" @penStart="penStart" @contextmenu="contextmenu"></CanvasInteraction>
+        <div ref="contextmenuRef" class="absolute b-solid b b-#f00 shadow shadow-xl shadow-15px bg-#fff p-10px b-rd-10px cursor-pointer" :style="contextmenuStyle" v-if="contextmenuShow">
+            <div @click="delNode">删除</div>
+        </div>
     </div>
 </template>
 
 <script setup lang="ts" title="钢笔贝塞尔曲线在线编辑">
 import CanvasInteraction, {ObjectBaseType} from "../components/CanvasInteraction"
+import {get, difference} from "lodash"
+const {x, y} = useMouseInElement()
+const {KeyP, Space} = useMagicKeys()
+const drawingBoardRef = ref({})
+const scene = computed<any[]>(()=> get(drawingBoardRef.value, 'sceneRef', []))
+const lineActives = computed(()=>{
+    return scene.value.filter(e=>e.isMouseLineIn === true)
+})
 const points = ref([])
+const currPoint = ref()
+const currPointIndex = ref(-1)
 const w = 10
 const h = 10
 const lines = computed(()=>{
@@ -21,17 +34,59 @@ const lines = computed(()=>{
         return []
     }
 })
+const contextmenuRef = ref(null)
+const { isOutside }= useMouseInElement(contextmenuRef)
+
+const contextmenuShow = ref(false)
+const contextmenuStyle = ref({
+    left:'0px',
+    top:'0px',
+})
+const contextmenu = (e:Event)=>{
+    e.preventDefault()
+    e.stopPropagation()
+    const index = points.value.findIndex(ee=>ee.id === scene.value.find(e=>e.isInside())?.id) - 1
+    const point = points.value[index]
+    currPoint.value = point
+    currPointIndex.value = index
+    contextmenuStyle.value.left = `${x.value+5}px`
+    contextmenuStyle.value.top = `${y.value+5}px`
+    contextmenuShow.value = true
+}
+const delNode = () => {
+    points.value.splice(currPointIndex.value, 1)
+    contextmenuShow.value = false
+}
+watchEffect(()=>{
+    if(!contextmenuShow.value){
+        currPoint.value = null
+        currPointIndex.value = -1
+    }
+})
 const penStart = async (e, event)=>{
-    if(!e){
-        points.value = points.value.concat([{
+    contextmenuShow.value = !isOutside.value
+    if(!e && !Space.value){
+        const pointsInfoNew = {
             x:event.center.x,
             y: event.center.y,
             id:Date.now()
-        }])
+        }
+        if(lineActives.value.length > 0){
+            // 在线上插入节点
+            lineActives.value.forEach(line=>{
+                const index = points.value.findIndex(e=>e.id === line.start.id)
+                points.value.splice(index+1, 0 ,pointsInfoNew)
+            })
+        }else {
+            /// 添加新节点
+            points.value = points.value.concat([pointsInfoNew])
+        }
+
     }
 }
-
-const load = async ({sceneRef, ObjectBase}:any) => {
+const load = async (drawingBoard:any) => {
+    drawingBoardRef.value = drawingBoard
+    const {sceneRef, ObjectBase} = drawingBoard
     class createRect extends ObjectBase implements ObjectBaseType{
         type = 'rect'
         offsetX = 0
@@ -155,11 +210,29 @@ const load = async ({sceneRef, ObjectBase}:any) => {
                 }
             }
         }
+        isMouseLineIn:boolean = false
 
         async draw(ctx:CanvasRenderingContext2D){
             ///**
             // line
-            ctx.strokeStyle = '#000000'
+
+            const x1 = this.startInfo.x
+            const y1 = this.startInfo.y
+            const x2 = this.endInfo.x
+            const y2 = this.endInfo.y
+            const m =  (y2 - y1) / (x2 - x1) //斜率 m = (y2 - y1) / (x2 - x1)
+            const ly = Math.round(m * x.value + (y1 - m * x1))
+            // 直线方程
+            const lineWidth = 1
+            const offset = 2
+            ctx.lineWidth = lineWidth
+            this.isMouseLineIn = y.value-lineWidth-offset <=  ly && ly <= y.value+lineWidth+offset
+            ctx.strokeStyle = this.isMouseLineIn ? '#f00':'#eee'
+            ctx.beginPath()
+            ctx.moveTo(this.startInfo.x, this.startInfo.y)
+            ctx.lineTo(this.endInfo.x, this.endInfo.y)
+            ctx.stroke()
+            ctx.strokeStyle = this.isMouseLineIn ? '#0080ff':'#000000'
             ctx.beginPath()
             ctx.moveTo(this.startInfo.x, this.startInfo.y)
             ctx.bezierCurveTo(
@@ -168,17 +241,30 @@ const load = async ({sceneRef, ObjectBase}:any) => {
                 this.endInfo.x, this.endInfo.y
             )
             ctx.stroke()
-            // p1
-            ctx.strokeStyle = '#0080ff'
-            ctx.beginPath()
-            ctx.moveTo(this.startInfo.x, this.startInfo.y)
-            ctx.lineTo(this.p1Info.x - this.startMoveInfo.x, this.p1Info.y - this.startMoveInfo.y)
-            ctx.stroke()
-            // p2
-            ctx.beginPath()
-            ctx.moveTo(this.endInfo.x, this.endInfo.y)
-            ctx.lineTo(this.p2Info.x - this.endMoveInfo.x, this.p2Info.y - this.endMoveInfo.y)
-            ctx.stroke()
+            if(this.isMouseLineIn){
+                ctx.beginPath()
+                ctx.fillStyle = '#f00'
+                ctx.arc(x.value, y.value, lineWidth+4, 0, 2*Math.PI)
+                ctx.fill()
+                ctx.beginPath()
+                ctx.strokeStyle = '#0080ff'
+                ctx.arc(x.value, y.value, lineWidth+4, 0, 2*Math.PI)
+                ctx.stroke()
+            }
+            if(KeyP.value){
+                // p1
+                ctx.strokeStyle = '#0080ff'
+                ctx.beginPath()
+                ctx.moveTo(this.startInfo.x, this.startInfo.y)
+                ctx.lineTo(this.p1Info.x - this.startMoveInfo.x, this.p1Info.y - this.startMoveInfo.y)
+                ctx.stroke()
+                // p2
+                ctx.beginPath()
+                ctx.moveTo(this.endInfo.x, this.endInfo.y)
+                ctx.lineTo(this.p2Info.x - this.endMoveInfo.x, this.p2Info.y - this.endMoveInfo.y)
+                ctx.stroke()
+            }
+
             // */
 
 
@@ -195,7 +281,8 @@ const load = async ({sceneRef, ObjectBase}:any) => {
         }
         let prev:Line = null
         lines.value.forEach(({start, end}, k)=>{
-            const cache = sceneRefMap[start.id]
+            // const cache = sceneRefMap[start.id]
+            const cache = null
             if(k === 0){
                 prev = new Line(
                     new createRect('#f00', cache?.start.x || start.x, cache?.start.y || start.y, w, h, start.id),
@@ -219,8 +306,16 @@ const load = async ({sceneRef, ObjectBase}:any) => {
             sceneRef.value.push(prev.p2)
             sceneRef.value.push(prev)
         })
-    })
+    }, {deep:true})
 
+    watchEffect(()=>{
+        sceneRef.value.filter(e=>e.type === 'line').forEach(e=>{
+            e.p1.visible = KeyP.value
+            e.p2.visible = KeyP.value
+        })
+        // prev.p1.visible = Alt.value
+        // prev.p2.visible = Alt.value
+    })
 }
 
 </script>

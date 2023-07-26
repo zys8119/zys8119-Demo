@@ -237,7 +237,7 @@ const CanvasInteraction = defineComponent({
                 return this.mousePointCalc(this.rotationAngle, false)
             }
             isInside() {
-                if (this.w && this.h) {
+                if (this.visible && this.w && this.h) {
                     const sx = this.mousePoint[0] - this.x
                     const sy = this.mousePoint[1] - this.y
                     return sx > -this.gapSizeBlank && sx < this.w + this.gapSizeBlank && sy > -this.gapSizeBlank && sy < this.h + this.gapSizeBlank
