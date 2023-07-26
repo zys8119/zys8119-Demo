@@ -281,8 +281,7 @@ const load = async (drawingBoard:any) => {
         }
         let prev:Line = null
         lines.value.forEach(({start, end}, k)=>{
-            // const cache = sceneRefMap[start.id]
-            const cache = null
+            const cache = sceneRefMap[start.id]
             if(k === 0){
                 prev = new Line(
                     new createRect('#f00', cache?.start.x || start.x, cache?.start.y || start.y, w, h, start.id),
