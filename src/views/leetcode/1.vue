@@ -44,18 +44,18 @@ function trap(height: number[]): number {
     return arr.reduce((a,b)=>a+b, 0)
 };
 /// 优化后代码
-function trap(height: number[]): number {
-    const arr = height.map((e,k)=>{
-        const start = Math.max.apply(null, height.slice(0, k))
-        const end = Math.max.apply(null, height.slice(k+1))
-        const min = start > end ? end : start
-        if(start > e && e < end){
-            return min - e
-        }
-        return  0
-    })
-    return arr.reduce((a,b)=>a+b, 0)
-};
+// function trap(height: number[]): number {
+//     const arr = height.map((e,k)=>{
+//         const start = Math.max.apply(null, height.slice(0, k))
+//         const end = Math.max.apply(null, height.slice(k+1))
+//         const min = start > end ? end : start
+//         if(start > e && e < end){
+//             return min - e
+//         }
+//         return  0
+//     })
+//     return arr.reduce((a,b)=>a+b, 0)
+// };
 console.log(trap([0, 1, 0, 2, 1, 0, 1, 3, 2, 1, 2, 1]));
 console.log(trap([4,2,0,3,2,5]));
 //todo ================================
