@@ -1,14 +1,11 @@
 <template>
     <div class="1">
+        请打开控制台查看
     </div>
 </template>
 
 <script setup lang="ts" title="接雨水">
-
-import {a} from "@/docs/assets/index-c5816990";
-
-/**
- 给定 n 个非负整数表示每个宽度为 1 的柱子的高度图，计算按此排列的柱子，下雨之后能接多少雨水。
+console.log(`给定 n 个非负整数表示每个宽度为 1 的柱子的高度图，计算按此排列的柱子，下雨之后能接多少雨水。
 
 
  示例 1：
@@ -28,8 +25,10 @@ import {a} from "@/docs/assets/index-c5816990";
 
  n == height.length
  1 <= n <= 2 * 104
- 0 <= height[i] <= 105
- */
+ 0 <= height[i] <= 105`)
+console.log('开始执行=================================================================')
+
+
 let arr = new Array(10000000).fill(0).map(()=> Math.round(Math.random()*100))
 // arr = [0,1,0,2,1,0,1,3,2,1,2,1]
 // arr = [4,2,0,3,2,5]
