@@ -1,6 +1,5 @@
 <template>
-    <div class="a">
-        <div v-for="item, i in aa" :key="i">{{ i }}</div>
+    <div class="a">asdas
     </div>
 </template>
 
