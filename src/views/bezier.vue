@@ -7,7 +7,7 @@
     </div>
 </template>
 
-<script setup lang="ts">
+<script setup lang="ts" title="贝塞尔曲线 bezier" content="贝塞尔曲线动画思路">
 import winframe from "winframe"
 import * as d3 from "d3"
 
