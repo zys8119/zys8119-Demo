@@ -48,6 +48,7 @@ specifiers:
   unplugin-auto-import: ^0.15.0
   use-canvas-image: ^0.0.7
   vite: ^4.3.1
+  vite-plugin-enhance-log: ^0.5.2
   vite-plugin-windicss: ^1.9.0
   vitejs-plugin-api-auto-import: ^0.0.3
   vitejs-plugin-vue-route-auto-import: ^0.0.18
@@ -100,6 +101,7 @@ dependencies:
   three-onevent-esm: 0.0.4
   unocss: 0.53.1_vite@4.3.1
   use-canvas-image: 0.0.7
+  vite-plugin-enhance-log: 0.5.2_vite@4.3.1
   vitejs-plugin-api-auto-import: 0.0.3_etc753u4mmvjwrmepfk4l4fa6e
   vitejs-plugin-vue-route-auto-import: 0.0.18
   vue: 3.2.47
@@ -362,6 +364,14 @@ packages:
     dependencies:
       '@babel/types': 7.21.4
 
+  /@babel/parser/7.22.7:
+    resolution: {integrity: sha512-7NF8pOkHP5o2vpmGgNGcfAeCvOYhGLyA3Z4eBQkT1RJlWu47n63bCs93QfJ2hIAFCil7L5P2IWhs1oToVgrL0Q==}
+    engines: {node: '>=6.0.0'}
+    hasBin: true
+    dependencies:
+      '@babel/types': 7.21.4
+    dev: false
+
   /@babel/plugin-syntax-jsx/7.21.4_@babel+core@7.21.4:
     resolution: {integrity: sha512-5hewiLct5OKyh6PLKEYaFclcqtIgCb6bmELouxjF6up5q3Sov7rOayW4RwhbaBL0dit8rA80GNfY+UuDp2mBbQ==}
     engines: {node: '>=6.9.0'}
@@ -369,6 +379,15 @@ packages:
       '@babel/core': ^7.0.0-0
     dependencies:
       '@babel/core': 7.21.4
+      '@babel/helper-plugin-utils': 7.20.2
+    dev: false
+
+  /@babel/plugin-syntax-typescript/7.21.4:
+    resolution: {integrity: sha512-xz0D39NvhQn4t4RNsHmDnnsaQizIlUkdtYvLs8La1BlfjQ6JEwxkJGeqJMW2tAXx+q6H+WFuUTXNdYVpEya0YA==}
+    engines: {node: '>=6.9.0'}
+    peerDependencies:
+      '@babel/core': ^7.0.0-0
+    dependencies:
       '@babel/helper-plugin-utils': 7.20.2
     dev: false
 
@@ -416,7 +435,7 @@ packages:
       '@babel/helper-function-name': 7.21.0
       '@babel/helper-hoist-variables': 7.18.6
       '@babel/helper-split-export-declaration': 7.18.6
-      '@babel/parser': 7.21.4
+      '@babel/parser': 7.22.7
       '@babel/types': 7.21.4
       debug: 4.3.4
       globals: 11.12.0
@@ -2853,6 +2872,11 @@ packages:
     resolution: {integrity: sha512-UjgapumWlbMhkBgzT7Ykc5YXUT46F0iKu8SGXq0bcwP5dz/h0Plj6enJqjz1Zbq2l5WaqYnrVbwWOWMyF3F47g==}
     engines: {node: '>=0.10.0'}
 
+  /source-map/0.7.4:
+    resolution: {integrity: sha512-l3BikUxvPOcn5E74dZiq5BGsTb5yEwhaTSzccU6t4sDOH8NWJCstKO5QT2CvtFoK6F0saL7p9xHAqHOlCPJygA==}
+    engines: {node: '>= 8'}
+    dev: false
+
   /sourcemap-codec/1.4.8:
     resolution: {integrity: sha512-9NykojV5Uih4lgo5So5dtw+f0JgJX30KCNI8gwhz2J9A15wD0Ml6tjHKwf6fTSa6fAdVBdZeNOs9eJ71qCk8vA==}
     deprecated: Please use @jridgewell/sourcemap-codec instead
@@ -3087,6 +3111,22 @@ packages:
     resolution: {integrity: sha512-0Pm9hTQ3se5ll1XihRic3FDIku70C+iHUdT/W926rSgHV5QgXsYbKZN8MSC3tJtSkhuROzvsQjAaFENRXr+19A==}
     dependencies:
       inherits: 2.0.3
+    dev: false
+
+  /vite-plugin-enhance-log/0.5.2_vite@4.3.1:
+    resolution: {integrity: sha512-ybCnKHMAE5viRkMacTw3WX5bLV/YLyELScwhw1LW1H3/uCpdx8Bu3vOO8C1RghbSrRlpmnJKnSY7SatttW2YZg==}
+    peerDependencies:
+      vite: ^2.9.0 || ^3.0.0 || ^4.0.0
+    dependencies:
+      '@babel/generator': 7.21.4
+      '@babel/parser': 7.22.7
+      '@babel/plugin-syntax-typescript': 7.21.4
+      '@babel/traverse': 7.21.4
+      source-map: 0.7.4
+      vite: 4.3.1_etc753u4mmvjwrmepfk4l4fa6e
+    transitivePeerDependencies:
+      - '@babel/core'
+      - supports-color
     dev: false
 
   /vite-plugin-windicss/1.9.0_vite@4.3.1:

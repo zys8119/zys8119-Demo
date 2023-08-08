@@ -57,6 +57,7 @@
         "three-onevent-esm": "^0.0.4",
         "unocss": "^0.53.1",
         "use-canvas-image": "^0.0.7",
+        "vite-plugin-enhance-log": "^0.5.2",
         "vitejs-plugin-api-auto-import": "^0.0.3",
         "vitejs-plugin-vue-route-auto-import": "^0.0.18",
         "vue": "^3.2.47",

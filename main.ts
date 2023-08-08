@@ -7,6 +7,7 @@ import 'swiper/css/mousewheel';
 import 'swiper/css/effect-fade';
 import  "@/src/less/style.less"
 import 'virtual:uno.css'
+import './global'
 route.beforeEach((to, from, next)=>{
     document.title = import.meta.env.DEV ? '本地测试' :`张云山-${to.meta.title || '个人博客'}`
     next()
