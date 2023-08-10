@@ -4,6 +4,7 @@ import Vue from '@vitejs/plugin-vue'
 import vueJsx from '@vitejs/plugin-vue-jsx'
 import AutoRoute from 'vitejs-plugin-vue-route-auto-import'
 import AutoApi from 'vitejs-plugin-api-auto-import'
+import AutoConfig from 'vitejs-plugin-config-auto-import/vite'
 // vite.config.ts
 import ReactivityTransform from '@vue-macros/reactivity-transform/vite'
 import UnoCss from 'unocss/vite'
@@ -49,7 +50,8 @@ export default defineConfig({
         AutoRoute({
             views:'src/views',
             routes_extend:"./routes_extend.ts"
-        })
+        }),
+        AutoConfig()
     ],
     resolve:{
         alias:{
