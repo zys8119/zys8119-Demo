@@ -51,7 +51,17 @@ export default defineConfig({
             views:'src/views',
             routes_extend:"./routes_extend.ts"
         }),
-        AutoConfig()
+        AutoConfig(),
+        AutoConfig({
+            globalName:'$aaa',
+            configTypeName:'$GGGG',
+            globalData:{
+                test:{
+                    b:'asdasd',
+                    c:"阿萨德发生打卡"
+                }
+            }
+        })
     ],
     resolve:{
         alias:{
@@ -61,5 +71,5 @@ export default defineConfig({
     server:{
         port:8899,
         strictPort:true
-    }
+    },
 })

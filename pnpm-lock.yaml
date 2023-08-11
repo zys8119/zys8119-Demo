@@ -51,7 +51,7 @@ specifiers:
   vite-plugin-enhance-log: ^0.5.2
   vite-plugin-windicss: ^1.9.0
   vitejs-plugin-api-auto-import: ^0.0.3
-  vitejs-plugin-config-auto-import: ^0.0.2
+  vitejs-plugin-config-auto-import: ^0.0.4
   vitejs-plugin-vue-route-auto-import: ^0.0.18
   vue: ^3.2.47
   vue-router: ^4.1.6
@@ -116,7 +116,7 @@ devDependencies:
   unplugin-auto-import: 0.15.3_@vueuse+core@10.1.2
   vite: 4.3.1_etc753u4mmvjwrmepfk4l4fa6e
   vite-plugin-windicss: 1.9.0_vite@4.3.1
-  vitejs-plugin-config-auto-import: 0.0.2
+  vitejs-plugin-config-auto-import: 0.0.4
   web-auto-deploy: 0.0.2
   windicss: 3.5.6
 
@@ -3196,8 +3196,8 @@ packages:
       - terser
     dev: false
 
-  /vitejs-plugin-config-auto-import/0.0.2:
-    resolution: {integrity: sha512-pJllkBD1HkXtL9TeGgoTmwQu9VZaca5gCO+k7WcxqGkVM+ImkFDrbnNfww0pTL3pd630JwPLnlE75aTrFHQYgQ==}
+  /vitejs-plugin-config-auto-import/0.0.4:
+    resolution: {integrity: sha512-faoLCExv6Ka+NAL3rwlYR5/jlirfVei237ICMtvcN0mnUWBgb0Vo+JTBTh6Xxjt0h/gnSo3ZmInKVe1Lwn8VKQ==}
     dependencies:
       lodash: 4.17.21
     dev: true

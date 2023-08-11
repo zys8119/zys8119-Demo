@@ -23,3 +23,4 @@ prepend-rules:
   - DOMAIN-SUFFIX,bilibili.com,🔰 选择节点
   - DOMAIN-SUFFIX,hdslb.com,🔰 选择节点
   - DOMAIN-SUFFIX,bilivideo.com,🔰 选择节点
+  - DOMAIN-SUFFIX,yy.com,🔰 选择节点

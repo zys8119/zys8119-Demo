@@ -1,0 +1,1 @@
+import{d as o,e as t,o as n,c as _,f as e,t as s,_ as c}from"./index-e2d53348.js";const d={class:"a"},l=o({__name:"a",setup(p){return t(()=>{console.log("test"),console.log("阿萨德发生打卡")}),(a,r)=>(n(),_("div",d,[e("div",null,s(a.$config)+"asdas",1),e("div",null,s(a.$aaa.c),1)]))}});const f=c(l,[["__scopeId","data-v-a9a33aaf"]]);export{f as default};

@@ -17,6 +17,8 @@ const app = createApp(App)
 app.config.errorHandler = (err)=>{
     console.info("[Error]", err)
 }
+import AutoConfig from "vitejs-plugin-config-auto-import"
+app.use(AutoConfig)
 app.mount('#app')
 
 declare module "vue-router"{
