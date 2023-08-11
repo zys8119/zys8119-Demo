@@ -51,15 +51,14 @@ export default defineConfig({
             views:'src/views',
             routes_extend:"./routes_extend.ts"
         }),
-        AutoConfig(),
         AutoConfig({
-            globalName:'$aaa',
-            configTypeName:'$GGGG',
+            globalActive:'b',
             globalData:{
-                test:{
-                    b:'asdasd',
-                    c:"阿萨德发生打卡"
-                }
+                'a':{
+                    a:"asda",
+                    b:'asda'
+                },
+                "b":"bbbb"
             }
         })
     ],
