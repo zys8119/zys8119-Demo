@@ -63,7 +63,7 @@
         "vitejs-plugin-api-auto-import": "^0.0.3",
         "vitejs-plugin-vue-route-auto-import": "^0.0.18",
         "vue": "^3.2.47",
-        "vue-console-plug": "^0.1.0",
+        "vue-console-plug": "^0.1.1",
         "vue-router": "^4.1.6",
         "winframe": "^0.0.3"
     },

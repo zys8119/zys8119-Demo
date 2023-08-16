@@ -4,8 +4,8 @@ export default {
     eventMap: ['error', 'messageerror', 'unhandledrejection', 'rejectionhandled'],
     AxiosConfig:{
         // baseURL、method 必须设置string 才会上报
-        // baseURL:'',
-        // method:'post'
+        baseURL:'',
+        method:'post'
     },
     getCustomData(data, fp, app): Promise<any> {
         return Promise.resolve({
