@@ -147,8 +147,8 @@ dependencies:
     specifier: ^3.2.47
     version: 3.2.47
   vue-console-plug:
-    specifier: ^0.1.1
-    version: 0.1.1
+    specifier: ^0.1.2
+    version: 0.1.2
   vue-router:
     specifier: ^4.1.6
     version: 4.1.6(vue@3.2.47)
@@ -3658,8 +3658,8 @@ packages:
       lodash: 4.17.21
     dev: false
 
-  /vue-console-plug@0.1.1:
-    resolution: {integrity: sha512-AIF6jqiNUqU0wKnHRk7abQlGZiYq4sCcYTB7XK8HWmVzSkiRt8hexszsnbjpXLNM3rjfYRn6QoS3atvw7a7xnQ==}
+  /vue-console-plug@0.1.2:
+    resolution: {integrity: sha512-qCJBo1RAlhha+/n8pnIqSvsnuJl6eiFydlLXJByLdtXo0X264MzvHX2EeKLWygQk3l/ETMTbQxo27nv1x6rC1w==}
     dev: false
 
   /vue-demi@0.14.5(vue@3.2.47):
