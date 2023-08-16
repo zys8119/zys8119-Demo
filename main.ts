@@ -14,12 +14,18 @@ route.beforeEach((to, from, next)=>{
 })
 const app = createApp(App)
 .use(route)
+
 app.config.errorHandler = (err)=>{
     console.info("[Error]", err)
 }
+import vueConsolePlug from "vue-console-plug"
+import vueConsolePlugConfigs from "./logConfig"
+
+
+app.use(vueConsolePlug, vueConsolePlugConfigs)
 import AutoConfig from "vitejs-plugin-config-auto-import"
 app.use(AutoConfig)
-app.mount('#app')
+// app.mount('#app')
 
 declare module "vue-router"{
     interface RouteMeta {

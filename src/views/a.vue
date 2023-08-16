@@ -6,7 +6,7 @@
 
 <script setup lang="ts">
 onMounted(()=>{
-    console.log($config.value)
+    console.log($config.value.a.b)
 })
 </script>
 
