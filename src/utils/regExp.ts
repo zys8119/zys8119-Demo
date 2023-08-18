@@ -67,7 +67,7 @@ export const regExpCalc = (options?:RegExpCalcOptions)=>{
     if(config.noCapitalLetter){str += `(?!.*[A-Z])`}
     if(config.special){str += `(?=.*[${config.specialStr}])`}
     if(config.noSpecial){str += `(?!.*[${config.specialStr}])`}
-    if(config.noEmpty){str += `(?!.*\\s)${config.noStartEmpty ? `(?=^\\S)` : ''}${config.noEndEmpty ? `(?=\\S$)` : ''}`}
+    if(config.noEmpty){str += `(?!.*\\s)${config.noStartEmpty ? `(?=^\\S)` : ''}${config.noEndEmpty ? `(?=.*\\S$)` : ''}`}
     str += startToEnd(config, ()=>{
         let str = ''
         types.forEach(({key, reg})=>{
@@ -82,8 +82,7 @@ export const regExpCalc = (options?:RegExpCalcOptions)=>{
 }
 export default {
     /**
-     * 密码强度校验
+     * 密码强度校验正则
      */
-    password:regExpCalc(),
-    // password:new RegExp(`(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*[!@#$%^&*\(\)\.])[\\S]{${8}}`),
+    password8:regExpCalc({start:8}),
 }
