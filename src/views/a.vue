@@ -1,12 +1,17 @@
 <template>
     <div class="a">
-        <div>{{$config}}asdas</div>
+        asdas
     </div>
 </template>
 
 <script setup lang="ts">
-onMounted(()=>{
-    console.log($config.value.a.b)
+const a = ()=> Promise.resolve(1)
+const b = ()=> Promise.resolve(a)
+const c = async ()=> {
+    return await b()
+}
+onMounted(async ()=>{
+    console.log(await c())
 })
 </script>
 

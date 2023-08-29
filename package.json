@@ -5,7 +5,7 @@
     "main": "index.js",
     "homepage": "https://zys8119.github.io/zys8119-Demo/#/",
     "scripts": {
-        "dev": "vite -c vite.config.ts --force",
+        "dev": "vite -c vite.config.ts --force --host",
         "build": "vite build",
         "preview": "vite preview"
     },
@@ -59,6 +59,7 @@
         "three-onevent-esm": "^0.0.4",
         "unocss": "^0.53.1",
         "use-canvas-image": "^0.0.7",
+        "vconsole-hide": "^0.0.5",
         "vite-plugin-enhance-log": "^0.5.2",
         "vitejs-plugin-api-auto-import": "^0.0.3",
         "vitejs-plugin-vue-route-auto-import": "^0.0.18",
