@@ -6,7 +6,7 @@
 
 <script setup lang="ts">
 onMounted(async ()=>{
-    await fetch('https://www.baidu.com/asdasda')
+    console.log(3333)
 })
 </script>
 
