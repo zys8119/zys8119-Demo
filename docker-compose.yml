@@ -1,0 +1,26 @@
+# yaml 配置实例
+version: '3'
+services:
+  web-monitoring:
+    container_name: web-monitoring
+    image: zys8119/web-monitoring:latest
+    restart: always
+    command: sh ./web-monitoring-install.sh
+    ports:
+      # 服务端口
+      - "40010:40010"
+      # mysql端口
+      - "40020:3306"
+      # web页面端口
+      - "40030:80"
+    volumes:
+      # web前端资源
+      - "./web-monitoring/web:/web"
+      # node服务资源
+      - "./web-monitoring/node:/node"
+      # nginx服务配置
+      - "./web-monitoring/nginx/conf.d:/etc/nginx/conf.d"
+      - "./web-monitoring/nginx/sites-enabled:/etc/nginx/sites-enabled"
+      # 相关日志
+      - "./web-monitoring/logs/pm2:/root/.pm2/logs/"
+      - "./web-monitoring/logs/nginx:/var/log/nginx"

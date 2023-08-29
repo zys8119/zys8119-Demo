@@ -1,21 +1,18 @@
 <template>
     <div class="a">
-        asdas
+        <div class="aa w-500px h-500px bg-#f00"></div>
     </div>
 </template>
 
 <script setup lang="ts">
-const a = ()=> Promise.resolve(1)
-const b = ()=> Promise.resolve(a)
-const c = async ()=> {
-    return await b()
-}
 onMounted(async ()=>{
-    console.log(await c())
+    await fetch('https://www.baidu.com/asdasda')
 })
 </script>
 
 <style scoped lang="less">
 .a {
+    .aa{
+    }
 }
 </style>
