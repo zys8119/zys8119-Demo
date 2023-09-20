@@ -20,8 +20,8 @@ export default {
     eventMap: ['error', 'messageerror', 'unhandledrejection', 'rejectionhandled'],
     AxiosConfig:{
         // baseURL、method 必须设置string 才会上报
-        baseURL:'http://127.0.0.1:40010',
-        method:'post'
+        // baseURL:'http://127.0.0.1:40010',
+        // method:'post'
     },
     getCustomData(data, fp, app): Promise<any> {
         const up_post_data = {
