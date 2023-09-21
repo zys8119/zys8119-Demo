@@ -4,7 +4,7 @@
     </div>
 </template>
 
-<script setup lang="ts">
+<script setup lang="ts" title="怎样使 const [a, b] = {a:1, b:2}">
 /**
  * 怎样使 const [a, b] = {a:1, b:2}
  */
