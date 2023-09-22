@@ -1,6 +1,6 @@
 <template>
     <div class="3">
-        纯css实现9宫格grid布局，并鼠标进入某个格子后，该格子占比调整2:1（只能使用grid布局）
+        纯css实现9宫格grid布局，并鼠标进入某个格子后，该格子占比调整2:1
         <div class="grid m-l-15 m-t-15">
             <div v-for="i in 9" :key="i"></div>
         </div>
