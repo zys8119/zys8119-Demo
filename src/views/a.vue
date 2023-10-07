@@ -1,23 +1,23 @@
 <template>
     <div class="a">
         <div class="grid">
-            <div class="cell"></div>
-            <div class="cell"></div>
-            <div class="cell"></div>
-            <div class="cell"></div>
-            <div class="cell"></div>
-            <div class="cell"></div>
-            <div class="cell"></div>
-            <div class="cell"></div>
-            <div class="cell"></div>
+
         </div>
     </div>
 </template>
 
 <script setup lang="ts">
-
-
-
+const points = [
+    [1,5, 1,5,8],
+    [2,3, 6,55,56],
+    [4,2, 1,565,856]
+]
+for (let i =0; i < points.length; i++){
+    const arr = points[i]
+    for (let j =0; j < arr.length; j++){
+        console.log(points[i][j])
+    }
+}
 </script>
 
 <style scoped lang="less">
