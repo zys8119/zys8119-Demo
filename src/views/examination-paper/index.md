@@ -12,6 +12,7 @@
 |     ✅     |   ☑️   | 6. 利用位运算实现权限组合 ，写出对应的权限操作 （组合权限、删除权限、判断权限、添加权限、保留指定权限）的例子 |
 |     ✅     |   ☑️   | 7. 使用代理拦截动态属性                                             |
 |     ✅     |   ☑️   | 8. console.log(++[[]][+[]] + [+[]]) 输出多少？并按步骤解释其运算过程      |
+|     ✅     |   ☑️   | 9. 任务执行的洋葱模型                                              |
 
 ### 7.使用代理拦截动态属性
 
@@ -19,4 +20,22 @@
 const r1 = add[1][2][3] + 4 // 10
 const r2 = add[10][20] + 30 // 60
 const r3 = add[100][200][300] + 400 // 1000
+```
+
+### 9. 任务执行的洋葱模型
+
+```typescript
+const t = TaskPro()
+t.addTask(async (next)=>{
+    console.log(1, 'start')
+    await next()
+    console.log(1, 'end')
+})
+t.addTask(async (next)=>{
+    console.log(2)
+})
+t.addTask(async (next)=>{
+    console.log(3)
+})
+t.run(); // 1 start, 2, 3, 1 end
 ```
