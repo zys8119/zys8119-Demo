@@ -9,18 +9,19 @@ type Callback = (next:()=> void | Promise<void>)=> void | Promise<void>
 class createTaskPro {
     tasks:Callback[] = []
     currIndex:number = 0
+    _isRunTask:boolean = false
     constructor() {
     }
     addTask(callback:Callback){
         this.tasks.push(callback)
     }
     private getTask (){
-        const task = this.tasks[this.currIndex]
-        return task
+        return this.tasks[this.currIndex]
     }
     private async reset(){
         this.tasks = []
         this.currIndex = 0
+        this._isRunTask = false
     }
     private async next(){
         this.currIndex ++
@@ -29,7 +30,7 @@ class createTaskPro {
     private async runTask(){
         const currIndexStart = this.currIndex
         const task = this.getTask()
-        if(!task || this.currIndex > this.tasks.length - 1){
+        if(!this._isRunTask || !task || this.currIndex >= this.tasks.length){
             await this.reset()
             return
         }
@@ -40,6 +41,7 @@ class createTaskPro {
         }
     }
     async run(){
+        this._isRunTask = true
         await this.runTask()
     }
 }
