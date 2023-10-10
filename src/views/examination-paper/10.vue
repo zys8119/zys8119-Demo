@@ -5,78 +5,63 @@
 </template>
 
 <script setup lang="ts">
-// 输入：points = [[1,2,3],[1,5,1],[3,1,1]]
-// 输出：9
-// const points = [
-//     [1,2,3],
-//     [1,5,1],
-//     [3,1,1]
-// ]
-// const points = [[1,5],[2,3],[4,2]]
-const points = [[0,3,0,4,2],[5,4,2,4,1],[5,0,0,5,1],[2,0,1,0,3]]
-const max = points[0].length
-const arr = points.map((e, r)=>{
-    return e.map((ee, c)=>{
-        return new Array(max).fill(0).map((_, k)=> {
-            const index = points[r+1]?.[k] || 0
-            const differ = Math.abs(c - k)
-            return {
-                sum:index + ee - differ,
-                differ,
-                start:[r,c],
-                end:[r+1,k],
-                value:ee,
-                endValue:index
-            }
-        })
-    })
-})
-const calc = (index = 0, infoObj?:any , results = {
-    value:0,
-    points:[]
-})=>{
-    if(!points[index]){
-        return  results
-    }
-    const res = []
-    let sumsmax = 0
-    const sumsCalc = (e, k)=>{
-        const sumMax = Math.max.apply(null, arr[index][k].map(e=>e.sum))
-        const sums = arr[index][k].filter(e=>e.sum === sumMax)
-        sums.forEach(e=>{
-            const value = e.value + (points[e.end[0]]?.[e.end[1]] || 0) - e.differ
-            res.push({
-                value,
-                info:e
-            })
-            if(sumsmax < value){
-                sumsmax = value
-            }
-        })
-    }
-    if(infoObj){
-        sumsCalc(infoObj.endValue, infoObj.end[1])
-    }else {
-        const max = Math.max.apply(null,points[index])
-        points[index].forEach((e, k)=>{
-            if(e === max){
-                sumsCalc(e, k)
-            }
-        })
-    }
+// function maxPoints(points: number[][]): number {
+//     const calc = (curr, row, col)=>{
+//         const rowArr = points[row -1] ? points[row -1] : [...points[row]].fill(0)
+//         const map = rowArr.map((e, k)=> {
+//             return e + curr - Math.abs(k - col)
+//         })
+//         const max = Math.max.apply(null, map)
+//         return max
+//     }
+//     points.forEach((e, row)=>{
+//         e.forEach((v, col)=>{
+//             points[row][col] = calc(v, row, col)
+//         })
+//     })
+//     return Math.max.apply(null, points.at(-1))
+// };
+import a from "./a"
+let points = [[1,2,4,4,3], [1,4,5,5,1], [5,2,3,5,5], [2,3,4,3,0]] // 17
+// points = [[1,2,3],[1,5,1],[3,1,1]] // 9
+// points = [[1,5],[2,3],[4,2]] // 11
+// points = a // ?
 
-    const {info} = res.find(e=>e.value === sumsmax) || {}
-    results.value += info.value - info.differ
-    results.points.push({
-        point:info.start,
-        value:info.value,
-        differ:info.differ,
-        info
+console.table(points)
+console.time()
+let prevRowSum = []
+const run = (row)=>{
+    let max = 0
+    const maxMap = {}
+    points[row].forEach((e,k)=>{
+        points[row].forEach((_, kk)=>{
+            const pv = (prevRowSum[kk] || 0)
+            const sum = e + pv - Math.abs(k - kk)
+            maxMap[sum] = maxMap[sum] || []
+            maxMap[sum].push({
+                row:row,
+                col:k,
+                value:sum
+            })
+            if(sum > max){
+                max = sum
+            }
+        })
     })
-    calc(index+1, info, results)
-    return  results
+    prevRowSum = []
+    const arr = maxMap[max] || []
+    arr.forEach(e=>{
+        points[e.row][e.col] = e.value
+        prevRowSum[e.col] = e.value
+    })
 }
-console.log(calc());
+points.forEach((_, k)=>{
+    run(k)
+})
+
+console.log(Math.max.apply(null, points.at(-1)))
+console.timeEnd()
+console.table(points)
 </script>
 
 <style scoped lang="less">
