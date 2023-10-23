@@ -1,0 +1,88 @@
+:root {
+    .alert-dialog-custom-theme {
+        &.n-dialog {
+            --n-color: linear-gradient(
+                180deg,
+                #01254b 0%,
+                rgba(1, 17, 33, 0.88) 98%
+            ) !important;
+            --n-close-margin: 30px 26px 0 0 !important;
+            border-radius: 20px;
+            opacity: 1;
+            box-sizing: border-box;
+            border: 1px solid #1773a8;
+            padding: 10px;
+            @size: 40;
+            @br: 4;
+            @sum:@size + @br;
+            @max:@sum * 0.5;
+            &:after {
+                content: '';
+                position: absolute;
+                left: -@br*0.5*1px;
+                top: -@br*0.5*1px;
+                border: calc(@br * 1px) solid #00fff4;
+                width: calc(@size * 1px);
+                height: calc(@size * 1px);
+                border-radius: 100%;
+                clip-path: path('M@{max}, 0 L@{max},@{max}L0,@{max}, 0,0Z');
+            }
+            &:before {
+                content: '';
+                position: absolute;
+                left: -@br*0.5*1px;
+                bottom: -@br*0.5*1px;
+                border: calc(@br * 1px) solid #00fff4;
+                width: calc(@size * 1px);
+                height: calc(@size * 1px);
+                border-radius: 100%;
+                clip-path: path('M@{max}, 0 L@{max},@{max}L0,@{max}, 0,0Z');
+                transform: rotateX(180deg);
+            }
+            .n-dialog__content {
+                position: initial;
+                padding: 15px;
+                color: #fff;
+                font-size: 16px;
+                font-weight: normal;
+                line-height: 26px;
+                letter-spacing: 0em;
+                &:after {
+                    content: '';
+                    position: absolute;
+                    right: -@br*0.5*1px;
+                    top: -@br*0.5*1px;
+                    border: calc(@br * 1px) solid #00fff4;
+                    width: calc(@size * 1px);
+                    height: calc(@size * 1px);
+                    border-radius: 100%;
+                    clip-path: path('M@{max}, 0 L@{max},@{max}L0,@{max}, 0,0Z');
+                    transform: rotateY(180deg);
+                }
+                &:before {
+                    content: '';
+                    position: absolute;
+                    right: -@br*0.5*1px;
+                    bottom: -@br*0.5*1px;
+                    border: calc(@br * 1px) solid #00fff4;
+                    width: calc(@size * 1px);
+                    height: calc(@size * 1px);
+                    border-radius: 100%;
+                    clip-path: path('M@{max}, 0 L@{max},@{max}L0,@{max}, 0,0Z');
+                    transform: rotateX(180deg) rotateY(180deg);
+                }
+            }
+            .n-base-close {
+                cursor: pointer;
+                * {
+                    fill: #ddedfe;
+                    &:hover {
+                        * {
+                            fill: #fff;
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

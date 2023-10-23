@@ -20,7 +20,7 @@ onMounted(async ()=>{
         },
         "documentType": "word",
         "editorConfig": {
-            mode:'edit',
+            mode:'view',
             lang:'zh',
             "customization": {
                 "zoom": -2
