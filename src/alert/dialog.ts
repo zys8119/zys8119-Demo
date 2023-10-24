@@ -1,5 +1,6 @@
-import { createDiscreteApi } from 'naive-ui';
+import { createDiscreteApi, DialogReactive } from 'naive-ui';
 import dialogAlertTitle from './dialogAlertTitle.vue';
+import App from '@/app.vue';
 const { dialog } = createDiscreteApi(['dialog']);
 type DialogConfigType = {
     content: any;
@@ -7,25 +8,42 @@ type DialogConfigType = {
     props?: Record<string, any>;
     width?: string | undefined;
 };
-export default (config: DialogConfigType = {} as DialogConfigType) => {
-    return dialog.create({
+const dialogCaches:Array<DialogReactive> = []
+const dialogDefault = (config: DialogConfigType = {} as DialogConfigType) => {
+    const dialogApp = dialog.create({
         title: config.title
             ? () =>
-                  h(dialogAlertTitle, {
-                      title: config.title,
-                  })
+                h(dialogAlertTitle, {
+                    title: config.title,
+                })
             : undefined,
         class: 'alert-dialog-custom-theme',
         style: `width:${config.width || 'auto'}`,
         showIcon: false,
         content: () =>
             typeof config.content === 'object'
-                ? h(
-                      defineAsyncComponent({
-                          loader: () => config.content,
-                      }),
-                      config.props
-                  )
+                ? h(App, [
+                    h(
+                        defineAsyncComponent({
+                            loader: () => config.content,
+                        }),
+                        config.props
+                    ),
+                ])
                 : config.content,
     } as any);
+    dialogCaches.push(dialogApp)
+    return dialogApp
 };
+dialogDefault.close = ()=>{
+    const a = dialogCaches.pop()
+    setTimeout(()=>{
+        a?.destroy()
+    }, 500)
+}
+dialogDefault.closeAll = ()=>{
+    while (dialogCaches.length > 0){
+        dialogDefault.close()
+    }
+}
+export default dialogDefault
