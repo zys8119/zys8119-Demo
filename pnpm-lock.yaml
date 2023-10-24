@@ -62,6 +62,9 @@ dependencies:
   '@types/marked':
     specifier: ^4.0.8
     version: 4.0.8
+  '@types/mockjs':
+    specifier: ^1.0.9
+    version: 1.0.9
   '@types/node':
     specifier: ^18.14.1
     version: 18.15.11
@@ -107,6 +110,12 @@ dependencies:
   marked:
     specifier: ^4.2.12
     version: 4.3.0
+  mockjs:
+    specifier: ^1.1.0
+    version: 1.1.0
+  mockjs-async:
+    specifier: ^0.0.5
+    version: 0.0.5
   opentype:
     specifier: ^0.1.2
     version: 0.1.2
@@ -1402,6 +1411,10 @@ packages:
 
   /@types/marked@4.0.8:
     resolution: {integrity: sha512-HVNzMT5QlWCOdeuBsgXP8EZzKUf0+AXzN+sLmjvaB3ZlLqO+e4u0uXrdw9ub69wBKFs+c6/pA4r9sy6cCDvImw==}
+    dev: false
+
+  /@types/mockjs@1.0.9:
+    resolution: {integrity: sha512-WvvMpV85bREBPdzaRjHhQ2z8Ji4E6DHaQ8tIBHAqk5+ZYGKQdsEs25/ZXx46H1Z5wvXK33Y5z2A5wDlxn7vHXw==}
     dev: false
 
   /@types/node-fetch@2.6.4:
@@ -2941,6 +2954,20 @@ packages:
       pkg-types: 1.0.2
       ufo: 1.1.1
     dev: true
+
+  /mockjs-async@0.0.5:
+    resolution: {integrity: sha512-X/+P8BzpzeO3Frtm6IK9cdApq7p2OVOPMEiq+IX8lyfM+FVq9zBgBcDV6FCK5bkrOl5msCFyOQz1LKOMSMDwXw==}
+    hasBin: true
+    dependencies:
+      commander: 7.2.0
+    dev: false
+
+  /mockjs@1.1.0:
+    resolution: {integrity: sha512-eQsKcWzIaZzEZ07NuEyO4Nw65g0hdWAyurVol1IPl1gahRwY+svqzfgfey8U8dahLwG44d6/RwEzuK52rSa/JQ==}
+    hasBin: true
+    dependencies:
+      commander: 7.2.0
+    dev: false
 
   /mrmime@1.0.1:
     resolution: {integrity: sha512-hzzEagAgDyoU1Q6yg5uI+AorQgdvMCur3FcKf7NhMKWsaYg+RnbTyHRa/9IlLF9rf455MOCtcqqrQQ83pPP7Uw==}
