@@ -7,21 +7,6 @@
 <script setup lang="ts">
 //@ts-ignore
 console.log(++[[]][+[]] + [+[]])
-console.log("解题")
-//@ts-ignore======================
-// [].toString() // ''
-console.log(++[''][+''] + [+''])
-//@ts-ignore======================
-// +'' // 0
-console.log(++[''][0] + [0])
-//@ts-ignore======================
-console.log((++'') + [0])
-//@ts-ignore======================
-console.log((+0) + [0])
-//@ts-ignore======================
-console.log(1 + '0')
-//@ts-ignore======================
-console.log('10')
 </script>
 
 <style scoped lang="less">
