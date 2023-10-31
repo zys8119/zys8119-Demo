@@ -6,7 +6,7 @@ const ipScanCalc = (arr:any, i, max = 255)=>{
         ipScanCalc(arr, i + 1, max)
     }
 }
-export const ipScanCalc = async (ip1:string, ip2:string, callBack?:(ip:string)=> Promise<void> | void, max = 255)=>{
+export const ipScan = async (ip1:string, ip2:string, callBack?:(ip:string)=> Promise<void> | void, max = 255)=>{
     const ip1Arr = ip1.split('.')
     const ip2Arr = ip2.split('.')
     const ip1max = Number(ip1Arr.map(e=>e.padStart(3,'0')).join(''))
@@ -24,7 +24,7 @@ export const ipScanCalc = async (ip1:string, ip2:string, callBack?:(ip:string)=>
             return arr
         },[]).join('.')
         await Promise.resolve()
-        await ipScanCalc(newIp, ip2, callBack, max)
+        await ipScan(newIp, ip2, callBack, max)
     }
 }
-export default ipScanCalc
+export default ipScan
