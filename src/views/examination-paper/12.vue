@@ -1,13 +1,13 @@
 <template>
-    <div class="a w-300px m-x-auto m-t-15 b b-solid b-#d8d8d8 b-rd-15px p-15px">
-      <button @click="tags" class="w-100%">{{ str }}</button>
-      <div ref="aa" class="aa">
-        <div v-for="i in 8" :key="i">
-          <div>{{i}}</div>
-        </div>
+  <div class="a w-300px m-x-auto m-t-15 b b-solid b-#d8d8d8 b-rd-15px p-15px">
+    <button @click="tags" class="w-100%">{{ str }}</button>
+    <div ref="aa" class="aa">
+      <div v-for="i in 8" :key="i">
+        <div>{{i}}</div>
       </div>
-      <div>其他内容-{{isNone}}</div>
     </div>
+    <div>其他内容-{{isNone}}</div>
+  </div>
 </template>
 
 <script setup lang="ts">
