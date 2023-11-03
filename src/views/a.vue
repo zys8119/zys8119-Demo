@@ -6,7 +6,7 @@
           <div>{{i}}</div>
         </div>
       </div>
-      <div>其他内容-{{isNone}}</div>
+      <div>其他内容</div>
     </div>
 </template>
 
