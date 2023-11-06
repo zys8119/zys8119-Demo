@@ -80,7 +80,7 @@ const run = (type:string)=>{
     if(k % 2 === 0 || kk % 2 === 0){
       return ee
     }
-    let value = Math.floor(Math.random()*32)
+    let value = Math.floor(Math.random()*4)
     value = value % 2 === 0 ? value : value+1;
     return ee === 0 ? value : ee
   }))
