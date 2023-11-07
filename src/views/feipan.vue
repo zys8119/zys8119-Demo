@@ -12,7 +12,7 @@ const circle = shallowRef<THREE.Mesh>()
 import { MTLLoader } from 'three/examples/jsm/loaders/MTLLoader.js'
 import { OBJLoader } from 'three/examples/jsm/loaders/OBJLoader.js'
 const load = async (three:BaseThreeClass)=>{
-  const {scene, imagesTexture} = three
+  const {scene, imagesTexture, light} = three
   three.downloadImagesTexture('http://localhost:3000/%E5%9B%BE%E7%89%87:%E8%A7%86%E9%A2%91/1.png', 'a')
   three.downloadImagesTexture('http://localhost:3000/%E5%9B%BE%E7%89%87:%E8%A7%86%E9%A2%91/%E9%98%BF%E7%8B%B8%20cosplay%E7%BE%8E%E5%A5%B34k%E9%AB%98%E6%B8%85%E5%A3%81%E7%BA%B8_%E5%BD%BC%E5%B2%B8%E5%9B%BE%E7%BD%91.jpg', 'b')
 
@@ -35,6 +35,7 @@ const load = async (three:BaseThreeClass)=>{
   scene.add(bb)
   ;(function aa(){
     bb.rotation.y += 0.005
+    light.rotation.y += -0.005
     requestAnimationFrame(aa)
   })()
 
