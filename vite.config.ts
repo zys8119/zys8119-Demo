@@ -71,4 +71,7 @@ export default defineConfig({
         port:8899,
         strictPort:true
     },
+    optimizeDeps:{
+        exclude:['pdfjs-dist']
+    }
 })
