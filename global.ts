@@ -1,4 +1,6 @@
+import * as pdfjsLibType from "pdfjs-dist"
 declare global{
+    const pdfjsLib:typeof pdfjsLibType
     interface PASSWORDCREDENTIAL {
         new (options:Options):Credential
     }
