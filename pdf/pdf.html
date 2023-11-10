@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+          content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <script src="./vconsole.min.js"></script>
+    <script>
+        new VConsole()
+    </script>
+
+    <title>pdf文档解析</title>
+    <script>
+    </script>
+</head>
+<body>
+<script>
+    const trailerParse = (data)=>{
+        const trailer  = data.split(/trailer/)[1] || ''
+        const results = {}
+        ;(trailer.match(/\/[^\/]+/g)||[]).forEach(e=>{
+            const arr = e.match(/(\/[^\s]+)(.*)/) || []
+            let value = arr[2].trim()
+            if(/\/id/i.test(arr[1])){
+                value = (value.match(/<.*?>/g) || []).map(ee=>ee.replace(/^<|>$/g,''))
+            }
+            results[arr[1].replace(/^\//,'')] = value
+        })
+        return results
+    }
+    const tagsParse = (str)=>{
+        const results = {}
+        const arr = str.match(/\/[^\/]+/g) || []
+        arr.forEach(e=>{
+            const arr = (e.match(/\/([^\s]+)(.*)/) || []).map(e=> (e || '').trim().replace(/<<|>>/g,''))
+            results[arr[1]] = arr[2]
+        })
+
+        return results
+    }
+    const objectsParse = (data)=>{
+        const result = {}
+        const objects = data.match(/\d+ \d+ obj?(.|\s)*?endobj/g) || []
+        objects.forEach(str=>{
+            const key = str.match(/^\d+ \d+ obj/)
+            const arr = str.split(/\r/)
+            const catalog = tagsParse(arr[1])
+            result[key] = {
+                str,
+                key,
+                arr,
+                catalog,
+            }
+        })
+        return result
+    }
+    const catalogParseKey = (str, isObj)=>{
+        if(isObj){
+            return str.replace(/obj/i, 'R')
+        }
+        return str.replace(/r/i, 'obj')
+    }
+    ;(async ()=>{
+        var xhrSync = new XMLHttpRequest();
+        xhrSync.open("GET", '2.pdf', false);
+        xhrSync.send();
+        const data = xhrSync.responseText
+        const pdfInfo = {}
+        // console.log(data)
+        pdfInfo.version = (data.match(/PDF-(.*)/) || [])[1]
+        pdfInfo.objects = objectsParse(data)
+        pdfInfo.trailer = trailerParse(data)
+        pdfInfo.rootInfo = pdfInfo.objects[catalogParseKey(pdfInfo.trailer.Root)]
+        pdfInfo.pagesInfo = pdfInfo.objects[catalogParseKey(pdfInfo.rootInfo.catalog.Pages)]
+        pdfInfo.pagesCount = pdfInfo.pagesInfo.catalog.Count
+        console.log(pdfInfo.pagesInfo)
+
+        console.log(pdfInfo)
+    })()
+</script>
+</body>
+</html>
