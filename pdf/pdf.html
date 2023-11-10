@@ -68,6 +68,8 @@
     xhrSync.open("GET", '2.pdf', true);
     xhrSync.send();
     xhrSync.onload = async ()=>{
+        console.log(pako)
+        const arr = [...new Uint8Array(xhrSync.response)]
         const data = new TextDecoder().decode(xhrSync.response)
         const pdfInfo = {}
         // console.log(data)
@@ -81,9 +83,8 @@
         const page = pdfInfo.objects[pdfInfo.Kids[0]]
         const pageContent = pdfInfo.objects[catalogParseKey(page.catalog.Contents)]
         console.log(pageContent)
-        console.log(pako)
-        // console.log(pako.inflate(new TextEncoder().encode(pageContent.stream)))
-        console.log([...new TextEncoder().encode('x�{�g��]�n"V�')].map(e=>e.toString(16)))
+        const stream = new TextEncoder().encode('7 0 obj <</Filter /FlateDecode /Length 1610>>')
+        console.log(arr.join().indexOf([...stream].join()))
 
         console.log(pdfInfo)
     }
