@@ -6,6 +6,7 @@
           content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <script src="./vconsole.min.js"></script>
+    <script src="./pako.es5.min.js"></script>
     <script>
         new VConsole()
     </script>
@@ -61,33 +62,32 @@
         }
         return str.replace(/r/i, 'obj')
     }
-    ;(async ()=>{
-        try {
-            var xhrSync = new XMLHttpRequest();
-            xhrSync.open("GET", '2.pdf', false);
-            xhrSync.send();
-            const data = xhrSync.responseText
-            const pdfInfo = {}
-            // console.log(data)
-            pdfInfo.version = (data.match(/PDF-(.*)/) || [])[1]
-            pdfInfo.objects = objectsParse(data)
-            pdfInfo.trailer = trailerParse(data)
-            pdfInfo.rootInfo = pdfInfo.objects[catalogParseKey(pdfInfo.trailer.Root)]
-            pdfInfo.pagesInfo = pdfInfo.objects[catalogParseKey(pdfInfo.rootInfo.catalog.Pages)]
-            pdfInfo.pagesCount = pdfInfo.pagesInfo.catalog.Count
-            pdfInfo.Kids = pdfInfo.pagesInfo.catalog.Kids.split("R").map(e=>e.replace(/[^\d\s]/g, '').trim()).filter(e=>e).map(e=>catalogParseKey(e + ' R'))
-            const page = pdfInfo.objects[pdfInfo.Kids[0]]
-            const pageContent = pdfInfo.objects[catalogParseKey(page.catalog.Contents)]
-            console.log(pageContent)
-            console.log(pageContent.stream)
-            console.log(await (new Blob([pageContent.stream], {type:'stream'})).text())
 
-            console.log(pdfInfo)
-        }catch (e) {
-            console.error(e)
-        }
+    var xhrSync = new XMLHttpRequest();
+    xhrSync.responseType = 'arraybuffer'
+    xhrSync.open("GET", '2.pdf', true);
+    xhrSync.send();
+    xhrSync.onload = async ()=>{
+        const data = new TextDecoder().decode(xhrSync.response)
+        const pdfInfo = {}
+        // console.log(data)
+        pdfInfo.version = (data.match(/PDF-(.*)/) || [])[1]
+        pdfInfo.objects = objectsParse(data)
+        pdfInfo.trailer = trailerParse(data)
+        pdfInfo.rootInfo = pdfInfo.objects[catalogParseKey(pdfInfo.trailer.Root)]
+        pdfInfo.pagesInfo = pdfInfo.objects[catalogParseKey(pdfInfo.rootInfo.catalog.Pages)]
+        pdfInfo.pagesCount = pdfInfo.pagesInfo.catalog.Count
+        pdfInfo.Kids = pdfInfo.pagesInfo.catalog.Kids.split("R").map(e=>e.replace(/[^\d\s]/g, '').trim()).filter(e=>e).map(e=>catalogParseKey(e + ' R'))
+        const page = pdfInfo.objects[pdfInfo.Kids[0]]
+        const pageContent = pdfInfo.objects[catalogParseKey(page.catalog.Contents)]
+        console.log(pageContent)
+        console.log(pako)
+        // console.log(pako.inflate(new TextEncoder().encode(pageContent.stream)))
+        console.log([...new TextEncoder().encode('x�{�g��]�n"V�')].map(e=>e.toString(16)))
 
-    })()
+        console.log(pdfInfo)
+    }
+
 </script>
 </body>
 </html>
