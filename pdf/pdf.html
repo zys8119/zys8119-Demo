@@ -11,11 +11,10 @@
     </script>
 
     <title>pdf文档解析</title>
-    <script>
-    </script>
 </head>
 <body>
 <script>
+
     const trailerParse = (data)=>{
         const trailer  = data.split(/trailer/)[1] || ''
         const results = {}
@@ -51,6 +50,7 @@
                 key,
                 arr,
                 catalog,
+                stream:(str.match(/stream\r\n((.|\n|\s)+)\r\nendstream/) || [])[1]
             }
         })
         return result
@@ -62,21 +62,31 @@
         return str.replace(/r/i, 'obj')
     }
     ;(async ()=>{
-        var xhrSync = new XMLHttpRequest();
-        xhrSync.open("GET", '2.pdf', false);
-        xhrSync.send();
-        const data = xhrSync.responseText
-        const pdfInfo = {}
-        // console.log(data)
-        pdfInfo.version = (data.match(/PDF-(.*)/) || [])[1]
-        pdfInfo.objects = objectsParse(data)
-        pdfInfo.trailer = trailerParse(data)
-        pdfInfo.rootInfo = pdfInfo.objects[catalogParseKey(pdfInfo.trailer.Root)]
-        pdfInfo.pagesInfo = pdfInfo.objects[catalogParseKey(pdfInfo.rootInfo.catalog.Pages)]
-        pdfInfo.pagesCount = pdfInfo.pagesInfo.catalog.Count
-        console.log(pdfInfo.pagesInfo)
+        try {
+            var xhrSync = new XMLHttpRequest();
+            xhrSync.open("GET", '2.pdf', false);
+            xhrSync.send();
+            const data = xhrSync.responseText
+            const pdfInfo = {}
+            // console.log(data)
+            pdfInfo.version = (data.match(/PDF-(.*)/) || [])[1]
+            pdfInfo.objects = objectsParse(data)
+            pdfInfo.trailer = trailerParse(data)
+            pdfInfo.rootInfo = pdfInfo.objects[catalogParseKey(pdfInfo.trailer.Root)]
+            pdfInfo.pagesInfo = pdfInfo.objects[catalogParseKey(pdfInfo.rootInfo.catalog.Pages)]
+            pdfInfo.pagesCount = pdfInfo.pagesInfo.catalog.Count
+            pdfInfo.Kids = pdfInfo.pagesInfo.catalog.Kids.split("R").map(e=>e.replace(/[^\d\s]/g, '').trim()).filter(e=>e).map(e=>catalogParseKey(e + ' R'))
+            const page = pdfInfo.objects[pdfInfo.Kids[0]]
+            const pageContent = pdfInfo.objects[catalogParseKey(page.catalog.Contents)]
+            console.log(pageContent)
+            console.log(pageContent.stream)
+            console.log(await (new Blob([pageContent.stream], {type:'stream'})).text())
 
-        console.log(pdfInfo)
+            console.log(pdfInfo)
+        }catch (e) {
+            console.error(e)
+        }
+
     })()
 </script>
 </body>
