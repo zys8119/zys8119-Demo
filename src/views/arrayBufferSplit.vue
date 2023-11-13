@@ -13,6 +13,7 @@ asda
       }
       let item = []
       const results = []
+      let offsetIndex =  Infinity
       while (index < str.length){
         let isBool = true
         let searchIndex = 0
@@ -26,19 +27,23 @@ asda
         if(isBool){
           results.push(item)
           item = []
+          offsetIndex = 0
         }else {
-          item.push(str[index])
+          if(offsetIndex >= search.length){
+            item.push(str[index])
+          }
         }
         index += 1
+        offsetIndex += 1
       }
       if(item.length > 0){
         results.push(item)
       }
       return results
     }
-    const arr = new Uint8Array([21,12,1,12,2,1,31,6,45,1,23,4,5,51,42,1,2,1,5,1,42,1,4,2,45,5,125,5,5,5,2])
+    const arr = new Uint8Array([21,12,1,12,2,1,31,6,1,2,3,4,1,2,3,4,45,1,23,4,5,51,42,1,2,1,1,2,3,4,5,1,42,1,4,2,45,5,125,5,5,5,2,1,2,3,4])
     console.log(arr)
-    console.log(arr.arrayBufferSplit([1, 2]))
+    console.log(arr.arrayBufferSplit([1, 2,3,4]))
 </script>
 
 <style scoped lang="less">

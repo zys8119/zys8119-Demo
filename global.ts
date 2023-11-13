@@ -26,6 +26,9 @@ declare global{
             mediation:CredentialMediationRequirement
         }):Promise<Credential>
     }
+    interface Object {
+        arrayBufferSplit(search:any):Array<number[]>
+    }
 }
 
 export {}
