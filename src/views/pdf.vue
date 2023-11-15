@@ -163,13 +163,18 @@ onMounted(async ()=>{
     return a
   }, {})
   console.log(objects)
-  const objInfo = objects['208 0 obj']
+  console.log(Object.fromEntries(Object.entries(objects).filter(e=>/BitsPerComponent/.test(e[1].header))))
+  const objInfo = objects['173 0 obj']
   console.log(objInfo)
   if(objInfo){
-    const stream = split(split(split(split(buff, objInfo.header).arr[1], "endstream").arr[0], 'stream').arr[1], '\r\n').arr[1]
+    const stream = split(split(split(split(buff, objInfo.header).arr[1], "endstream").arr[0], 'stream').arr[1], '\r\n').arr.filter(e=>e.length > 0)
+        .reduce((a,b, k)=>{
+          return a.concat(k === 0 ? [] : [...new TextEncoder().encode('\r\n')]).concat(b)
+        },[])
     console.log(stream)
     try {
-      console.log(new TextDecoder().decode(inflate(stream)))
+      window.open(URL.createObjectURL(new Blob([new Uint8Array(stream)],{type:'image/jpg'})))
+      console.log(new TextDecoder().decode(inflate(new Uint8Array(stream))))
     }catch (e) {
       console.log("解析失败", new TextDecoder().decode(new Uint8Array(stream)))
     }
