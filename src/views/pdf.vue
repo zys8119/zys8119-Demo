@@ -152,7 +152,7 @@ onMounted(async ()=>{
   const str = new TextDecoder().decode(buff)
   const objs = ([...new Set(str.match(/\d+ \d+ ?obj/ig).map(e=>parseInt(e.split(" ")[0])))] as any).sort((a:number, b:number)=>(a-b) < -1)
   const objects = objs.map(e=> {
-    const header = str.match(new RegExp(`${e} 0 obj\r(<<.*)\r`))[1].replace(/>>[^>]*$/,'>>')
+    const header = str.match(new RegExp(`^${e} 0 obj\r(<<.*)\r`,'m'))[1].replace(/>>[^>]*$/,'>>')
     return {
       obj:`${e} 0 obj`,
       header,
@@ -163,8 +163,8 @@ onMounted(async ()=>{
     return a
   }, {})
   console.log(objects)
-  console.log(Object.fromEntries(Object.entries(objects).filter(e=>/BitsPerComponent/.test(e[1].header))))
-  const objInfo = objects['173 0 obj']
+  console.log(Object.fromEntries(Object.entries(objects).filter((e:any)=>/BitsPerComponent/.test(e[1].header))))
+  const objInfo = objects['410 0 obj']
   console.log(objInfo)
   if(objInfo){
     const stream = split(split(split(split(buff, objInfo.header).arr[1], "endstream").arr[0], 'stream').arr[1], '\r\n').arr.filter(e=>e.length > 0)
@@ -173,7 +173,7 @@ onMounted(async ()=>{
         },[])
     console.log(stream)
     try {
-      window.open(URL.createObjectURL(new Blob([new Uint8Array(stream)],{type:'image/jpg'})))
+      // window.open(URL.createObjectURL(new Blob([new Uint8Array(stream)],{type:'image/jpg'})))
       console.log(new TextDecoder().decode(inflate(new Uint8Array(stream))))
     }catch (e) {
       console.log("解析失败", new TextDecoder().decode(new Uint8Array(stream)))
