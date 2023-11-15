@@ -28,6 +28,7 @@ declare global{
     }
     interface Object {
         arrayBufferSplit(search:any):Array<number[]>
+        groupBy<T,S extends string | number | symbol>(obj:T[], callback:(item:T)=> S):Record<S, T[]>
     }
 }
 
