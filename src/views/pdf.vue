@@ -7,10 +7,9 @@
 </template>
 
 <script setup lang="ts">
-import raw from "./a.pdf?raw"
-import url from "./a.pdf?url"
+import url from "../../../UnityFront/public/a.pdf?url"
 import axios from "axios"
-
+import {inflate} from "pako"
 Object.prototype.arrayBufferSplit = function (search){
   let str = this;
   let index = 0;
@@ -57,6 +56,92 @@ const split = (buff:any, search:string)=>{
     str:arr.map(e=> new TextDecoder().decode(new Uint8Array(e)))
   }
 }
+function pdfHeaderParse (input:string){
+  let index = 0
+  const getKey = ()=>  {
+    index += 1
+    return `$${index}`
+  }
+  function parseString(input:string, result = {}) {
+    input = input
+        .replace(/(>)(<)|(\))(\()/g,'$1 $2')
+        .replace(/(<<|<|\[)/g,' $1')
+        .replace(/(>>|>|])/g,'$1 ').trim()
+        .replace(/([^<])(<<[^<>]+>>)([^>])/g, (m, $1, $2, $3)=>{
+          const key = getKey()
+          const {input} = parseString($2, result)
+          result[key] = input
+          return $1+key+$3
+        })
+        .replace(/([^<])(<[^<>]+>)([^>])/g, (m, $1, $2, $3)=>{
+          const key = getKey()
+          result[key] = $2
+          return $1+key+$3
+        })
+        .replace(/\[[^\[\]]+]/g, m=>{
+          const key = getKey()
+          result[key] = m
+          return key
+        })
+        .replace(/([^(])(\([^()]+\))([^)])/g, (m, $1, $2, $3)=>{
+          const key = getKey()
+          result[key] = $2
+          return $1+key+$3
+        })
+    if(/[^<]<<[^<>]+>>[^>]/.test(input)){
+      input = parseString(input, result).input
+    }
+    return {
+      result,
+      input,
+    }
+  }
+  const setValue = (val:any)=>{
+    if(typeof val === 'string'){
+      return val.replace(/^(<|\()([^<()>]*)(\)|>)$/g, '$2')
+    }
+    return val
+  }
+  const isArray = input=> /^\s*\[.+]\s*$/.test(input)
+  const isObject = input=> /^\s*<<|>>\s*$/.test(input)
+  function parseStringToObject({input, result}:{
+    input:string
+    result:Record<any, string>
+  }, data:any = {}){
+    if(isObject(input)){
+      (input.match(/\/[^/<>]+/g) || []).forEach((e:string)=>{
+        let [_,key,value] = e.match(/^\/([^\s\/]+)(.*)/) || []
+        value = value ||''
+        value = value.trim?.()
+        value = result[value] || value
+        if(/\$/.test(value) || isArray(value) || isObject(input)){
+          value = parseStringToObject({
+            input:value as string,
+            result
+          }) as any
+        }
+        data[key] = setValue(value)
+      })
+    }else
+    if(isArray(input)){
+      data = input.match(/[^\[\]|\s]+/g) || []
+      data = data.map(e=>{
+        if(/\$/.test(e)){
+          return setValue(result[e] ?  parseStringToObject({
+            input:result[e],
+            result
+          }) : e)
+        }
+        return setValue(e)
+      })
+    }else {
+      return setValue(input)
+    }
+    return data
+  }
+
+  return parseStringToObject(parseString(input))
+}
 onMounted(async ()=>{
   const  {data} = await axios({
     url,
@@ -64,88 +149,32 @@ onMounted(async ()=>{
     responseType:'arraybuffer'
   })
   const buff = new Uint8Array(data)
-  const buffArr = split(buff, "\r\n")
-  const info:any = {
-    objects:{}
+  const str = new TextDecoder().decode(buff)
+  const objs = ([...new Set(str.match(/\d+ \d+ ?obj/ig).map(e=>parseInt(e.split(" ")[0])))] as any).sort((a:number, b:number)=>(a-b) < -1)
+  const objects = objs.map(e=> {
+    const header = str.match(new RegExp(`${e} 0 obj\r(<<.*)\r`))[1].replace(/>>[^>]*$/,'>>')
+    return {
+      obj:`${e} 0 obj`,
+      header,
+      headerInfo:pdfHeaderParse(header) ,
+    }
+  }).reduce((a,b)=>{
+    a[b.obj] = b;
+    return a
+  }, {})
+  console.log(objects)
+  const objInfo = objects['208 0 obj']
+  console.log(objInfo)
+  if(objInfo){
+    const stream = split(split(split(split(buff, objInfo.header).arr[1], "endstream").arr[0], 'stream').arr[1], '\r\n').arr[1]
+    console.log(stream)
+    try {
+      console.log(new TextDecoder().decode(inflate(stream)))
+    }catch (e) {
+      console.log("解析失败", new TextDecoder().decode(new Uint8Array(stream)))
+    }
   }
-  buffArr.str.forEach((s,k)=>{
-    if(/%PDF-\d\.\d/i.test(s)){
-      info.versions = s.match(/%PDF-(\d\.\d)/)[1]
-    }
-    if(/\d+\s\d+\sobj/i.test(s)){
-      const key = s.match(/\d+\s\d+\sobj/i)[0]
-      info.objects[key] = info.objects[key] || {}
-      if(/<<.+>>/.test(s)){
-        let index = 0
-        let start = false
-        const result = {}
-        let value = ''
-        let key2 = ''
-        let isKey = false
-        let isArr = false
-        let arr = []
-        while (index < s.length){
-          switch (s[index]){
-            case '<':
-              start = true
-              break
-            case '>':
-              start = false
-              break
-            case '[':
-              isArr = true
-              break
-            case ']':
-              if (isArr && value){
-                arr.push(value)
-                value = ''
-              }
-              if(key2){
-                result[key2] = arr
-              }
-              isArr = false
-              arr = []
-              break
-            case '/':
-              if(key2 && value){
-                result[key2] = value
-              }
-              key2 = ''
-              value = ''
-              isKey = true
-              break
-            case ' ':
-              if (isArr && value){
-                arr.push(value)
-                value = ''
-              }else {
-                isKey = false
-              }
-              break
-            default:
-              if(start){
-                if(isKey){
-                  key2 += s[index]
-                }else {
-                  value += s[index]
-                }
-              }
-              break
-          }
-          index += 1
-        }
-        if(key2 && value){
-          result[key2] = value
-        }
-        info.objects[key].info = result
-      }
-    }
-    if(k == 2){
-      console.log(s)
 
-    }
-  })
-  console.log(info)
 })
 </script>
 
