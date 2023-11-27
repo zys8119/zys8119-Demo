@@ -19,6 +19,7 @@
         "@css-render/plugin-bem": "^0.15.12",
         "@css-render/vue3-ssr": "^0.15.12",
         "@mediapipe/face_mesh": "^0.4.1633559619",
+        "@microsoft/fetch-event-source": "^2.0.1",
         "@tensorflow-models/face-landmarks-detection": "^1.0.2",
         "@tensorflow/tfjs": "^4.8.0",
         "@types/d3": "^7.4.0",
