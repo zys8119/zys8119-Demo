@@ -6,7 +6,7 @@
 
 <script setup lang="ts">
 import useCanvasImage from "use-canvas-image"
-import img from "./21155.png?url"
+import img from "./15558.png?url"
 const canvasRef = ref()
 
 onMounted(async ()=>{
@@ -19,68 +19,28 @@ onMounted(async ()=>{
   await useCanvasImage(img, e=>{
     pxs.push(e)
     pxsMap.set([e.x, e.y].join(), e)
+  },{
   })
-  const isBJ = ({x, y, canvasWidth, a}:any)=>{
-    return [
-      [x, y-1],
-      [x, y+1],
-      [x-1, y],
-      [x+1, y],
-    ].some(e=>pxsMap.get(e.join())?.a === 0) || (a !== 0 && (y-1 < 0 || x-1 < 0))
+  const getZwPx = (x:number, y:number)=> [
+    [x-1,y-1],
+    [x,y-1],
+    [x+1,y-1],
+    [x-1,y],
+    [x+1,y],
+    [x-1,y+1],
+    [x,y+1],
+    [x+1,y+1],
+  ]
+  const isBJ = ({x, y, canvasWidth, canvasHeight, a}:any)=>{
+    return getZwPx(x,y).some(e=>pxsMap.get(e.join())?.a === 0) || (a !== 0 && (y === 0 || x === 0 || x === canvasWidth-1 || y === canvasHeight-1))
   }
   const pxsResultsMap = new Map()
-  const pxsResultsLines = []
-  const getNextPxs = ({x, y}:any)=>{
-    const key = [
-      [x+1, y],
-      [x, y+1],
-      [x, y-1],
-      [x-1, y],
-    ].filter(e=>!pxsResultsLines.find(ee=>ee.x === e[0] && ee.y === e[1]))
-    .find(e=>pxsResultsMap.get(e.join())) || []
-    return pxsResultsMap.get(key.join())
-  }
   const pxsResults =  pxs.filter(e=>{
     if(e.a !== 0 && isBJ(e)){
       pxsResultsMap.set([e.x, e.y].join(), e)
       return true
     }
   })
-  console.log(pxsResults.length)
-  let curr = null
-  const dots = []
-  pxsResults.forEach((e,k)=>{
-    ctx.beginPath()
-    ctx.fillStyle = `rgba(${e.r}, ${e.g}, ${e.b}, ${e.a})`
-    ctx.rect(e.x, e.y,1,1)
-    ctx.fill()
-    if(k === 0){
-      curr = e;
-    }
-    curr = getNextPxs(curr || {})
-    if(dots.length >= 3){
-      dots.splice(0,1)
-    }
-    dots.push(e)
-    if(dots.length === 3 && !arePointsCollinear(dots.map(e => [e.x, e.y]))){
-      pxsResultsLines.push(e)
-    }
-    if(dots.length < 3){
-      pxsResultsLines.push(e)
-    }
-  })
-
-  ctx.lineWidth = 1
-  ctx.beginPath()
-  pxsResultsLines.forEach((e, k)=>{
-    if(k === 0){
-      ctx.moveTo(e.x, e.y)
-    }else {
-      ctx.lineTo(e.x, e.y)
-    }
-  })
-  ctx.stroke()
-  console.log(pxsResultsLines.length)
   function arePointsCollinear(points) {
     if (points.length < 3) {
       // 至少需要三个点才能形成一条直线
@@ -101,6 +61,40 @@ onMounted(async ()=>{
     }
     return true;
   }
+  const pxsLine = []
+  const pxsLineMap = new Map()
+  let curr = null
+  const calcNextCurr = (e)=>{
+    const {x, y} = e
+    const ps = getZwPx(x,y).map(e=>pxsResultsMap.get(e.join())).filter(e=>e && !pxsLineMap.get([e.x, e.y].join()))
+    return ps[0] || e
+  }
+  pxsResults.forEach((e,k)=>{
+    ctx.beginPath()
+    ctx.fillStyle = e.rgba;
+    ctx.rect(e.x, e.y, 3,3)
+    ctx.fill()
+    if(k === 0){
+      curr = e
+    }else {
+      curr = calcNextCurr(curr)
+    }
+    if(curr){
+      pxsLine.push(curr)
+      pxsLineMap.set([curr.x, curr.y].join(), curr)
+    }
+  })
+
+  ctx.beginPath()
+  ctx.strokeStyle = '#f00'
+  pxsLine.forEach((e,k)=>{
+    if(k === 0){
+      ctx.moveTo(e.x, e.y)
+    }else {
+      ctx.lineTo(e.x, e.y)
+    }
+  })
+  ctx.stroke()
 })
 
 </script>
