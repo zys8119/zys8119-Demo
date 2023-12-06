@@ -7,18 +7,18 @@
 <script setup lang="ts" title="网易图中图" content="网易图中图效果">
 import winframe from "winframe"
 const canvasRef = ref() as Ref<HTMLCanvasElement>
-const width = ref('500px')
+const widthIndex = ref('500px')
 useCssVar(()=>{
   return {
-    index:width.value
+    index:widthIndex.value
   } as any
 })
 useMutationObserver(canvasRef, ()=>{
-  width.value = canvasRef.value.style.getPropertyValue('--index')
+  widthIndex.value = canvasRef.value.style.getPropertyValue('--index')
 },{
   attributes:true
 })
-const index = computed(()=> +width.value.replace('px', ''))
+const index = computed(()=> +widthIndex.value.replace('px', ''))
 const render = async (ctx:CanvasRenderingContext2D, canvas:HTMLCanvasElement, p1:HTMLImageElement, p2:HTMLImageElement, x:number, y:number, w:number, h:number,timeout:number = 5000)=>{
   await winframe(p=>{
     ctx.clearRect(0, 0, canvas.width, canvas.height)
@@ -36,7 +36,8 @@ const render = async (ctx:CanvasRenderingContext2D, canvas:HTMLCanvasElement, p1
     )
   }, timeout)
 }
-onMounted(async ()=>{
+const {width, height} = useWindowSize()
+const reset = async ()=>{
   const [p1, p2, p3, p4, p5, p6]:Array<HTMLImageElement> = await Promise.all([
     import("@/src/assets/wangyi-images/1.jpg"),
     import("@/src/assets/wangyi-images/2.jpg"),
@@ -54,14 +55,20 @@ onMounted(async ()=>{
     })))
   }) as any
   const canvas = canvasRef.value as HTMLCanvasElement
-  canvas.width = window.innerWidth
-  canvas.height = window.innerHeight
+  canvas.width = width.value
+  canvas.height = height.value
   const ctx = canvas.getContext('2d') as CanvasRenderingContext2D
   await render(ctx, canvas, p4, p5, 370, 1067, 152, 244)
   await render(ctx, canvas, p3, p4, 1251, 1048, 599, 898)
   await render(ctx, canvas, p2, p3,  108, 898,167, 267)
   await render(ctx, canvas, p1, p2,  83, 1401,197, 317)
+}
+watchEffect(async ()=>{
+  width.value;
+  height.value;
+  await reset()
 })
+onMounted(reset)
 </script>
 
 <style scoped lang="less">
