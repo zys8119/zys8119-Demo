@@ -1,12 +1,41 @@
 <template>
   <div class="wangyi-images">
-      <canvas ref="canvasRef"></canvas>
+      <canvas ref="canvasRef" :style="{'--index':index}"></canvas>
   </div>
 </template>
 
 <script setup lang="ts">
 import winframe from "winframe"
-const canvasRef = ref()
+const canvasRef = ref() as Ref<HTMLCanvasElement>
+const width = ref('100px')
+useCssVar(()=>{
+  return {
+    index:width.value
+  }
+})
+useMutationObserver(canvasRef, ()=>{
+  width.value = canvasRef.value.style.getPropertyValue('--index')
+},{
+  attributes:true
+})
+const index = computed(()=> +width.value.replace('px', ''))
+const render = async (ctx:CanvasRenderingContext2D, canvas:HTMLCanvasElement, p1:HTMLImageElement, p2:HTMLImageElement, x:number, y:number, w:number, h:number,timeout:number = 5000)=>{
+  await winframe(p=>{
+    ctx.clearRect(0, 0, canvas.width, canvas.height)
+    const sx = x*(1-p)
+    const sy = y*(1-p)
+    const sw = p1.width*p + w*(1-p)
+    const sh = p1.height*p + h*(1-p)
+    ctx.drawImage(p1, sx, sy, sw, sh , 0, 0, canvas.width, canvas.height)
+    ctx.drawImage(p2,
+        0, 0, p2.width, p2.height,
+        canvas.width/sw*(x-sx),
+        canvas.height/sh*(y-sy),
+        canvas.width/sw*w,
+        canvas.height/sh*h,
+    )
+  }, timeout)
+}
 onMounted(async ()=>{
   const [p1, p2, p3, p4, p5, p6]:Array<HTMLImageElement> = await Promise.all([
     import("@/src/assets/wangyi-images/1.jpg"),
@@ -28,11 +57,10 @@ onMounted(async ()=>{
   canvas.width = window.innerWidth
   canvas.height = window.innerHeight
   const ctx = canvas.getContext('2d') as CanvasRenderingContext2D
-  winframe(p=>{
-    ctx.clearRect(0, 0, canvas.width, canvas.height)
-    ctx.drawImage(p4, 0, 0, p4.width, p4.height, 10*p, 10*p, canvas.width, canvas.height)
-    ctx.drawImage(p5, 0, 0, p5.width, p5.height, 10*p, 10*p, canvas.width, canvas.height)
-  }, 2000)
+  await render(ctx, canvas, p4, p5, 370, 1067, 152, 244)
+  await render(ctx, canvas, p3, p4, 1251, 1048, 599, 898)
+  await render(ctx, canvas, p2, p3,  108, 898,167, 267)
+  await render(ctx, canvas, p1, p2,  83, 1401,197, 317)
 })
 </script>
 
