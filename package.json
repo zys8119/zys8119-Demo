@@ -5,15 +5,22 @@
     "main": "index.js",
     "homepage": "https://zys8119.github.io/zys8119-Demo/#/",
     "scripts": {
-        "dev": "vite -c vite.config.ts --force --host",
+        "dev": "wireit",
         "build": "vite build",
-        "preview": "vite preview"
+        "preview": "wireit"
+    },
+    "wireit": {
+        "dev": {
+            "command": "vite"
+        },
+        "preview": {
+            "command": "vite preview"
+        }
     },
     "author": "",
     "license": "ISC",
     "workspaces": [
-        "packages/*",
-        "../*"
+        "packages/*"
     ],
     "dependencies": {
         "@css-render/plugin-bem": "^0.15.12",
@@ -85,6 +92,7 @@
         "vite-plugin-windicss": "^1.9.0",
         "vitejs-plugin-config-auto-import": "^0.0.5",
         "web-auto-deploy": "^0.0.2",
-        "windicss": "^3.5.6"
+        "windicss": "^3.5.6",
+        "wireit": "^0.14.1"
     }
 }
