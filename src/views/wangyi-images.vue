@@ -19,7 +19,7 @@ useMutationObserver(canvasRef, ()=>{
   attributes:true
 })
 const index = computed(()=> +widthIndex.value.replace('px', ''))
-const render = async (ctx:CanvasRenderingContext2D, canvas:HTMLCanvasElement, p1:HTMLImageElement, p2:HTMLImageElement, x:number, y:number, w:number, h:number,timeout:number = 5000)=>{
+const render = async (ctx:CanvasRenderingContext2D, canvas:HTMLCanvasElement, p1:HTMLImageElement, p2:HTMLImageElement, x:number, y:number, w:number, h:number,timeout:number = 20000)=>{
   await winframe(p=>{
     ctx.clearRect(0, 0, canvas.width, canvas.height)
     const sx = x*(1-p)
