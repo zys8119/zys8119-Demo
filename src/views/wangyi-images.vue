@@ -4,14 +4,14 @@
   </div>
 </template>
 
-<script setup lang="ts">
+<script setup lang="ts" title="网易图中图" content="网易图中图效果">
 import winframe from "winframe"
 const canvasRef = ref() as Ref<HTMLCanvasElement>
-const width = ref('100px')
+const width = ref('500px')
 useCssVar(()=>{
   return {
     index:width.value
-  }
+  } as any
 })
 useMutationObserver(canvasRef, ()=>{
   width.value = canvasRef.value.style.getPropertyValue('--index')
