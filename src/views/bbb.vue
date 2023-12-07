@@ -48,7 +48,7 @@ onMounted(async ()=>{
     const data = JSON.parse(ev.data) || {}
     switch (data.emit){
       case 'webrtcLogin':
-        await aa(localStream, data.userId)
+        await aa(localStream.clone(), data.userId)
         break
       case 'bb':
         await peerConnectionMap.get(data.userId).setRemoteDescription(data.data)
