@@ -5,7 +5,7 @@
 </template>
 
 <script setup lang="ts" title="webRTC发起端">
-const {send, ws} = useWebSocket("ws://localhost:81/websocket", {
+const {send, ws} = useWebSocket("ws://localhost:3000/websocket", {
   autoReconnect:true,
 })
 const video = $ref() as HTMLVideoElement
