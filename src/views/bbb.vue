@@ -52,6 +52,7 @@ onMounted(async ()=>{
         break
       case 'bb':
           if(peerConnectionMap.has(data.userId)){
+            console.log(data.data)
             await peerConnectionMap.get(data.userId).setRemoteDescription(data.data)
           }
         break
