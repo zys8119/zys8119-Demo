@@ -4,7 +4,7 @@
   </div>
 </template>
 
-<script setup lang="ts" title="同屏-webRTC发起端-多人">
+<script setup lang="ts" title="同屏-webRTC接收端-多人">
 const route = useRoute()
 const userId = ref(route.query.userId)
 const video = ref()

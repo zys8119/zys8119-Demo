@@ -57,6 +57,7 @@
         "d3-geo": "^3.1.0",
         "fs-extra": "^11.1.0",
         "hammerjs": "^2.0.8",
+        "html2canvas": "^1.4.1",
         "image-gbc": "^0.0.2",
         "less": "^4.1.3",
         "lodash": "^4.17.21",
