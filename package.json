@@ -11,7 +11,7 @@
     },
     "wireit": {
         "dev": {
-            "command": "vite"
+            "command": "vite --host"
         },
         "preview": {
             "command": "vite preview"
