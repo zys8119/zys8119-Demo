@@ -1,10 +1,10 @@
 <template>
   <div class="aaa">
-    <video class="w-100% h-100% obj-cover" ref="video" muted autoplay></video>
+    <video class="w-100% h-100% object-contain absolute" ref="video" muted autoplay></video>
   </div>
 </template>
 
-<script setup lang="ts" title="webRTC发起端">
+<script setup lang="ts" title="webRTC发起端-多人">
 const route = useRoute()
 const userId = ref(route.query.userId)
 const video = ref()

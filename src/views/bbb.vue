@@ -4,7 +4,7 @@
   </div>
 </template>
 
-<script setup lang="ts" title="webRTC发起端">
+<script setup lang="ts" title="webRTC发起端-多人">
 const {send, ws} = useWebSocket("ws://localhost:3000/websocket", {
   autoReconnect: true,
 })
@@ -13,7 +13,9 @@ const peerConnectionMap = {}
 const createPeerConnection = async (localStream: any, sendIceCallback?: (rtc:RTCPeerConnection)=>void) => {
   // 创建 RTCPeerConnection 对象
   const peerConnection = new RTCPeerConnection();
-  localStream.getTracks().forEach(track => peerConnection.addTrack(track, localStream));
+  localStream.getTracks().forEach(track =>{
+    peerConnection.addTrack(track, localStream)
+  });
   let isSend = false
   // 监听 ICE Candidate 事件，将 ICE Candidate 发送给对方
   peerConnection.onicecandidate = (event) => {
