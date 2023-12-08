@@ -46,9 +46,9 @@ const renderCanvas = (ctx:CanvasRenderingContext2D)=>{
   ;(async ()=>{
     const img = await html2canvas(contentEl, {
       backgroundColor:'#0000',
-      width:contentEl.clientWidth,
-      height:contentEl.clientHeight
     })
+    ctx.canvas.width = img.width
+    ctx.canvas.height = img.height
     ctx.drawImage(img, 0, 0)
     requestIdleCallback(()=>{
       renderCanvas(ctx)
