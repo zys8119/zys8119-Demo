@@ -12,7 +12,7 @@
   </div>
 </template>
 
-<script setup lang="ts" title="同屏-webRTC发起端-多人">
+<script setup lang="ts" title="页面同屏-webRTC发起端-多人">
 import html2canvas from "html2canvas"
 const {send, ws} = useWebSocket("ws://localhost:3000/websocket", {
   autoReconnect: true,
