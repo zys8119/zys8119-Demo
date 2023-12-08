@@ -4,7 +4,7 @@
   </div>
 </template>
 
-<script setup lang="ts" title="webRTC发起端-多人">
+<script setup lang="ts" title="同屏-webRTC发起端-多人">
 const {send, ws} = useWebSocket("ws://localhost:3000/websocket", {
   autoReconnect: true,
 })
