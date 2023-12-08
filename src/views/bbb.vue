@@ -12,22 +12,7 @@ const video = $ref() as HTMLVideoElement
 const peerConnectionMap = {}
 const createPeerConnection = async (localStream: any, sendIceCallback?: (rtc:RTCPeerConnection)=>void) => {
   // 创建 RTCPeerConnection 对象
-  const peerConnection = new RTCPeerConnection({ iceServers: [
-      "stun.l.google.com:19302",
-      "stun1.l.google.com:19302",
-      "stun2.l.google.com:19302",
-      "stun3.l.google.com:19302",
-      "stun4.l.google.com:19302",
-      "stun.ekiga.net",
-      "stun.ideasip.com",
-      "stun.rixtelecom.se",
-      "stun.schlund.de",
-      "stun.stunprotocol.org:3478",
-      "stun.voiparound.com",
-      "stun.voipbuster.com",
-      "stun.voipstunt.com",
-      "stun.voxgratia.org"
-    ].map(url=>({url})) });
+  const peerConnection = new RTCPeerConnection();
   localStream.getTracks().forEach(track =>{
     peerConnection.addTrack(track, localStream)
   });
