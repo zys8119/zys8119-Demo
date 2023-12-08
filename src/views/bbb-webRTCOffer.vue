@@ -11,7 +11,11 @@ const video = ref()
 // 在一个标签页中创建广播通道
 onMounted(async () => {
   // 创建 RTCPeerConnection 对象
-  const peerConnection = new RTCPeerConnection();
+  const peerConnection = new RTCPeerConnection({
+    iceServers:[
+      {urls:"stun:127.0.0.1:3478"}
+    ],
+  });
   peerConnection.ontrack = event => {
     video.value.srcObject = event.streams[0]
     video.value.onloadedmetadata = function (e) {
@@ -43,6 +47,9 @@ onMounted(async () => {
       }))
     }
   })
+})
+onErrorCaptured(err => {
+  console.log(err)
 })
 </script>
 

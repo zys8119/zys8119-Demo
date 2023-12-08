@@ -12,7 +12,11 @@ const video = $ref() as HTMLVideoElement
 const peerConnectionMap = {}
 const createPeerConnection = async (localStream: any, sendIceCallback?: (rtc:RTCPeerConnection)=>void) => {
   // 创建 RTCPeerConnection 对象
-  const peerConnection = new RTCPeerConnection();
+  const peerConnection = new RTCPeerConnection({
+    iceServers:[
+      {urls:"stun:127.0.0.1:3478"}
+    ],
+  });
   localStream.getTracks().forEach(track =>{
     peerConnection.addTrack(track, localStream)
   });
@@ -55,6 +59,9 @@ onMounted(async () => {
         break
     }
   })
+})
+onErrorCaptured(err => {
+  console.log(err)
 })
 </script>
 
