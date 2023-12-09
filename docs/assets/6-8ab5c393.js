@@ -1,1 +1,0 @@
-import{d as o,o as s,c as t}from"./index-b01273ef.js";const n={class:"6"},g=o({__name:"6",setup(r){let e=15;return console.log(e.toString(2)),e|=16,console.log(e&16),e^=2,console.log(e&2),e&=8,console.log(e&1),(u,_)=>(s(),t("div",n," 6. 利用位运算实现权限组合 "))}});export{g as default};
