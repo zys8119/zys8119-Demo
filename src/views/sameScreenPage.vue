@@ -1,20 +1,21 @@
 <template>
   <div class="aaa">
     <canvas ref="canvas" class="hidden w=0 h-0"></canvas>
-    <div ref="contentEl" class="bg-#fff w-100% h-100% absolute of-x-hidden">
+    <div ref="contentEl" id="contentEl" class="bg-#fff w-100% h-100% absolute of-x-hidden">
       <h1>这是同屏的内容区域</h1>
       <div class="text-#fff bg-#f00">阿斯科利大量三等奖</div>
       <div class="text-#fff bg-#f00 flex justify-between">
         <span>left</span>
         <span>right</span>
       </div>
+      <div v-for="i in 100">{{i}}</div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts" title="页面同屏-webRTC发起端-多人">
-import html2canvas from "html2canvas"
-const {send, ws} = useWebSocket("ws://localhost:3000/websocket", {
+const {query} = useRoute()
+const {send, ws} = useWebSocket(query.wsUrl as string,  {
   autoReconnect: true,
 })
 const canvas = $ref() as HTMLCanvasElement
@@ -42,22 +43,8 @@ const createPeerConnection = async (localStream: MediaStream, sendIceCallback?: 
   await peerConnection.setLocalDescription(await peerConnection.createOffer())
   return peerConnection
 }
-const renderCanvas = (ctx:CanvasRenderingContext2D)=>{
-  ;(async ()=>{
-    const img = await html2canvas(contentEl, {
-      backgroundColor:'#0000',
-    })
-    ctx.canvas.width = img.width
-    ctx.canvas.height = img.height
-    ctx.drawImage(img, 0, 0)
-    requestIdleCallback(()=>{
-      renderCanvas(ctx)
-    })
-  })()
-}
 onMounted(async () => {
-  const localStream = canvas.captureStream()
-  renderCanvas(canvas.getContext('2d'))
+  const localStream = await navigator.mediaDevices.getDisplayMedia();
   ws.value.addEventListener('message', async (ev) => {
     const data = JSON.parse(ev.data) || {}
     switch (data.emit) {

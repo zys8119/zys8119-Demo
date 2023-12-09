@@ -5,7 +5,8 @@
 </template>
 
 <script setup lang="ts" title="同屏-webRTC发起端-多人">
-const {send, ws} = useWebSocket("ws://123.60.16.78:50200/websocket/websocket", {
+const {query} = useRoute()
+const {send, ws} = useWebSocket(query.wsUrl as string, {
   autoReconnect: true,
 })
 const video = $ref() as HTMLVideoElement

@@ -1,1 +1,0 @@
-import{d as e,o as _,c as o,_ as s}from"./index-76c60e35.js";const t={class:"8.vue"},a=e({__name:"8",setup(c){return console.log(++[[]][+[]]+[+[]]),(n,l)=>(_(),o("div",t," console.log(++[[]][+[]] + [+[]]) 输出多少？并按步骤解释其运算过程 "))}});const r=s(a,[["__scopeId","data-v-859ab63a"]]);export{r as default};

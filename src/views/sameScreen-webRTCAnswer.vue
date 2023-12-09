@@ -23,7 +23,7 @@ onMounted(async () => {
     };
   }
 
-  const {send} = useWebSocket('ws://123.60.16.78:50200/websocket/websocket', {
+  const {send} = useWebSocket(route.query.wsUrl as string, {
     async onMessage(ws, event: any) {
       const data = JSON.parse(event.data)
       if(data.userId === userId.value){

@@ -1,1 +1,0 @@
-import{_ as c,o as e,c as s,l as a,a as t,F as o,b as r}from"./index-76c60e35.js";const d={},n={class:"3"},i={class:"grid m-l-15 m-t-15"};function l(m,p){return e(),s("div",n,[a(" 纯css实现9宫格grid布局，并鼠标进入某个格子后，该格子占比调整2:1 "),t("div",i,[(e(),s(o,null,r(9,_=>t("div",{key:_})),64))])])}const f=c(d,[["render",l],["__scopeId","data-v-21b4d358"]]);export{f as default};
