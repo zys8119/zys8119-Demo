@@ -5,6 +5,10 @@
 </template>
 
 <script setup lang="ts" title="同屏-webRTC发起端-多人">
+/**
+ * Chrome浏览器允许http网站打开摄像头和麦克风
+ * chrome://flags/#unsafely-treat-insecure-origin-as-secure
+ */
 const {query} = useRoute()
 const {send, ws} = useWebSocket(query.wsUrl as string, {
   autoReconnect: true,
