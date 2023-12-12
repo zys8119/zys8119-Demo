@@ -1,0 +1,1 @@
+import{_ as e,o as s,c as a,a as c}from"./index-ee812f84.js";const _={},t={class:"bayl"},o=["src"];function l(n,d){return s(),a("div",t,[c("img",{class:"absolute w-100% h-100% block",src:"./images/bayl.jpg",alt:""},null,8,o)])}const i=e(_,[["render",l],["__scopeId","data-v-da0512d8"]]);export{i as default};

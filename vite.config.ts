@@ -12,11 +12,12 @@ import AutoConfig from 'vitejs-plugin-config-auto-import/vite'
 // vite.config.ts
 import ReactivityTransform from '@vue-macros/reactivity-transform/vite'
 import UnoCss from 'unocss/vite'
+import VineBrowser from './vite/VineBrowser'
 
 export default defineConfig({
     base:"",
     build:{
-        outDir:'docs'
+        outDir:'docs',
     },
     plugins:[
         UnoCss(),
@@ -69,7 +70,8 @@ export default defineConfig({
                 },
                 "b":"bbbb"
             }
-        })
+        }),
+        VineBrowser()
     ],
     resolve:{
         alias:{
