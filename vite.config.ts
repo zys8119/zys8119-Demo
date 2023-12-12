@@ -1,5 +1,9 @@
 import {defineConfig, Plugin} from "vite"
 import AutoImport from 'unplugin-auto-import/vite'
+import Components from 'unplugin-vue-components/vite';
+import {
+    NaiveUiResolver,
+} from 'unplugin-vue-components/resolvers';
 import Vue from '@vitejs/plugin-vue'
 import vueJsx from '@vitejs/plugin-vue-jsx'
 import AutoRoute from 'vitejs-plugin-vue-route-auto-import'
@@ -19,6 +23,11 @@ export default defineConfig({
         Vue(),
         vueJsx(),
         ReactivityTransform(),
+        Components({
+            resolvers:[
+                NaiveUiResolver()
+            ]
+        }),
         AutoImport({
             include:[
                 /\.[tj]sx?$/, // .ts, .tsx, .js, .jsx
