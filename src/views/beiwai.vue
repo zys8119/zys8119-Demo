@@ -185,7 +185,6 @@ const getData = debounce(async ()=>{
   isLoading.value = false
 })
 const change = ()=>{
-  localStorage.setItem(localStorageKey, JSON.stringify(axiosConfig.value))
   data.value.units = []
   getData()
 }
