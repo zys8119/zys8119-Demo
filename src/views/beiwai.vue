@@ -12,7 +12,10 @@
           <n-input v-model:value="cookiesStr" :rows="20" type="textarea"></n-input>
         </n-form-item>
         <n-form-item>
-          <n-button @click="save" type="primary">保存</n-button>
+          <n-space>
+            <n-button @click="save" type="primary">保存</n-button>
+            <n-button @click="change" type="info">刷新</n-button>
+          </n-space>
         </n-form-item>
       </n-form>
     </div>
