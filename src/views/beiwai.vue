@@ -64,7 +64,22 @@ import {debounce} from "lodash"
 import {useMessage, useLoadingBar} from "naive-ui"
 const message = useMessage()
 const loading = useLoadingBar()
-const cookiesStr = ref(JSON.stringify([
+const localStorageKey = 'beiwai'
+let localStorageKeyValue = ref({
+  data:{
+    "cookies": null,
+    "pageUrl": null,
+    "activeUnit": null
+  },
+  url:null,
+  method:null,
+})
+try {
+  localStorageKeyValue.value = JSON.parse(localStorage.getItem(localStorageKey)) || localStorageKeyValue.value
+}catch (e) {
+  // asda
+}
+const cookiesStr = ref(JSON.stringify(localStorageKeyValue.value.data.cookies || [
   // {
   //   name:'sspm_appid',
   //   value:'1540947351189100',
@@ -140,26 +155,27 @@ const cookies = computed(()=> {
     return []
   }
 })
-const host = ref('http://127.0.0.1:81/beiwai')
-const pageUrl = ref('https://study.ebeiwai.com/lms2014/fore/foreIndex/gotoCoursev3/beiwaionline/ZK_BWME3033_20230801140311544/5441277/200003001,200003002,200003003/90ba1d1f99a87643fc7216084d182f95?userId=629700')
-const activeUnit = ref(0)
+const host = ref(localStorageKeyValue.value.url || 'http://127.0.0.1:81/beiwai')
+const pageUrl = ref(localStorageKeyValue.value.data.pageUrl || 'https://study.ebeiwai.com/lms2014/fore/foreIndex/gotoCoursev3/beiwaionline/ZK_BWME3033_20230801140311544/5441277/200003001,200003002,200003003/90ba1d1f99a87643fc7216084d182f95?userId=629700')
+const activeUnit = ref(localStorageKeyValue.value.data.activeUnit || 0)
 const data = ref<any>({})
 const coursevList = computed(()=> data.value.coursevList || [])
 const units = computed(()=> data.value.units || [])
 const isLoading = ref(false)
+const axiosConfig = computed(()=>({
+  url:host.value,
+  method:'post',
+  data:{
+    cookies:cookies.value,
+    pageUrl:pageUrl.value,
+    activeUnit:activeUnit.value
+  }
+}))
 const getData = debounce(async ()=>{
   loading.start()
   isLoading.value = true
   try {
-    const {data:{data:resData}} = await axios({
-      url:host.value,
-      method:'post',
-      data:{
-        cookies:cookies.value,
-        pageUrl:pageUrl.value,
-        activeUnit:activeUnit.value
-      }
-    })
+    const {data:{data:resData}} = await axios(axiosConfig.value)
     data.value = resData
     loading.finish()
   }catch (e) {
@@ -173,6 +189,7 @@ const change = ()=>{
   getData()
 }
 const save = ()=>{
+  localStorage.setItem(localStorageKey, JSON.stringify(axiosConfig.value))
   activeUnit.value = 0
   data.value = {}
   change()
