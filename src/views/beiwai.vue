@@ -117,11 +117,10 @@ const cookies = computed(()=> {
 const pageUrl = ref('https://study.ebeiwai.com/lms2014/fore/foreIndex/gotoCoursev3/beiwaionline/ZK_BWME3033_20230801140311544/5441277/200003001,200003002,200003003/90ba1d1f99a87643fc7216084d182f95?userId=629700')
 const activeUnit = ref(0)
 const data = ref<any>({})
-const coursevList = computed(()=> data.value.coursevList || [{title:'asda'},{title:'asda'}])
+const coursevList = computed(()=> data.value.coursevList || [])
 const units = computed(()=> data.value.units || [])
 const getData = debounce(async ()=>{
   loading.start()
-  data.value = {}
   try {
     const {data:{data:resData}} = await axios({
       baseURL:'http://127.0.0.1:81',
@@ -141,10 +140,12 @@ const getData = debounce(async ()=>{
   }
 })
 const change = ()=>{
+  data.value.units = []
   getData()
 }
 const save = ()=>{
   activeUnit.value = 0
+  data.value = {}
   change()
 }
 </script>
