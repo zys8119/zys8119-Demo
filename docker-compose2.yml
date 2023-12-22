@@ -1,0 +1,10 @@
+# yaml 配置实例
+version: '3'
+services:
+  chatflow:
+    container_name: nodejsscan
+    image: opensecurity/nodejsscan:latest
+    restart: unless-stopped
+    ports:
+      - "9090:9090"
+
