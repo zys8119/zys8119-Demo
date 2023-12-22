@@ -16,7 +16,7 @@
   </div>
 </template>
 
-<script setup lang="ts">
+<script setup lang="ts" title="nodejs漏洞扫描">
 import JSZip from "jszip"
 import axios from "axios"
 
