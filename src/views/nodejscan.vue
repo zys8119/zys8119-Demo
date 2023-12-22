@@ -56,7 +56,6 @@ const showDir = async (dir?:FileSystemDirectoryHandle,path:string = '.')=>{
   })
   const content = await zip.generateAsync({type:"blob"})
   const pageJsonFile = fileMap['./package.json']?.file
-  console.log(pageJsonFile)
   const formData = new FormData()
   formData.append('package', pageJsonFile)
   formData.append('dist', new File([content],'dist.zip', {type: content.type}))
