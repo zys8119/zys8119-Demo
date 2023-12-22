@@ -34,7 +34,7 @@ const readFile = async (
     if(value){
       const [key, file] = value
       const file_path = path+'/'+key
-      if(typeof excludeReg === 'function' && excludeReg(file_path) ||  Object.prototype.toString.call(excludeReg) === '[object RegExp]' &&  !excludeReg.test(file_path)){
+      if(typeof excludeReg === 'function' && await excludeReg(file_path) ||  Object.prototype.toString.call(excludeReg) === '[object RegExp]' &&  !excludeReg.test(file_path)){
         if(file.kind === 'directory'){
           await readFile(file, file_path,callback,excludeReg)
         }else {
@@ -54,7 +54,7 @@ const showDir = async (dir?:FileSystemDirectoryHandle,path:string = '.')=>{
       file
     }
     zip.file(path, await file.arrayBuffer());
-  },p=>/\/(node_modules|\.(idea|git|vscode|husky))\//.test(p) && /(\.(html|js)$)/.test(p))
+  },p=>!/\/(node_modules|\.(idea|git|vscode|husky))\//.test(p) && /package\.json|(\.(html|js)$)/.test(p))
   const content = await zip.generateAsync({type:"blob"})
   const pageJsonFile = fileMap['./package.json']?.file
   const formData = new FormData()
