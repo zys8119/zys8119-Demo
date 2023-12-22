@@ -18,6 +18,7 @@
 
 <script setup lang="ts">
 import JSZip from "jszip"
+import axios from "axios"
 
 const readFile = async (
     dir:FileSystemDirectoryHandle,
@@ -59,10 +60,12 @@ const showDir = async (dir?:FileSystemDirectoryHandle,path:string = '.')=>{
   const formData = new FormData()
   formData.append('package', pageJsonFile)
   formData.append('dist', new File([content],'dist.zip', {type: content.type}))
-  await fetch('http://127.0.0.1:81/nodeJsScan', {
+  const {data} = await axios({
+    url:'http://127.0.0.1:81/nodeJsScan',
     method: 'POST',
-    body: formData,
+    data: formData,
   })
+  console.log(data)
 }
 </script>
 
