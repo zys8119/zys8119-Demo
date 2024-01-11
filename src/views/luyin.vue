@@ -9,9 +9,9 @@
 import Recorder from 'recorder-core'
 import 'recorder-core/src/engine/mp3'
 import 'recorder-core/src/engine/mp3-engine'
-var rec,wave;
+let rec,wave;
 /**调用open打开录音请求好录音权限**/
-var recOpen=function(success){//一般在显示出录音按钮或相关的录音界面时进行此方法调用，后面用户点击开始录音时就能畅通无阻了
+const recOpen = (success:()=>void)=>{//一般在显示出录音按钮或相关的录音界面时进行此方法调用，后面用户点击开始录音时就能畅通无阻了
   rec=Recorder({ //本配置参数请参考下面的文档，有详细介绍
     type:"mp3",sampleRate:16000,bitRate:16 //mp3格式，指定采样率hz、比特率kbps，其他参数使用默认配置；注意：是数字的参数必须提供数字，不要用字符串；需要使用的type类型，需提前把格式支持文件加载进来，比如使用wav格式需要提前加载wav.js编码引擎
     ,onProcess:function(buffers,powerLevel,bufferDuration,bufferSampleRate,newBufferIdx,asyncEnd){
@@ -29,7 +29,9 @@ var recOpen=function(success){//一般在显示出录音按钮或相关的录音
 
     //创建可视化，指定一个要显示的div
     if(Recorder.WaveView)wave=Recorder.WaveView({elem:".recwave"});
-    success&&success();
+    if(success){
+      success?.();
+    }
   },function(msg,isUserNotAllow){//用户拒绝未授权或不支持
     console.log((isUserNotAllow?"UserNotAllow，":"")+"无法录音:"+msg);
   });
@@ -59,11 +61,8 @@ function recStop(){
 };
 
 
-//这里假设立即运行，只录3秒，录完后立即播放，本段代码copy到控制台内可直接运行
-// recOpen(function(){
-//   recStart();
-//   setTimeout(recStop,3000);
-// });
+onMounted(async ()=>{
+})
 </script>
 
 <style scoped lang="less">
