@@ -248,29 +248,7 @@ const load = async (three: BaseThreeClass)=>{
   })
   scene.add(map2)
   console.log(three.scene)
-  const b = new THREE.Mesh(
-      new THREE.BoxGeometry(0.5,0.5,0.5),
-      new THREE.MeshBasicMaterial({color:0x00ff00})
-  )
-  b.name = 'AAA'
-  const obj = new THREE.AnimationObjectGroup()
-  animationClips[0] = new THREE.AnimationClip('柱子动画2', 5, [
-    new THREE.VectorKeyframeTrack(
-        'AAA.position',
-        [0,5],
-        [
-          new THREE.Vector3(0,0,0),
-          new THREE.Vector3(0,0,300),
-        ].map(e=>e.toArray()).reduce((a,b)=>a.concat(b),[]),
-    )
-  ])
-  // b.scale.set(0.1,0.1,0.1)
-  console.log(three.scene)
-  three.scene.children[4].add(b)
-  obj.add(b)
-  obj.add(three.scene)
-  // three.scene.add(b)
-  mixer = new THREE.AnimationMixer(obj)
+  mixer = new THREE.AnimationMixer(three.scene)
   if(mixer && animationClips[0]){
     console.log(animationClips[0])
     const action = mixer.clipAction(animationClips[0])
