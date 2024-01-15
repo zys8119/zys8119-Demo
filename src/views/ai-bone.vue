@@ -188,7 +188,7 @@ const load = async (three: BaseThreeClass)=>{
                 [0,1],
                 [
                     new THREE.Vector3(cx-0.1, cy+0.1, barDepth/2 + depth.value),
-                    new THREE.Vector3(cx-0.1, cy+0.1+0.2, barDepth/2 + depth.value),
+                    new THREE.Vector3(cx-0.1, cy+0.1, barDepth/2 + depth.value+0.2),
                 ].map(e=>e.toArray()).reduce((a,b)=>a.concat(b),[]),
             )
         ])
