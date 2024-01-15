@@ -182,13 +182,13 @@ const load = async (three: BaseThreeClass)=>{
         province.add(barConterMesh)
         map.add(province)
         // 动画
-        const animationClip = new THREE.AnimationClip('柱子动画', 2, [
+        const animationClip = new THREE.AnimationClip('柱子动画', 5, [
             new THREE.VectorKeyframeTrack(
                 'map.bar.mesh.position',
                 [0,1],
                 [
-                    new THREE.Vector3(0,0,0),
-                    new THREE.Vector3(0,0,1000),
+                    new THREE.Vector3(cx-0.1, cy+0.1, barDepth/2 + depth.value),
+                    new THREE.Vector3(cx-0.1, cy+0.1+0.2, barDepth/2 + depth.value),
                 ].map(e=>e.toArray()).reduce((a,b)=>a.concat(b),[]),
             )
         ])
@@ -232,7 +232,7 @@ const load = async (three: BaseThreeClass)=>{
   binjie.wrapS = THREE.RepeatWrapping
   binjie.wrapT = THREE.RepeatWrapping
   // binjie.rotation = Math.PI*0.5
-  map.traverse((object3d:THREE.Mesh)=>{
+  map2.traverse((object3d:THREE.Mesh)=>{
     if(object3d.name === 'map'){
       object3d.material = [
         new THREE.MeshBasicMaterial({
@@ -244,6 +244,10 @@ const load = async (three: BaseThreeClass)=>{
           map:binjie
         }),
       ]
+    }else {
+      if(!object3d.isGroup){
+        object3d.visible = false
+      }
     }
   })
   scene.add(map2)
