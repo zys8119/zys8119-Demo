@@ -1,5 +1,5 @@
 <template>
-  <div class="ai-digital-people">
+  <div class="ai-digital-people" ref="elRef">
     <BaseThree
       @load="load"
       @animation="animation"
@@ -20,14 +20,12 @@ import transparent from "@/src/assets/ai-bone/tm.png"
 import liuguan from "@/src/assets/ai-bone/liuguang.png"
 import { TextGeometry } from 'three/examples/jsm/geometries/TextGeometry.js'
 import { geoMercator } from 'd3-geo'
-import {
-  AddOperation,
-  ClampToEdgeWrapping,
-  MirroredRepeatWrapping,
-  MixOperation,
-  RepeatWrapping
-} from "three/src/constants";
-let m:AnimationMixer = null
+import onEvent from "three-onevent-esm";
+import {AnimationClip} from "three/src/animation/AnimationClip";
+import {AdditiveAnimationBlendMode, NormalAnimationBlendMode} from "three/src/constants";
+const elRef = ref()
+let mixer:AnimationMixer = null
+let animationClips:Array<AnimationClip> = []
 const projectionScale = ref(200)
 // 地图立体深度
 const depth = ref(0.3)
@@ -41,6 +39,8 @@ const projection = geoMercator()
     .translate([0, 0])
 let binjie = null
 const load = async (three: BaseThreeClass)=>{
+  animationClips = []
+  new onEvent(three.scene, three.camera , elRef.value)
   const {scene} = three
   await three.downloadFonts(
       font,
@@ -171,6 +171,7 @@ const load = async (three: BaseThreeClass)=>{
           return v
         })
         const barMesh = new THREE.Mesh(barBox, barMaterial)
+        barMesh.name = 'map.bar.mesh'
         barMesh.position.set(cx-0.1, cy+0.1, barDepth/2 + depth.value)
         province.add(barMesh)
         const barConterMesh = new THREE.Mesh(
@@ -180,6 +181,18 @@ const load = async (three: BaseThreeClass)=>{
         barConterMesh.position.set(cx-0.1, cy+0.1, barDepth/2 + depth.value)
         province.add(barConterMesh)
         map.add(province)
+        // 动画
+        const animationClip = new THREE.AnimationClip('柱子动画', 2, [
+            new THREE.VectorKeyframeTrack(
+                'map.bar.mesh.position',
+                [0,1],
+                [
+                    new THREE.Vector3(0,0,0),
+                    new THREE.Vector3(0,0,1000),
+                ].map(e=>e.toArray()).reduce((a,b)=>a.concat(b),[]),
+            )
+        ])
+        animationClips.push(animationClip)
       })
   )
   const scale = 100
@@ -206,6 +219,9 @@ const load = async (three: BaseThreeClass)=>{
       })
       object3d.castShadow = true
       object3d.receiveShadow = true
+      object3d.on('hover', ev=>{
+        // console.log(ev)
+      })
     }
   })
   scene.add(map)
@@ -231,12 +247,50 @@ const load = async (three: BaseThreeClass)=>{
     }
   })
   scene.add(map2)
+  console.log(three.scene)
+  const b = new THREE.Mesh(
+      new THREE.BoxGeometry(0.5,0.5,0.5),
+      new THREE.MeshBasicMaterial({color:0x00ff00})
+  )
+  b.name = 'AAA'
+  const obj = new THREE.AnimationObjectGroup()
+  animationClips[0] = new THREE.AnimationClip('柱子动画2', 5, [
+    new THREE.VectorKeyframeTrack(
+        'AAA.position',
+        [0,5],
+        [
+          new THREE.Vector3(0,0,0),
+          new THREE.Vector3(0,0,300),
+        ].map(e=>e.toArray()).reduce((a,b)=>a.concat(b),[]),
+    )
+  ])
+  // b.scale.set(0.1,0.1,0.1)
+  console.log(three.scene)
+  three.scene.children[4].add(b)
+  obj.add(b)
+  obj.add(three.scene)
+  // three.scene.add(b)
+  mixer = new THREE.AnimationMixer(obj)
+  if(mixer && animationClips[0]){
+    console.log(animationClips[0])
+    const action = mixer.clipAction(animationClips[0])
+    action.enabled = true
+    action.clampWhenFinished = true
+    // action.loop = THREE.LoopOnce
+    action
+        .play()
+  }
 }
 const play = async (keyName:string)=>{
 
 }
 const animation = (three: BaseThreeClass)=>{
-  binjie.offset.x += 0.01
+  if(binjie){
+    binjie.offset.x += 0.01
+  }
+  if(mixer){
+    mixer.update(three.clockTime)
+  }
 }
 </script>
 
