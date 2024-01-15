@@ -182,7 +182,7 @@ const load = async (three: BaseThreeClass)=>{
         province.add(barConterMesh)
         map.add(province)
         // 动画
-        const animationClip = new THREE.AnimationClip('柱子动画', 5, [
+        const animationClip = new THREE.AnimationClip('柱子动画', 1, [
             new THREE.VectorKeyframeTrack(
                 'map.bar.mesh.position',
                 [0,1],
@@ -254,13 +254,12 @@ const load = async (three: BaseThreeClass)=>{
   console.log(three.scene)
   mixer = new THREE.AnimationMixer(three.scene)
   if(mixer && animationClips[0]){
-    console.log(animationClips[0])
     const action = mixer.clipAction(animationClips[0])
     action.enabled = true
     action.clampWhenFinished = true
-    // action.loop = THREE.LoopOnce
     action
         .play()
+
   }
 }
 const play = async (keyName:string)=>{
