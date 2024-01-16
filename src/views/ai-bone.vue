@@ -69,6 +69,7 @@ const load = async (three: BaseThreeClass)=>{
       'liuguan'
   )
   const map = new THREE.Group()
+  map.name = 'mapGroup'
   await Promise.all(
       mapJson.features.map(async (elem, key: number) => {
         const province: any = new THREE.Group()
@@ -364,6 +365,7 @@ const load = async (three: BaseThreeClass)=>{
   })
   scene.add(map)
   const map2 = map.clone()
+  map2.name = 'mapGroupClone'
   binjie = liuguanTexture.clone()
   binjie.repeat.set(1,3.5)
   binjie.offset.set(0,0.55)
@@ -442,6 +444,48 @@ const load = async (three: BaseThreeClass)=>{
       labelsIndex = 0
     }
   }, 2000)
+  // three.transformControls().attach(map).setMode('rotate')
+
+  mixers.push((mixer=>{
+    if(mixer && barAnimationClipAlls){
+      const values = [
+        new THREE.Quaternion(
+            -0.5986213257459734,
+            0.3020662486924077,
+            0.3149651772501568,
+            0.671718264514824
+        ),
+        new THREE.Quaternion(
+            -0.6988647722795184,
+            0.23856862747547736,
+            0.2959179481940359,
+            0.6058924062800226
+        ),
+      ].map(e=>e.toArray()).reduce((a,b)=>a.concat(b),[])
+      const tracks = [
+        new THREE.VectorKeyframeTrack(
+            `mapGroup.quaternion`,
+            [0,2],
+            values,
+        ),
+        new THREE.VectorKeyframeTrack(
+            `mapGroupClone.quaternion`,
+            [0,2],
+            values,
+        )
+      ]
+      const animationClip = new THREE.AnimationClip('全局场景动画', 2, tracks)
+      const action = mixer.clipAction(animationClip)
+      action.enabled = true
+      action.clampWhenFinished = true
+      action.loop = THREE.LoopOnce
+      action
+          .play()
+    }
+    return mixer
+  })(new THREE.AnimationMixer(three.scene)))
+  three.transformControls().attach(map).setMode('scale')
+  window.map = map
 }
 const play = async (keyName:string)=>{
 
