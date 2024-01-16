@@ -18,6 +18,8 @@ import line from "@/src/assets/ai-bone/line.png"
 import lineTop from "@/src/assets/ai-bone/line-top.png"
 import transparent from "@/src/assets/ai-bone/tm.png"
 import liuguan from "@/src/assets/ai-bone/liuguang.png"
+import fk1 from "@/src/assets/ai-bone/fk1.png"
+import fk2 from "@/src/assets/ai-bone/fk2.png"
 import { TextGeometry } from 'three/examples/jsm/geometries/TextGeometry.js'
 import { geoMercator } from 'd3-geo'
 import onEvent from "three-onevent-esm";
@@ -67,6 +69,14 @@ const load = async (three: BaseThreeClass)=>{
   const liuguanTexture = await three.downloadImagesTexture(
       liuguan,
       'liuguan'
+  )
+  const fk1Texture = await three.downloadImagesTexture(
+      fk1,
+      'fk1'
+  )
+  const fk2Texture = await three.downloadImagesTexture(
+      fk2,
+      'fk2'
   )
   const map = new THREE.Group()
   map.name = 'mapGroup'
@@ -444,22 +454,33 @@ const load = async (three: BaseThreeClass)=>{
       labelsIndex = 0
     }
   }, 2000)
-  // three.transformControls().attach(map).setMode('rotate')
 
   mixers.push((mixer=>{
     if(mixer && barAnimationClipAlls){
       const values = [
         new THREE.Quaternion(
-            -0.5986213257459734,
-            0.3020662486924077,
-            0.3149651772501568,
-            0.671718264514824
+              -0.6569051704277281,
+              0.13118209550159107,
+              0.16132626237722864,
+              0.7247349115038703
         ),
         new THREE.Quaternion(
             -0.6988647722795184,
             0.23856862747547736,
             0.2959179481940359,
             0.6058924062800226
+        ),
+      ].map(e=>e.toArray()).reduce((a,b)=>a.concat(b),[])
+      const mapGroupValues = [
+        new THREE.Vector3(
+            76,
+            76,
+            76,
+        ),
+        new THREE.Vector3(
+            100,
+            100,
+            100,
         ),
       ].map(e=>e.toArray()).reduce((a,b)=>a.concat(b),[])
       const tracks = [
@@ -472,6 +493,16 @@ const load = async (three: BaseThreeClass)=>{
             `mapGroupClone.quaternion`,
             [0,2],
             values,
+        ),
+        new THREE.VectorKeyframeTrack(
+            `mapGroup.scale`,
+            [0,2],
+            mapGroupValues,
+        ),
+        new THREE.VectorKeyframeTrack(
+            `mapGroupClone.scale`,
+            [0,2],
+            mapGroupValues,
         )
       ]
       const animationClip = new THREE.AnimationClip('全局场景动画', 2, tracks)
@@ -484,7 +515,103 @@ const load = async (three: BaseThreeClass)=>{
     }
     return mixer
   })(new THREE.AnimationMixer(three.scene)))
-  three.transformControls().attach(map).setMode('scale')
+  // three.transformControls().attach(ground).setMode('translate')
+  // 颗粒动画
+  const keluMaterialA = new Array(6).fill(new THREE.MeshBasicMaterial({
+    color:new THREE.Color('#7ce5ef'),
+    transparent:true,
+    map:fk1Texture
+  }))
+  const keluMaterialB = new Array(6).fill(new THREE.MeshBasicMaterial({
+    color:new THREE.Color('#7ce5ef'),
+    transparent:true,
+    opacity:0.9,
+  }))
+  const kelu = (mesh=>{
+    // three.transformControls().attach(mesh).setMode('scale')
+    return mesh
+  })(new THREE.Mesh(new THREE.BoxGeometry(.2,.2,.2),keluMaterialA))
+  // 获取圆弧上的点坐标
+  function getPointOnArc(radius, angleInDegrees, centerX, centerY) {
+    // 将角度转换为弧度
+    var angleInRadians = (angleInDegrees - 90) * Math.PI / 180.0;
+
+    // 计算点的坐标
+    var x = centerX + radius * Math.cos(angleInRadians);
+    var y = centerY + radius * Math.sin(angleInRadians);
+
+    return { x: x, y: y };
+  }
+
+  mixers.push((mixer=>{
+    const tracks = []
+    const time = 2
+    new Array(4).fill(0).map((e,index)=>{
+      return new Array(50).fill(kelu).map((e,k)=>{
+        const {x, y} = getPointOnArc(7, Math.random() * 360, 0, 0)
+        const pos = {
+          x,
+          y,
+          z:Math.random()
+        }
+        const mesh = kelu.clone()
+        mesh.name = `keyli-${index}-${k}`
+        if(k % 2){
+          mesh.material = keluMaterialB
+        }
+        const keyframeArr = new Array(20).fill(0).map((a,b,c)=>time/c.length*b)
+        // mesh.material.opacity = 0
+        // tracks.push(new THREE.VectorKeyframeTrack(
+        //     `${mesh.name}.material.opacity`,
+        //     keyframeArr, keyframeArr.map(()=> [0,.2,.4,.6,.8,1][Math.floor(Math.random()*7)]),
+        // ))
+        mesh.position.set(0, 0, 0)
+        tracks.push(new THREE.VectorKeyframeTrack(
+            `${mesh.name}.position`,
+            keyframeArr, keyframeArr.map(e=>new THREE.Vector3(
+                pos.x*e,
+                pos.y*e,
+                pos.z*e,
+            )).map(e=>e.toArray()).reduce((a,b)=>a.concat(b),[]),
+        ))
+        mesh.scale.set(0, 0, 0)
+        tracks.push(new THREE.VectorKeyframeTrack(
+            `${mesh.name}.scale`,
+            keyframeArr, keyframeArr.map(e=>{
+              const scale = [0,.2,.4,.6,.8,1][Math.floor(Math.random()*7)]
+              return new THREE.Vector3(
+                  scale,
+                  scale,
+                  scale,
+              )
+            }).map(e=>e.toArray()).reduce((a,b)=>a.concat(b),[]),
+        ))
+        tracks.push(new THREE.VectorKeyframeTrack(
+            `${mesh.name}.quaternion`,
+            keyframeArr, keyframeArr.map(e=>{
+              return new THREE.Quaternion(
+                  Math.random()/2,
+                  Math.random()/2,
+                  Math.random()/2,
+                  1
+              )
+            }).map(e=>e.toArray()).reduce((a,b)=>a.concat(b),[]),
+        ))
+        map.add(mesh)
+      })
+    })
+    const animationClip = new THREE.AnimationClip('颗粒动画', time, tracks)
+    const action = mixer.clipAction(animationClip)
+    action.enabled = true
+    action.clampWhenFinished = true
+    // action.loop = THREE.LoopOnce
+    action
+        .setEffectiveTimeScale(0.5)
+        .play()
+    return mixer
+  })(new THREE.AnimationMixer(three.scene)))
+
+  // map.add(kelu)
   window.map = map
 }
 const play = async (keyName:string)=>{
@@ -508,7 +635,7 @@ const animation = (three: BaseThreeClass)=>{
 <style scoped lang="less">
 .ai-digital-people {
   .base-three{
-    //background-color: #;
+    background-color: #0e1d33;
   }
 }
 </style>
