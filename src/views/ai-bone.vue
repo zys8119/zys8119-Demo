@@ -20,12 +20,14 @@ import transparent from "@/src/assets/ai-bone/tm.png"
 import liuguan from "@/src/assets/ai-bone/liuguang.png"
 import fk1 from "@/src/assets/ai-bone/fk1.png"
 import fk2 from "@/src/assets/ai-bone/fk2.png"
+import xuanzhuan from "@/src/assets/ai-bone/xuanzhuan.png"
 import { TextGeometry } from 'three/examples/jsm/geometries/TextGeometry.js'
 import { geoMercator } from 'd3-geo'
 import onEvent from "three-onevent-esm";
 import {AnimationClip} from "three/src/animation/AnimationClip";
 import {merge} from "lodash"
 import {AdditiveAnimationBlendMode, NormalAnimationBlendMode} from "three/src/constants";
+import {Euler} from "three/src/math/Euler";
 const elRef = ref()
 const activeMixer = ref<AnimationMixer>()
 const mixers:Array<AnimationMixer> = []
@@ -77,6 +79,10 @@ const load = async (three: BaseThreeClass)=>{
   const fk2Texture = await three.downloadImagesTexture(
       fk2,
       'fk2'
+  )
+  const xuanzhuanTexture = await three.downloadImagesTexture(
+      xuanzhuan,
+      'xuanzhuan'
   )
   const map = new THREE.Group()
   map.name = 'mapGroup'
@@ -604,13 +610,32 @@ const load = async (three: BaseThreeClass)=>{
     const action = mixer.clipAction(animationClip)
     action.enabled = true
     action.clampWhenFinished = true
-    // action.loop = THREE.LoopOnce
+    action.loop = THREE.LoopOnce
     action
         .setEffectiveTimeScale(0.5)
         .play()
     return mixer
   })(new THREE.AnimationMixer(three.scene)))
-
+  // 背景旋转
+  ;(()=>{
+    const size = 8
+    const box = new THREE.BoxGeometry(size,size,0)
+    const material = new THREE.MeshBasicMaterial({
+      map:xuanzhuanTexture,
+      transparent:true
+    })
+    const mesh = new THREE.Mesh(box,[
+        null,
+        null,
+        null,
+        null,
+        material,
+    ])
+    mesh.name = 'xuanzhuan.texture'
+    map.add(mesh)
+    three.transformControls().attach(mesh).setMode("rotate")
+    mesh.position.set(-0.00007450501024886719,0.00045044476074280007,-0.0029288844308935223)
+  })()
   // map.add(kelu)
   window.map = map
 }
@@ -628,6 +653,10 @@ const animation = (three: BaseThreeClass)=>{
   })
   if(activeMixer.value){
     activeMixer.value.update(three.clockTime)
+  }
+  const xuanzhuan = three.scene.getObjectByName('xuanzhuan.texture')
+  if(xuanzhuan){
+    xuanzhuan.rotation.z += 0.001;
   }
 }
 </script>
