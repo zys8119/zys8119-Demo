@@ -22,10 +22,16 @@ import { TextGeometry } from 'three/examples/jsm/geometries/TextGeometry.js'
 import { geoMercator } from 'd3-geo'
 import onEvent from "three-onevent-esm";
 import {AnimationClip} from "three/src/animation/AnimationClip";
+import {merge} from "lodash"
 import {AdditiveAnimationBlendMode, NormalAnimationBlendMode} from "three/src/constants";
 const elRef = ref()
-let mixer:AnimationMixer = null
+const activeMixer = ref<AnimationMixer>()
+const mixers:Array<AnimationMixer> = []
 let animationClips:Array<AnimationClip> = []
+const barAnimationClipAlls:AnimationClip =  new THREE.AnimationClip('全部柱子动画', 2, [])
+const labelAnimationClipAlls:AnimationClip =  new THREE.AnimationClip('全部地图名称动画', 2, [])
+const mapAnimationClipAlls:AnimationClip =  new THREE.AnimationClip('全部地图动画', 2, [])
+const conferenceTextGroupAnimationClipAlls:AnimationClip =  new THREE.AnimationClip('地图数据动画', 2, [])
 const projectionScale = ref(200)
 // 地图立体深度
 const depth = ref(0.3)
@@ -66,6 +72,7 @@ const load = async (three: BaseThreeClass)=>{
   await Promise.all(
       mapJson.features.map(async (elem, key: number) => {
         const province: any = new THREE.Group()
+        const coordinatesGroup: any = new THREE.Group()
         const coordinates = elem.geometry.coordinates
         coordinates.forEach((multiPolygon) => {
           if (typeof multiPolygon[0][0] === 'number') {
@@ -87,7 +94,7 @@ const load = async (three: BaseThreeClass)=>{
             linGeometry.setFromPoints(points)
             // 边界线
             const line = new THREE.Line(linGeometry)
-            province.add(line)
+            coordinatesGroup.add(line)
             // 土地
             const geometry = new THREE.ExtrudeGeometry(shape, {
               bevelEnabled: false,
@@ -96,9 +103,10 @@ const load = async (three: BaseThreeClass)=>{
             })
             const mesh = new THREE.Mesh(geometry)
             mesh.name = 'map'
-            province.add(mesh)
+            coordinatesGroup.add(mesh)
           })
         })
+        province.add(coordinatesGroup)
         // 将geojson的properties放到模型中，后面会用到
         province.properties = elem.properties
         if (elem.properties.centroid) {
@@ -106,17 +114,6 @@ const load = async (three: BaseThreeClass)=>{
           province.properties._centroid = [x, y]
         }
         // 文字
-        const fontBox = new TextGeometry(elem.properties.name, {
-          font: (three.fonts.get('font') as any).font,
-          size: 0.1,
-          height: 0.01,
-          curveSegments: 12,
-        })
-        const fontMaterial = new THREE.MeshPhongMaterial({
-          flatShading: true,
-          color: 0xffffff
-        })
-        const fontMesh = new THREE.Mesh(fontBox, fontMaterial)
         const [x, y] = projection(elem.properties.center as any) as number[]
         const offset = {
           "鄞州区":{x:0.5, y:-0.25},
@@ -127,13 +124,121 @@ const load = async (three: BaseThreeClass)=>{
           "慈溪市":{x:0.3, y:0},
         }[elem.properties.name]
         const [cx, cy] = [x - 0.2 + (offset?.x ?? 0), -y + (offset?.y ?? 0)]
-        fontMesh.position.set(cx, cy, depth.value)
-        fontMesh.rotation.x  = Math.PI/180*90
-        fontMesh.receiveShadow = true
-        fontMesh.castShadow = true
-        province.add(fontMesh)
+        const createText = (options:{
+          text:string
+          fontSize?:number
+          pos:number[],
+          name?:string,
+          fn?(data:{
+            box:TextGeometry
+            material:MeshPhongMaterial
+            mesh:THREE.Mesh
+          }):void
+        })=>{
+          const data = merge<Partial<typeof options>,typeof options>({
+            name:`${elem.properties.name}.map.label.mesh`
+          }, options)
+          const fontBox = new TextGeometry(data.text, {
+            font: (three.fonts.get('font') as any).font,
+            size: data.fontSize || 0.1,
+            height: 0.01,
+            curveSegments: 12,
+          })
+          const fontMaterial = new THREE.MeshPhongMaterial({
+            flatShading: true,
+            color: 0xffffff,
+            transparent: true,
+          })
+          const fontMesh = new THREE.Mesh(fontBox, fontMaterial)
+          ;(fontMesh.position.set as any)(...data.pos)
+          fontMesh.rotation.x  = Math.PI/180*90
+          fontMesh.receiveShadow = true
+          fontMesh.castShadow = true
+          fontMesh.name = data.name
+          data?.fn?.({
+            box:fontBox,
+            material:fontMaterial,
+            mesh:fontMesh
+          })
+          return fontMesh
+        }
+        const labelTtracks = [
+          new THREE.VectorKeyframeTrack(
+              `${elem.properties.name}.map.label.mesh.material.opacity`,
+              [0,2],
+              [0, 1],
+          )
+        ]
+        labelAnimationClipAlls.tracks = labelAnimationClipAlls.tracks.concat(labelTtracks)
+        province.add(createText({
+          text:elem.properties.name,
+          pos:[cx, cy, depth.value],
+        }))
+        coordinatesGroup.name = `${elem.properties.name}.map.mesh`
+        const mapTtracks = [
+          new THREE.VectorKeyframeTrack(
+              `${elem.properties.name}.map.mesh.position`,
+              [0,2],
+              [
+                new THREE.Vector3(0,0,0,),
+                new THREE.Vector3(0,0,0.1),
+              ].map(e=>e.toArray()).reduce((a,b)=>a.concat(b),[]),
+          ),
+          new THREE.VectorKeyframeTrack(
+              `${elem.properties.name}.map.mesh.clone.position`,
+              [0,2],
+              [
+                new THREE.Vector3(0,0,0,),
+                new THREE.Vector3(0,0,0.1),
+              ].map(e=>e.toArray()).reduce((a,b)=>a.concat(b),[]),
+          ),
+          new THREE.VectorKeyframeTrack(
+              `${elem.properties.name}.map.label.mesh.position`,
+              [0,2],
+              [
+                new THREE.Vector3(cx, cy, depth.value),
+                new THREE.Vector3(cx, cy, depth.value+0.1),
+              ].map(e=>e.toArray()).reduce((a,b)=>a.concat(b),[]),
+          )
+        ]
+        mapAnimationClipAlls.tracks = mapAnimationClipAlls.tracks.concat(mapTtracks)
+        // 会议文字
+        const conferenceTextGroup = new THREE.Group()
+        conferenceTextGroup.add(createText({
+          text:"在线活跃次数",
+          name:`${elem.properties.name}.conferenceText1`,
+          fontSize:0.2,
+          pos:[cx, cy, depth.value + 0.5],
+          fn({material}){
+            material.opacity = 0
+          }
+        }))
+        conferenceTextGroup.add(createText({
+          text:"56",
+          name:`${elem.properties.name}.conferenceText2`,
+          fontSize:0.2,
+          pos:[cx, cy, depth.value + 0.2],
+          fn({material}){
+            material.opacity = 0
+          }
+        }))
+        conferenceTextGroup.name = `${elem.properties.name}.conferenceTextGroup`
+        const conferenceTextGroupTtracks = [
+          new THREE.VectorKeyframeTrack(
+              `${elem.properties.name}.conferenceText1.material.opacity`,
+              [0,2],
+              [0, 1],
+          ),
+          new THREE.VectorKeyframeTrack(
+              `${elem.properties.name}.conferenceText2.material.opacity`,
+              [0,2],
+              [0, 1],
+          )
+        ]
+        conferenceTextGroupAnimationClipAlls.tracks = conferenceTextGroupAnimationClipAlls.tracks.concat(conferenceTextGroupTtracks)
+        province.add(conferenceTextGroup)
         // 柱子
-        const barDepth = depth.value + 0.5
+        const barDepth = depth.value + Math.random()
         const barBox = new THREE.BoxGeometry(0.1, 0.1, barDepth)
         const barMaterial = [
           new THREE.MeshBasicMaterial({
@@ -171,28 +276,55 @@ const load = async (three: BaseThreeClass)=>{
           return v
         })
         const barMesh = new THREE.Mesh(barBox, barMaterial)
-        barMesh.name = 'map.bar.mesh'
+        barMesh.name = `${elem.properties.name}.map.bar.mesh.line`
         barMesh.position.set(cx-0.1, cy+0.1, barDepth/2 + depth.value)
         province.add(barMesh)
         const barConterMesh = new THREE.Mesh(
-            new THREE.BoxGeometry(0.05, 0.05, barDepth - 0.001),
+            new THREE.BoxGeometry(0.05, 0.05, barDepth - 0.01),
             new THREE.MeshBasicMaterial({color: "#9dfbfe" })
         )
+        barConterMesh.name = `${elem.properties.name}.map.bar.center.mesh`
         barConterMesh.position.set(cx-0.1, cy+0.1, barDepth/2 + depth.value)
         province.add(barConterMesh)
         map.add(province)
+        const tracks = [
+          new THREE.VectorKeyframeTrack(
+              `${elem.properties.name}.map.bar.mesh.line.scale`,
+              [0,2],
+              [
+                new THREE.Vector3(1,1,0,),
+                new THREE.Vector3(1,1,1),
+              ].map(e=>e.toArray()).reduce((a,b)=>a.concat(b),[]),
+          ),
+          new THREE.VectorKeyframeTrack(
+              `${elem.properties.name}.map.bar.mesh.line.position`,
+              [0,2],
+              [
+                new THREE.Vector3(cx-0.1, cy+0.1,0,),
+                new THREE.Vector3(cx-0.1, cy+0.1, barDepth/2 + depth.value),
+              ].map(e=>e.toArray()).reduce((a,b)=>a.concat(b),[]),
+          ),
+          new THREE.VectorKeyframeTrack(
+              `${elem.properties.name}.map.bar.center.mesh.scale`,
+              [0,2],
+              [
+                new THREE.Vector3(1,1,0,),
+                new THREE.Vector3(1,1,1),
+              ].map(e=>e.toArray()).reduce((a,b)=>a.concat(b),[]),
+          ),
+          new THREE.VectorKeyframeTrack(
+              `${elem.properties.name}.map.bar.center.mesh.position`,
+              [0,2],
+              [
+                new THREE.Vector3(cx-0.1, cy+0.1,0,),
+                new THREE.Vector3(cx-0.1, cy+0.1, barDepth/2 + depth.value),
+              ].map(e=>e.toArray()).reduce((a,b)=>a.concat(b),[]),
+          )
+        ]
         // 动画
-        const animationClip = new THREE.AnimationClip('柱子动画', 1, [
-            new THREE.VectorKeyframeTrack(
-                'map.bar.mesh.position',
-                [0,1],
-                [
-                    new THREE.Vector3(cx-0.1, cy+0.1, barDepth/2 + depth.value),
-                    new THREE.Vector3(cx-0.1, cy+0.1, barDepth/2 + depth.value+0.2),
-                ].map(e=>e.toArray()).reduce((a,b)=>a.concat(b),[]),
-            )
-        ])
+        const animationClip = new THREE.AnimationClip('柱子动画', 2, tracks)
         animationClips.push(animationClip)
+        barAnimationClipAlls.tracks = barAnimationClipAlls.tracks.concat(tracks)
       })
   )
   const scale = 100
@@ -219,9 +351,6 @@ const load = async (three: BaseThreeClass)=>{
       })
       object3d.castShadow = true
       object3d.receiveShadow = true
-      object3d.on('hover', ev=>{
-        // console.log(ev)
-      })
     }
   })
   scene.add(map)
@@ -233,6 +362,9 @@ const load = async (three: BaseThreeClass)=>{
   binjie.wrapT = THREE.RepeatWrapping
   // binjie.rotation = Math.PI*0.5
   map2.traverse((object3d:THREE.Mesh)=>{
+    if(object3d.name.endsWith('map.mesh')){
+      object3d.name += '.clone'
+    }
     if(object3d.name === 'map'){
       object3d.material = [
         new THREE.MeshBasicMaterial({
@@ -252,15 +384,50 @@ const load = async (three: BaseThreeClass)=>{
   })
   scene.add(map2)
   console.log(three.scene)
-  mixer = new THREE.AnimationMixer(three.scene)
-  if(mixer && animationClips[0]){
-    const action = mixer.clipAction(animationClips[0])
+  // 播放动画
+  mixers.push((mixer=>{
+    if(mixer && labelAnimationClipAlls){
+      const action = mixer.clipAction(labelAnimationClipAlls)
+      action.enabled = true
+      action.clampWhenFinished = true
+      action.loop = THREE.LoopOnce
+      action
+          .play()
+    }
+    return mixer
+  })(new THREE.AnimationMixer(three.scene)))
+  mixers.push((mixer=>{
+    if(mixer && barAnimationClipAlls){
+      const action = mixer.clipAction(barAnimationClipAlls)
+      action.enabled = true
+      action.clampWhenFinished = true
+      action.loop = THREE.LoopOnce
+      action
+          .play()
+    }
+    return mixer
+  })(new THREE.AnimationMixer(three.scene)))
+  // 自动激活动画
+  activeMixer.value = new THREE.AnimationMixer(three.scene)
+  const labels = mapJson.features.map(e=>e.properties.name)
+  let labelsIndex = 0
+  setInterval(()=>{
+    activeMixer.value.stopAllAction()
+    const name = labels[labelsIndex]
+    const animationClip = new THREE.AnimationClip('柱子动画', 2, mapAnimationClipAlls.tracks.filter(e=>e.name.includes(name)))
+    const action = activeMixer.value.clipAction(animationClip)
     action.enabled = true
     action.clampWhenFinished = true
+    action.loop = THREE.LoopOnce
     action
+        .reset()
+        .setEffectiveTimeScale(4)
         .play()
-
-  }
+    labelsIndex += 1
+    if(labelsIndex >=labels.length){
+      labelsIndex = 0
+    }
+  }, 2000)
 }
 const play = async (keyName:string)=>{
 
@@ -269,8 +436,13 @@ const animation = (three: BaseThreeClass)=>{
   if(binjie){
     binjie.offset.x += 0.01
   }
-  if(mixer){
-    mixer.update(three.clockTime)
+  mixers.forEach(mixer=>{
+    if(mixer){
+      mixer.update(three.clockTime)
+    }
+  })
+  if(activeMixer.value){
+    activeMixer.value.update(three.clockTime)
   }
 }
 </script>
