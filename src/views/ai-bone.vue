@@ -421,7 +421,7 @@ const load = async (three: BaseThreeClass)=>{
     action.loop = THREE.LoopOnce
     action
         .reset()
-        .setEffectiveTimeScale(4)
+        .setEffectiveTimeScale(3)
         .play()
     labelsIndex += 1
     if(labelsIndex >=labels.length){
