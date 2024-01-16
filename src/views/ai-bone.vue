@@ -129,6 +129,8 @@ const load = async (three: BaseThreeClass)=>{
           fontSize?:number
           pos:number[],
           name?:string,
+          color?:string,
+          showShadow?:boolean,
           fn?(data:{
             box:TextGeometry
             material:MeshPhongMaterial
@@ -136,7 +138,8 @@ const load = async (three: BaseThreeClass)=>{
           }):void
         })=>{
           const data = merge<Partial<typeof options>,typeof options>({
-            name:`${elem.properties.name}.map.label.mesh`
+            name:`${elem.properties.name}.map.label.mesh`,
+            showShadow:true
           }, options)
           const fontBox = new TextGeometry(data.text, {
             font: (three.fonts.get('font') as any).font,
@@ -146,14 +149,16 @@ const load = async (three: BaseThreeClass)=>{
           })
           const fontMaterial = new THREE.MeshPhongMaterial({
             flatShading: true,
-            color: 0xffffff,
+            color: new THREE.Color(data.color || 0xffffff),
             transparent: true,
           })
           const fontMesh = new THREE.Mesh(fontBox, fontMaterial)
           ;(fontMesh.position.set as any)(...data.pos)
           fontMesh.rotation.x  = Math.PI/180*90
-          fontMesh.receiveShadow = true
-          fontMesh.castShadow = true
+          if(data.showShadow){
+            fontMesh.receiveShadow = true
+            fontMesh.castShadow = true
+          }
           fontMesh.name = data.name
           data?.fn?.({
             box:fontBox,
@@ -207,7 +212,9 @@ const load = async (three: BaseThreeClass)=>{
         conferenceTextGroup.add(createText({
           text:"在线活跃次数",
           name:`${elem.properties.name}.conferenceText1`,
-          fontSize:0.2,
+          fontSize:0.15,
+          color:'#b600cb',
+          showShadow:false,
           pos:[cx, cy, depth.value + 0.5],
           fn({material}){
             material.opacity = 0
@@ -216,8 +223,10 @@ const load = async (three: BaseThreeClass)=>{
         conferenceTextGroup.add(createText({
           text:"56",
           name:`${elem.properties.name}.conferenceText2`,
-          fontSize:0.2,
-          pos:[cx, cy, depth.value + 0.2],
+          fontSize:0.15,
+          pos:[cx, cy, depth.value + 0.3],
+          color:'#ff0000',
+          showShadow:false,
           fn({material}){
             material.opacity = 0
           }
@@ -414,7 +423,12 @@ const load = async (three: BaseThreeClass)=>{
   setInterval(()=>{
     activeMixer.value.stopAllAction()
     const name = labels[labelsIndex]
-    const animationClip = new THREE.AnimationClip('柱子动画', 2, mapAnimationClipAlls.tracks.filter(e=>e.name.includes(name)))
+    const animationClip = new THREE.AnimationClip('柱子动画', 2,
+        []
+        .concat(mapAnimationClipAlls.tracks.filter(e=>e.name.includes(name)))
+        .concat(conferenceTextGroupAnimationClipAlls.tracks.filter(e=>e.name.includes(name)))
+        .concat(barAnimationClipAlls.tracks.filter(e=>e.name.includes(name)))
+    )
     const action = activeMixer.value.clipAction(animationClip)
     action.enabled = true
     action.clampWhenFinished = true
