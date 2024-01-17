@@ -7,7 +7,7 @@
   </div>
 </template>
 
-<script setup lang="ts" title="ai数字人">
+<script setup lang="ts" title="3d地图">
 import BaseThree, {BaseThreeClass, InitializationData} from "@/src/components/BaseThree"
 import * as THREE from 'three';
 import {AnimationMixer, AnimationAction, MeshPhongMaterial, ExtrudeGeometry, Vector2} from 'three';
@@ -566,11 +566,6 @@ const load = async (three: BaseThreeClass)=>{
           mesh.material = keluMaterialB
         }
         const keyframeArr = new Array(20).fill(0).map((a,b,c)=>time/c.length*b)
-        // mesh.material.opacity = 0
-        // tracks.push(new THREE.VectorKeyframeTrack(
-        //     `${mesh.name}.material.opacity`,
-        //     keyframeArr, keyframeArr.map(()=> [0,.2,.4,.6,.8,1][Math.floor(Math.random()*7)]),
-        // ))
         mesh.position.set(0, 0, 0)
         tracks.push(new THREE.VectorKeyframeTrack(
             `${mesh.name}.position`,
@@ -598,7 +593,7 @@ const load = async (three: BaseThreeClass)=>{
               return new THREE.Quaternion(
                   Math.random()/2,
                   Math.random()/2,
-                  Math.random()/2,
+                  0,
                   1
               )
             }).map(e=>e.toArray()).reduce((a,b)=>a.concat(b),[]),
@@ -633,7 +628,7 @@ const load = async (three: BaseThreeClass)=>{
     ])
     mesh.name = 'xuanzhuan.texture'
     map.add(mesh)
-    three.transformControls().attach(mesh).setMode("rotate")
+    // three.transformControls().attach(mesh).setMode("rotate")
     mesh.position.set(-0.00007450501024886719,0.00045044476074280007,-0.0029288844308935223)
   })()
   // map.add(kelu)
