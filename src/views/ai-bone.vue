@@ -26,8 +26,6 @@ import { geoMercator } from 'd3-geo'
 import onEvent from "three-onevent-esm";
 import {AnimationClip} from "three/src/animation/AnimationClip";
 import {merge} from "lodash"
-import {AdditiveAnimationBlendMode, NormalAnimationBlendMode} from "three/src/constants";
-import {Euler} from "three/src/math/Euler";
 const elRef = ref()
 const activeMixer = ref<AnimationMixer>()
 const mixers:Array<AnimationMixer> = []
