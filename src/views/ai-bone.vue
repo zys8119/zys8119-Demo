@@ -7,7 +7,7 @@
   </div>
 </template>
 
-<script setup lang="ts" title="3d地图">
+<script setup lang="ts" title="大屏-3d地图">
 import BaseThree, {BaseThreeClass, InitializationData} from "@/src/components/BaseThree"
 import * as THREE from 'three';
 import {AnimationMixer, AnimationAction, MeshPhongMaterial, ExtrudeGeometry, Vector2} from 'three';
