@@ -120,7 +120,7 @@ function recStop(){
       time:duration,
       blob,
       type:'audio',
-      isSelf:true
+      isSelf:true,
     })
     // rec.close();//释放录音资源，当然可以不释放，后面可以连续调用start；但不释放时系统或浏览器会一直提示在录音，最佳操作是录完就close掉
     // rec=null;
