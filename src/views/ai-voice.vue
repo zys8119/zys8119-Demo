@@ -1,20 +1,38 @@
 <template>
-  <div class="ai-voice bg-#e8e8e8 abs-content">
-    {{isPress}}
-    <div v-for="(item,key) in list" :key="key" class="bg-#fff m-b-10px p-15px">
-      <div>
-        <audio controls :src="item.url"></audio>
-        <div>{{item.time}}</div>
+  <div class="ai-voice bg-#e8e8e8 abs-content of-x-hidden">
+    <div class="p-15px">
+      <div v-for="(item,key) in list" :key="key" :style="{'--color':item.isSelf ? '#3ab370':'cadetblue'}">
+        <div class="m-b-10px flex items-center gap-10px justify-end flex-shrink-0" :class="{
+        'flex-row-reverse': !item.isSelf,
+      }">
+          <div class="flex-1 flex justify-end " :class="{
+            'flex-row-reverse': !item.isSelf,
+          }">
+            <div class="bg-$color b-rd-10px p-10px b-1px b-solid b-#fff text-#fff ">
+              <div @click="playAudio(`audio${key}`)" v-if="item.type === 'audio'" class="flex-center gap-10px">
+                <svg-icon name="yuyin"></svg-icon>
+                <audio controls ref="audio" :id="`audio${key}`" hidden :src="item.url"></audio>
+                <div>{{(item.time/1000).toFixed(1)}}s</div>
+              </div>
+              <div v-if="item.type === 'text'">
+                <div>{{item.content}}</div>
+              </div>
+            </div>
+          </div>
+          <div class="w-30px h-30px bg-$color flex text-12px b-rd-50% of-hidden flex-center text-#fff">
+            {{item.isSelf ? '我': '对方'}}
+          </div>
+        </div>
       </div>
     </div>
     <footer-fixed>
       <div class="p-x-15px flex items-center gap-10px">
-        <div @click="isVoice = !isVoice" class="w-30px h-30px flex-center b-1px b-solid b-#38b06d text-#38b06d b-rd-50% text-18px">
+        <div @click="isVoice = !isVoice" class="w-30px h-30px flex-center b-1px b-solid b-#38b06d text-#38b06d b-rd-50% text-18px flex-shrink-0">
           <svg-icon name="jianpan" v-if="isVoice"></svg-icon>
           <svg-icon name="yuyin" v-else></svg-icon>
         </div>
         <div v-if="isVoice" ref="voiceBtnRef" class="flex-1 touch-callout select-none" @click.stop.prevent="void 0"><n-button class="flex-1 w-100% select-none">按住说话</n-button></div>
-        <n-input v-else class="flex-1" v-model:value='text' placeholder="请输入" @keyup.enter="change"></n-input>
+        <n-input v-else class="flex-1" type="textarea" autosize v-model:value='text' placeholder="请输入" @keyup.enter="change"></n-input>
       </div>
     </footer-fixed>
     <div class="abs-center bg-#38b06d p-15px b-rd-10px flex-center flex-col" v-if="isPress">
@@ -30,23 +48,30 @@
   </div>
 </template>
 
-<script setup lang="ts" title="ai语音识别">
+<script setup lang="ts" title="ai语音识别Demo">
 import Recorder from 'recorder-core'
 import 'recorder-core/src/engine/mp3'
 import 'recorder-core/src/engine/mp3-engine'
 import SvgIcon from "@/src/components/svg-icon";
 import Hammer from "hammerjs";
 const voiceBtnRef = ref()
-const isVoice = ref(true)
+const isVoice = ref(false)
 const isPress = ref(false)
 const text= ref()
-const list = ref<Array<{
+const list = ref<Array<Partial<{
   url:string
   time:any
   blob:any
-}>>([])
+  content:any
+  type:'text' | 'audio'
+  isSelf:boolean
+}>>>([])
 const change = ()=>{
-  console.log(text.value)
+  list.value.push({
+    content:text.value,
+    type:'text',
+    isSelf:true
+  })
   text.value = ''
 }
 /**调用open打开录音请求好录音权限**/
@@ -90,7 +115,9 @@ function recStop(){
     list.value.push({
       url:localUrl,
       time:duration,
-      blob
+      blob,
+      type:'audio',
+      isSelf:true
     })
     // rec.close();//释放录音资源，当然可以不释放，后面可以连续调用start；但不释放时系统或浏览器会一直提示在录音，最佳操作是录完就close掉
     // rec=null;
@@ -101,26 +128,46 @@ function recStop(){
     // rec=null;
   });
 };
+const playAudio = async id=>{
+ (document.getElementById(id) as HTMLAudioElement)?.play?.()
+}
+const hammer = ref()
+const hammerInit = async ()=>{
+  if(voiceBtnRef.value) {
+    if (hammer.value) {
+      hammer.value.destroy()
+    }
+    hammer.value = new Hammer(voiceBtnRef.value);
+    hammer.value.on('press', () => {
+      isPress.value = true
+      recStart()
+    })
+    hammer.value.on('pressup', () => {
+      isPress.value = false
+      recStop()
+    })
+  }
+}
+const init = async ()=>{
+  await nextTick()
+  recOpen(()=>{})
+  hammerInit()
+}
 watchEffect(()=>{
-  if(isVoice.value){
-    rec?.open?.()
-  }else {
-    rec?.close?.()
-    rec = null
-    isPress.value = false
+  if(!rec && isVoice.value){
+    init()
+  }else if(isVoice.value){
+    hammerInit()
   }
 })
+onUnmounted(()=>{
+  rec?.close?.()
+  rec = null
+  wave = null
+  isPress.value = false
+})
 onMounted(async ()=>{
-  recOpen(()=>{})
-  const hammer = new Hammer(voiceBtnRef.value);
-  hammer.on('press', ()=>{
-    isPress.value = true
-    recStart()
-  })
-  hammer.on('pressup', ()=>{
-    isPress.value = false
-    recStop()
-  })
+  init()
 })
 </script>
 
