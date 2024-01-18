@@ -1,5 +1,5 @@
-// import VConsoleHide from "vconsole-hide"
-// new VConsoleHide()
+import VConsoleHide from "vconsole-hide"
+new VConsoleHide()
 import App from "./App.vue"
 import route from "./route"
 import "swiper/css"
