@@ -2,8 +2,10 @@
   <div class="ai-voice bg-#e8e8e8 abs-content">
     {{isPress}}
     <div v-for="(item,key) in list" :key="key" class="bg-#fff m-b-10px p-15px">
-      <audio controls :src="item.url"></audio>
-      <div>{{item.time}}</div>
+      <div>
+        <audio controls :src="item.url"></audio>
+        <div>{{item.time}}</div>
+      </div>
     </div>
     <footer-fixed>
       <div class="p-x-15px flex items-center gap-10px">
