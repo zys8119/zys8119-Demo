@@ -8,13 +8,16 @@
           <div class="flex-1 flex justify-end " :class="{
             'flex-row-reverse': !item.isSelf,
           }">
-            <div class="bg-$color b-rd-10px p-10px b-1px b-solid b-#fff text-#fff ">
-              <div @click="playAudio(`audio${key}`)" v-if="item.type === 'audio'" class="flex-center gap-10px">
-                <svg-icon name="yuyin"></svg-icon>
-                <audio controls ref="audio" :id="`audio${key}`" hidden :src="item.url"></audio>
-                <div>{{(item.time/1000).toFixed(1)}}s</div>
+            <div class="bg-$color b-rd-10px p-10px b-1px b-solid b-#fff text-#fff " @click="playAudio(`audio${key}`)">
+              <div v-if="item.type === 'audio'" class="flex flex-col items-start">
+                <div class="flex-center gap-10px">
+                  <svg-icon name="yuyin"></svg-icon>
+                  <audio controls ref="audio" :id="`audio${key}`" hidden :src="item.url"></audio>
+                  <div>{{(item.time/1000).toFixed(1)}}s</div>
+                </div>
+                <div class="w-100% b-t-solid b-1px b-#fff m-t-10px" v-if="item.content">{{item.content}}</div>
               </div>
-              <div v-if="item.type === 'text'">
+              <div  v-if="item.type === 'text'">
                 <div>{{item.content}}</div>
               </div>
             </div>
