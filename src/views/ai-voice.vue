@@ -81,7 +81,7 @@ function recStart(){//打开了录音后才能进行start、stop调用
 
 /**结束录音**/
 function recStop(){
-  rec.stop(function(blob,duration){
+  rec.stop(async function(blob,duration){
     //简单利用URL生成本地文件地址，注意不用了时需要revokeObjectURL，否则霸占内存
     //此地址只能本地使用，比如赋值给audio.src进行播放，赋值给a.href然后a.click()进行下载（a需提供download="xxx.mp3"属性）
     var localUrl=(window.URL||webkitURL).createObjectURL(blob);
