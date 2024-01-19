@@ -20,6 +20,18 @@
               <div  v-if="item.type === 'text'">
                 <div>{{item.content}}</div>
               </div>
+              <div  v-if="item.type === 'loading'">
+                <div style="color: #ffffff" class="la-ball-spin-clockwise-fade-rotating la-sm">
+                  <div></div>
+                  <div></div>
+                  <div></div>
+                  <div></div>
+                  <div></div>
+                  <div></div>
+                  <div></div>
+                  <div></div>
+                </div>
+              </div>
             </div>
           </div>
           <div class="w-30px h-30px bg-$color flex text-12px b-rd-50% of-hidden flex-center text-#fff">
@@ -35,7 +47,13 @@
           <svg-icon name="yuyin" v-else></svg-icon>
         </div>
         <div v-if="isVoice" ref="voiceBtnRef" class="flex-1 touch-callout select-none" @click.stop.prevent="void 0"><n-button class="flex-1 w-100% select-none">按住说话</n-button></div>
-        <n-input v-else class="flex-1" type="textarea" autosize v-model:value='text' placeholder="请输入" @keyup.enter="change"></n-input>
+        <n-input v-else class="flex-1" clearable type="textarea" autosize v-model:value='text' placeholder="请输入"></n-input>
+        <div class="flex-center gap-10px" v-if="!isVoice">
+          <n-button type="primary" v-if="!isChat" @click="change" :disabled="isDisabled">发送</n-button>
+          <n-button class="text-28px" type="default" v-if="isChat" @click="stopChat">
+            <svg-icon name="stop"></svg-icon>
+          </n-button>
+        </div>
       </div>
     </footer-fixed>
     <div class="abs-center bg-#38b06d p-15px b-rd-10px flex-center flex-col" v-if="isPress">
@@ -52,6 +70,8 @@
 </template>
 
 <script setup lang="ts" title="ai语音识别Demo">
+import axios from "axios"
+import {get, debounce} from "lodash"
 import Recorder from 'recorder-core'
 import 'recorder-core/src/engine/mp3'
 import 'recorder-core/src/engine/mp3-engine'
@@ -60,23 +80,65 @@ import Hammer from "hammerjs";
 const voiceBtnRef = ref()
 const isVoice = ref(false)
 const isPress = ref(false)
-const text= ref()
+const isChat = ref(false)
+const text= ref('')
+const isDisabled = computed(()=> text.value.length === 0 || isChat.value)
 const list = ref<Array<Partial<{
   url:string
   time:any
   blob:any
   content:any
-  type:'text' | 'audio'
+  type:'text' | 'audio' | 'loading'
   isSelf:boolean
+  results:any
 }>>>([])
-const change = ()=>{
+const stopChat = ()=>{
+  isChat.value = false
+  list.value.pop()
+}
+const change = debounce(async ()=>{
+  const content = text.value;
   list.value.push({
-    content:text.value,
+    content,
     type:'text',
-    isSelf:true
+    isSelf:true,
+  })
+  list.value.push({
+    type:'loading',
+    isSelf:false,
   })
   text.value = ''
-}
+  try {
+    isChat.value = true
+    const {data} = await axios({
+      method:'post',
+      baseURL:'http://192.168.110.46:8000',
+      url:'/v1/chat/completions',
+      data:{
+        messages:[
+          {
+            "content": content,
+            "role": "user"
+          },
+        ]
+      }
+    })
+    if(isChat.value){
+      list.value.pop()
+      get(data,'choices',[]).forEach((e:any)=>{
+        list.value.push({
+          content:get(e,'message.content'),
+          type:'text',
+          isSelf:false,
+        })
+      })
+    }
+    isChat.value = false
+  }catch (e){
+    isChat.value = false
+  }
+
+},300)
 /**调用open打开录音请求好录音权限**/
 let rec,wave;
 const recOpen = (success?:()=>void)=>{//一般在显示出录音按钮或相关的录音界面时进行此方法调用，后面用户点击开始录音时就能畅通无阻了
@@ -333,6 +395,229 @@ onMounted(async ()=>{
       -moz-transform: scaleY(1);
       -o-transform: scaleY(1);
       transform: scaleY(1);
+    }
+  }
+  /*!
+ * Load Awesome v1.1.0 (http://github.danielcardoso.net/load-awesome/)
+ * Copyright 2015 Daniel Cardoso <@DanielCardoso>
+ * Licensed under MIT
+ */
+  .la-ball-spin-clockwise-fade-rotating,
+  .la-ball-spin-clockwise-fade-rotating > div {
+    position: relative;
+    -webkit-box-sizing: border-box;
+    -moz-box-sizing: border-box;
+    box-sizing: border-box;
+  }
+  .la-ball-spin-clockwise-fade-rotating {
+    display: block;
+    font-size: 0;
+    color: #fff;
+  }
+  .la-ball-spin-clockwise-fade-rotating.la-dark {
+    color: #333;
+  }
+  .la-ball-spin-clockwise-fade-rotating > div {
+    display: inline-block;
+    float: none;
+    background-color: currentColor;
+    border: 0 solid currentColor;
+  }
+  .la-ball-spin-clockwise-fade-rotating {
+    width: 32px;
+    height: 32px;
+    -webkit-animation: ball-spin-clockwise-fade-rotating-rotate 6s infinite linear;
+    -moz-animation: ball-spin-clockwise-fade-rotating-rotate 6s infinite linear;
+    -o-animation: ball-spin-clockwise-fade-rotating-rotate 6s infinite linear;
+    animation: ball-spin-clockwise-fade-rotating-rotate 6s infinite linear;
+  }
+  .la-ball-spin-clockwise-fade-rotating > div {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 8px;
+    height: 8px;
+    margin-top: -4px;
+    margin-left: -4px;
+    border-radius: 100%;
+    -webkit-animation: ball-spin-clockwise-fade-rotating 1s infinite linear;
+    -moz-animation: ball-spin-clockwise-fade-rotating 1s infinite linear;
+    -o-animation: ball-spin-clockwise-fade-rotating 1s infinite linear;
+    animation: ball-spin-clockwise-fade-rotating 1s infinite linear;
+  }
+  .la-ball-spin-clockwise-fade-rotating > div:nth-child(1) {
+    top: 5%;
+    left: 50%;
+    -webkit-animation-delay: -.875s;
+    -moz-animation-delay: -.875s;
+    -o-animation-delay: -.875s;
+    animation-delay: -.875s;
+  }
+  .la-ball-spin-clockwise-fade-rotating > div:nth-child(2) {
+    top: 18.1801948466%;
+    left: 81.8198051534%;
+    -webkit-animation-delay: -.75s;
+    -moz-animation-delay: -.75s;
+    -o-animation-delay: -.75s;
+    animation-delay: -.75s;
+  }
+  .la-ball-spin-clockwise-fade-rotating > div:nth-child(3) {
+    top: 50%;
+    left: 95%;
+    -webkit-animation-delay: -.625s;
+    -moz-animation-delay: -.625s;
+    -o-animation-delay: -.625s;
+    animation-delay: -.625s;
+  }
+  .la-ball-spin-clockwise-fade-rotating > div:nth-child(4) {
+    top: 81.8198051534%;
+    left: 81.8198051534%;
+    -webkit-animation-delay: -.5s;
+    -moz-animation-delay: -.5s;
+    -o-animation-delay: -.5s;
+    animation-delay: -.5s;
+  }
+  .la-ball-spin-clockwise-fade-rotating > div:nth-child(5) {
+    top: 94.9999999966%;
+    left: 50.0000000005%;
+    -webkit-animation-delay: -.375s;
+    -moz-animation-delay: -.375s;
+    -o-animation-delay: -.375s;
+    animation-delay: -.375s;
+  }
+  .la-ball-spin-clockwise-fade-rotating > div:nth-child(6) {
+    top: 81.8198046966%;
+    left: 18.1801949248%;
+    -webkit-animation-delay: -.25s;
+    -moz-animation-delay: -.25s;
+    -o-animation-delay: -.25s;
+    animation-delay: -.25s;
+  }
+  .la-ball-spin-clockwise-fade-rotating > div:nth-child(7) {
+    top: 49.9999750815%;
+    left: 5.0000051215%;
+    -webkit-animation-delay: -.125s;
+    -moz-animation-delay: -.125s;
+    -o-animation-delay: -.125s;
+    animation-delay: -.125s;
+  }
+  .la-ball-spin-clockwise-fade-rotating > div:nth-child(8) {
+    top: 18.179464974%;
+    left: 18.1803700518%;
+    -webkit-animation-delay: 0s;
+    -moz-animation-delay: 0s;
+    -o-animation-delay: 0s;
+    animation-delay: 0s;
+  }
+  .la-ball-spin-clockwise-fade-rotating.la-sm {
+    width: 16px;
+    height: 16px;
+  }
+  .la-ball-spin-clockwise-fade-rotating.la-sm > div {
+    width: 4px;
+    height: 4px;
+    margin-top: -2px;
+    margin-left: -2px;
+  }
+  .la-ball-spin-clockwise-fade-rotating.la-2x {
+    width: 64px;
+    height: 64px;
+  }
+  .la-ball-spin-clockwise-fade-rotating.la-2x > div {
+    width: 16px;
+    height: 16px;
+    margin-top: -8px;
+    margin-left: -8px;
+  }
+  .la-ball-spin-clockwise-fade-rotating.la-3x {
+    width: 96px;
+    height: 96px;
+  }
+  .la-ball-spin-clockwise-fade-rotating.la-3x > div {
+    width: 24px;
+    height: 24px;
+    margin-top: -12px;
+    margin-left: -12px;
+  }
+  /*
+   * Animations
+   */
+  @-webkit-keyframes ball-spin-clockwise-fade-rotating-rotate {
+    100% {
+      -webkit-transform: rotate(-360deg);
+      transform: rotate(-360deg);
+    }
+  }
+  @-moz-keyframes ball-spin-clockwise-fade-rotating-rotate {
+    100% {
+      -moz-transform: rotate(-360deg);
+      transform: rotate(-360deg);
+    }
+  }
+  @-o-keyframes ball-spin-clockwise-fade-rotating-rotate {
+    100% {
+      -o-transform: rotate(-360deg);
+      transform: rotate(-360deg);
+    }
+  }
+  @keyframes ball-spin-clockwise-fade-rotating-rotate {
+    100% {
+      -webkit-transform: rotate(-360deg);
+      -moz-transform: rotate(-360deg);
+      -o-transform: rotate(-360deg);
+      transform: rotate(-360deg);
+    }
+  }
+  @-webkit-keyframes ball-spin-clockwise-fade-rotating {
+    50% {
+      opacity: .25;
+      -webkit-transform: scale(.5);
+      transform: scale(.5);
+    }
+    100% {
+      opacity: 1;
+      -webkit-transform: scale(1);
+      transform: scale(1);
+    }
+  }
+  @-moz-keyframes ball-spin-clockwise-fade-rotating {
+    50% {
+      opacity: .25;
+      -moz-transform: scale(.5);
+      transform: scale(.5);
+    }
+    100% {
+      opacity: 1;
+      -moz-transform: scale(1);
+      transform: scale(1);
+    }
+  }
+  @-o-keyframes ball-spin-clockwise-fade-rotating {
+    50% {
+      opacity: .25;
+      -o-transform: scale(.5);
+      transform: scale(.5);
+    }
+    100% {
+      opacity: 1;
+      -o-transform: scale(1);
+      transform: scale(1);
+    }
+  }
+  @keyframes ball-spin-clockwise-fade-rotating {
+    50% {
+      opacity: .25;
+      -webkit-transform: scale(.5);
+      -moz-transform: scale(.5);
+      -o-transform: scale(.5);
+      transform: scale(.5);
+    }
+    100% {
+      opacity: 1;
+      -webkit-transform: scale(1);
+      -moz-transform: scale(1);
+      -o-transform: scale(1);
+      transform: scale(1);
     }
   }
 }
