@@ -119,6 +119,7 @@ const change = debounce(async ()=>{
       baseURL:baseURL.value,
       url:'/v1/chat/completions',
       data:{
+        model:"chatglm3-6b",
         messages:[
           {
             "content": content,
