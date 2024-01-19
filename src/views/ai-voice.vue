@@ -46,10 +46,10 @@
           <svg-icon name="jianpan" v-if="isVoice"></svg-icon>
           <svg-icon name="yuyin" v-else></svg-icon>
         </div>
-        <div v-if="isVoice" ref="voiceBtnRef" class="flex-1 touch-callout select-none" @click.stop.prevent="void 0"><n-button class="flex-1 w-100% select-none">按住说话</n-button></div>
+        <div v-if="isVoice" ref="voiceBtnRef" class="flex-1 touch-callout select-none" @click.stop.prevent="void 0"><n-button class="flex-1 w-100% select-none" :disabled="isChat">按住说话</n-button></div>
         <n-input v-else class="flex-1" clearable type="textarea" autosize v-model:value='text' placeholder="请输入"></n-input>
-        <div class="flex-center gap-10px" v-if="!isVoice">
-          <n-button type="primary" v-if="!isChat" @click="change" :disabled="isDisabled">发送</n-button>
+        <div class="flex-center gap-10px">
+          <n-button type="primary" v-if="!isVoice && !isChat" @click="change" :disabled="isDisabled">发送</n-button>
           <n-button class="text-28px" type="default" v-if="isChat" @click="stopChat">
             <svg-icon name="stop"></svg-icon>
           </n-button>
@@ -75,15 +75,17 @@ import {get, debounce} from "lodash"
 import Recorder from 'recorder-core'
 import 'recorder-core/src/engine/mp3'
 import 'recorder-core/src/engine/mp3-engine'
+import 'recorder-core/src/engine/wav'
+import 'recorder-core/src/engine/beta-webm'
 import SvgIcon from "@/src/components/svg-icon";
 import Hammer from "hammerjs";
 const voiceBtnRef = ref()
-const isVoice = ref(false)
+const isVoice = ref(true)
 const isPress = ref(false)
 const isChat = ref(false)
 const text= ref('')
 const isDisabled = computed(()=> text.value.length === 0 || isChat.value)
-const list = ref<Array<Partial<{
+type ListItemType = Partial<{
   url:string
   time:any
   blob:any
@@ -91,11 +93,13 @@ const list = ref<Array<Partial<{
   type:'text' | 'audio' | 'loading'
   isSelf:boolean
   results:any
-}>>>([])
+}>
+const list = ref<ListItemType[]>([])
 const stopChat = ()=>{
   isChat.value = false
   list.value.pop()
 }
+const baseURL = ref('http://192.168.110.46:8000')
 const change = debounce(async ()=>{
   const content = text.value;
   list.value.push({
@@ -112,7 +116,7 @@ const change = debounce(async ()=>{
     isChat.value = true
     const {data} = await axios({
       method:'post',
-      baseURL:'http://192.168.110.46:8000',
+      baseURL:baseURL.value,
       url:'/v1/chat/completions',
       data:{
         messages:[
@@ -137,8 +141,36 @@ const change = debounce(async ()=>{
   }catch (e){
     isChat.value = false
   }
-
 },300)
+/**
+ * 发送音频
+ */
+const sendAudio = async (info:ListItemType)=>{
+  try {
+    isChat.value = true
+    const formData = new FormData()
+    formData.append('model', 'large-v3')
+    const file = new File([info.blob],'audio.mp3',{type:'audio/mp3'})
+    formData.append('file', file)
+    info.url = URL.createObjectURL(file)
+    list.value.push(info)
+    const {data} = await axios({
+      method:'post',
+      baseURL:baseURL.value,
+      url:'/v1/audio/transcriptions',
+      data:formData
+    })
+    if(isChat.value){
+      text.value = data.text
+      await change()
+    }
+    isChat.value = false
+  }catch (e){
+    console.error(e)
+    isChat.value = false
+  }
+  // list.value.push(info)
+}
 /**调用open打开录音请求好录音权限**/
 let rec,wave;
 const recOpen = (success?:()=>void)=>{//一般在显示出录音按钮或相关的录音界面时进行此方法调用，后面用户点击开始录音时就能畅通无阻了
@@ -177,13 +209,14 @@ function recStop(){
     //简单利用URL生成本地文件地址，注意不用了时需要revokeObjectURL，否则霸占内存
     //此地址只能本地使用，比如赋值给audio.src进行播放，赋值给a.href然后a.click()进行下载（a需提供download="xxx.mp3"属性）
     var localUrl=(window.URL||webkitURL).createObjectURL(blob);
-    list.value.push({
+    const info = {
       url:localUrl,
       time:duration,
       blob,
       type:'audio',
       isSelf:true,
-    })
+    }
+    sendAudio(info as any)
     // rec.close();//释放录音资源，当然可以不释放，后面可以连续调用start；但不释放时系统或浏览器会一直提示在录音，最佳操作是录完就close掉
     // rec=null;
   },function(msg){
