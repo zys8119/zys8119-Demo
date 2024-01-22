@@ -1,0 +1,14 @@
+# yaml 配置实例
+version: '3'
+services:
+  ecshop:
+    container_name: ecshop
+    image: likeshop/php-b2c:2.5.7
+    restart: unless-stopped
+#    command:
+#      - "python /ecshop/main.py"
+    ports:
+      - "20208:80"
+    volumes:
+      - "./docker/ecshop:/ecshop"
+
