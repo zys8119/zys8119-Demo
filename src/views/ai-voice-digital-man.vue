@@ -269,30 +269,6 @@ onUnmounted(()=>{
   wave = null
   isPress.value = false
 })
-async function fastestDecode() {
-  let time = 0;
-  while (true) {
-    const { state, video } = await clip.tick(time);
-    if (state === 'done') break;
-    if (video != null && state === 'success') {
-      ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
-      ctx.drawImage(
-          video,
-          0,
-          0,
-          video.codedWidth,
-          video.codedHeight,
-          0,
-          0,
-          ctx.canvas.width,
-          ctx.canvas.height,
-      );
-      video.close();
-    }
-    time += 33000;
-  }
-  clip.destroy();
-}
 const chromakey = createChromakey({
   similarity: 0.4,
   smoothness: 0.05,
@@ -333,7 +309,7 @@ const videoParsing = async (canvas:HTMLCanvasElement, ctx:CanvasRenderingContext
       }
     }, 1000 / 30);
   }
-  timesSpeedDecode(1)
+  timesSpeedDecode(50)
 }
 onMounted(async ()=>{
   init()
