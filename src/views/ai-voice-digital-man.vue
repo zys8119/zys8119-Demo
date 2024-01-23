@@ -294,7 +294,7 @@ async function fastestDecode() {
   clip.destroy();
 }
 const chromakey = createChromakey({
-  similarity: 300,
+  similarity: 0.4,
   smoothness: 0.05,
   spill: 0.05,
 });
@@ -316,16 +316,17 @@ const videoParsing = async (canvas:HTMLCanvasElement, ctx:CanvasRenderingContext
       }
       if (video != null && state === 'success') {
         ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+        const va = await chromakey(video)
         ctx.drawImage(
             await chromakey(video),
             0,
             0,
-            video.codedWidth,
-            video.codedHeight,
-            (ctx.canvas.width - video.codedWidth)/2,
-            ctx.canvas.height - video.codedHeight,
-            video.codedWidth,
-            video.codedHeight,
+            va.codedWidth,
+            va.codedHeight,
+            (ctx.canvas.width - va.codedWidth)/2,
+            ctx.canvas.height - va.codedHeight,
+            va.codedWidth,
+            va.codedHeight,
         );
 
         video.close();
