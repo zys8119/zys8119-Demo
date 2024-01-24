@@ -311,7 +311,7 @@ const chromakey = createChromakey({
   spill: 0.05,
 });
 const videoParsing = async (canvas:HTMLCanvasElement, ctx:CanvasRenderingContext2D)=>{
-  async function timesSpeedDecode(times: number = 1, total:number = 3) {
+  async function timesSpeedDecode(times: number = 0, total:number = 3) {
     const resp1 = await fetch(map4Url);
     const clip = new MP4Previewer(resp1.body!);
     const body = await clip.ready;
