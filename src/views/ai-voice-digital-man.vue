@@ -71,7 +71,7 @@
 </template>
 
 <script setup lang="ts" title="ai数字人">
-import { MP4Clip, createChromakey, OffscreenSprite,AudioClip,DEFAULT_AUDIO_CONF } from '@webav/av-cliper';
+import { MP4Clip, MP4Previewer, createChromakey, OffscreenSprite,AudioClip,DEFAULT_AUDIO_CONF } from '@webav/av-cliper';
 import map4Url from './ai-b.mp4?url';
 import axios from "axios"
 import {get, debounce} from "lodash"
@@ -287,9 +287,9 @@ const hammerInit = async ()=>{
   }
 }
 const init = async ()=>{
-  await nextTick()
-  recOpen(()=>{})
-  hammerInit()
+  // await nextTick()
+  // recOpen(()=>{})
+  // hammerInit()
 }
 watchEffect(()=>{
   if(!rec && isVoice.value){
@@ -309,17 +309,17 @@ const chromakey = createChromakey({
   smoothness: 0.05,
   spill: 0.05,
 });
-const videoParsing = async (canvas:HTMLCanvasElement, ctx:CanvasRenderingContext2D, time:number = 0)=>{
-  const resp1 = await fetch(map4Url);
-  const clip = new MP4Clip(resp1.body!);
-  await clip.ready;
-  async function timesSpeedDecode(times: number) {
+const videoParsing = async (canvas:HTMLCanvasElement, ctx:CanvasRenderingContext2D)=>{
+  async function timesSpeedDecode(times: number = 1) {
+    const resp1 = await fetch(map4Url);
+    const clip = new MP4Clip(resp1.body!);
+    const body = await clip.ready;
     let startTime = performance.now();
     return new Promise<any>(resolve => {
       const timer = setInterval(async () => {
-        const { state, video } = await clip.tick(
-            Math.round((performance.now() - startTime + time) * 1000) * times,
-        );
+        const tickTime =  Math.round((performance.now() - startTime) * 1000) * times
+        const { state, video } = await clip.tick(tickTime);
+        console.log(state, tickTime)
         if (state === 'done') {
           clearInterval(timer);
           clip.destroy();
@@ -330,7 +330,7 @@ const videoParsing = async (canvas:HTMLCanvasElement, ctx:CanvasRenderingContext
           ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
           const va = await chromakey(video)
           ctx.drawImage(
-              await chromakey(video),
+              va,
               0,
               0,
               va.codedWidth,
@@ -353,6 +353,7 @@ const resize = debounce(async (canvas:HTMLCanvasElement, ctx:CanvasRenderingCont
   canvas.width = window.innerWidth*window.devicePixelRatio
   canvas.height = window.innerHeight*window.devicePixelRatio
   videoSpeech.value = await videoParsing(canvas, ctx)
+  videoSpeech.value?.()
 }, 300)
 const speech = async (input:string)=>{
   const {data} = await axios({
