@@ -83,6 +83,7 @@ import 'recorder-core/src/engine/beta-webm'
 import SvgIcon from "@/src/components/svg-icon";
 import Hammer from "hammerjs";
 import pinyin from "pinyin";
+import winframe from "winframe";
 const voiceBtnRef = ref()
 const isVoice = ref(true)
 const isPress = ref(false)
@@ -310,40 +311,29 @@ const chromakey = createChromakey({
   spill: 0.05,
 });
 const videoParsing = async (canvas:HTMLCanvasElement, ctx:CanvasRenderingContext2D)=>{
-  async function timesSpeedDecode(times: number = 1) {
+  async function timesSpeedDecode(times: number = 1, total:number = 3) {
     const resp1 = await fetch(map4Url);
-    const clip = new MP4Clip(resp1.body!);
+    const clip = new MP4Previewer(resp1.body!);
     const body = await clip.ready;
-    let startTime = performance.now();
-    return new Promise<any>(resolve => {
-      const timer = setInterval(async () => {
-        const tickTime =  Math.round((performance.now() - startTime) * 1000) * times
-        const { state, video } = await clip.tick(tickTime);
-        if (state === 'done') {
-          clearInterval(timer);
-          clip.destroy();
-          resolve()
-          return;
-        }
-        if (video != null && state === 'success') {
-          ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
-          const va = await chromakey(video)
-          ctx.drawImage(
-              va,
-              0,
-              0,
-              va.codedWidth,
-              va.codedHeight,
-              (ctx.canvas.width - va.codedWidth)/2,
-              ctx.canvas.height - va.codedHeight,
-              va.codedWidth,
-              va.codedHeight,
-          );
-
-          video.close();
-        }
-      }, 1000 / 30);
-    })
+    const remainingTime =  (total-times)
+    return await winframe(async p=>{
+      const video = await clip.getVideoFrame(times + remainingTime*p)
+      if(video){
+        ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+        const va = await chromakey(video)
+        ctx.drawImage(
+            va,
+            0,
+            0,
+            va.codedWidth,
+            va.codedHeight,
+            (ctx.canvas.width - va.codedWidth)/2,
+            ctx.canvas.height - va.codedHeight,
+            va.codedWidth,
+            va.codedHeight,
+        );
+      }
+    }, remainingTime*1000)
   }
   return timesSpeedDecode
 }
