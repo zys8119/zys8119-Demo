@@ -70,7 +70,8 @@
       </div>
       <div class="text-12px text-#fff">松开发送</div>
     </div>
-    <div class="abs-content z-1 bg-#f00">
+    <div class="abs-content z-1">
+      <img class="abs-content" :src="`./ai-bg.jpeg`" alt="">
       <canvas class="abs-content" ref="convasRef"></canvas>
     </div>
   </div>
