@@ -296,9 +296,9 @@ const hammerInit = async () => {
   }
 }
 const init = async () => {
-  // await nextTick()
-  // recOpen(()=>{})
-  // hammerInit()
+  await nextTick()
+  recOpen(()=>{})
+  hammerInit()
 }
 watchEffect(() => {
   if (!rec && isVoice.value) {
@@ -361,24 +361,6 @@ const videoParsing = async (canvas: HTMLCanvasElement, ctx: CanvasRenderingConte
         requestAnimationFrame(aa)
       })()
     })
-    // return await winframe(async p=>{
-    //   const video = await clip.getVideoFrame(start + remainingTime*p)
-    //   if(video){
-    //     ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
-    //     const va = await chromakey(video)
-    //     ctx.drawImage(
-    //         va,
-    //         0,
-    //         0,
-    //         va.codedWidth,
-    //         va.codedHeight,
-    //         (ctx.canvas.width - va.codedWidth)/2,
-    //         ctx.canvas.height - va.codedHeight,
-    //         va.codedWidth,
-    //         va.codedHeight,
-    //     );
-    //   }
-    // }, (time || remainingTime)*1000)
   }
 
   return timesSpeedDecode
@@ -405,7 +387,7 @@ const speech = async (input: string) => {
   audio.src = URL.createObjectURL(data)
   audio.autoplay = true
   console.log(videoSpeech.value)
-  videoSpeech.value?.(1, 0)
+  videoSpeech.value?.()
   // audio.play()
 }
 onMounted(async () => {
