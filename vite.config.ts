@@ -96,6 +96,9 @@ export default defineConfig({
                 //     referer:"http://szrd.nbyz.cn/"
                 // },
                 // prependPath:false,
+            },
+            "/v1":{
+                target:"http://192.168.110.46:8000"
             }
         }
     },

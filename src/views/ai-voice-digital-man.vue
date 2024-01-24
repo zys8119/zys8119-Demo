@@ -71,7 +71,7 @@
 </template>
 
 <script setup lang="ts" title="ai数字人">
-import { MP4Clip, createChromakey, OffscreenSprite } from '@webav/av-cliper';
+import { MP4Clip, createChromakey, OffscreenSprite,AudioClip,DEFAULT_AUDIO_CONF } from '@webav/av-cliper';
 import map4Url from './ai-b.mp4?url';
 import axios from "axios"
 import {get, debounce} from "lodash"
@@ -104,7 +104,8 @@ const stopChat = ()=>{
   isChat.value = false
   list.value.pop()
 }
-const baseURL = ref('http://192.168.110.46:8000')
+// const baseURL = ref('http://192.168.110.46:8000')
+const baseURL = ref(null)
 const change = debounce(async ()=>{
   const content = text.value;
   list.value.push({
@@ -135,13 +136,14 @@ const change = debounce(async ()=>{
     })
     if(isChat.value){
       list.value.pop()
-      get(data,'choices',[]).forEach((e:any)=>{
+      await Promise.all(get(data,'choices',[]).forEach(async (e:any)=>{
         list.value.push({
           content:get(e,'message.content'),
           type:'text',
           isSelf:false,
         })
-      })
+        await speech(get(e,'message.content'))
+      }))
     }
     isChat.value = false
   }catch (e){
@@ -283,9 +285,9 @@ const hammerInit = async ()=>{
   }
 }
 const init = async ()=>{
-  // await nextTick()
-  // recOpen(()=>{})
-  // hammerInit()
+  await nextTick()
+  recOpen(()=>{})
+  hammerInit()
 }
 watchEffect(()=>{
   if(!rec && isVoice.value){
@@ -347,6 +349,22 @@ const resize = debounce(async (canvas:HTMLCanvasElement, ctx:CanvasRenderingCont
   canvas.height = window.innerHeight*window.devicePixelRatio
   await videoParsing(canvas, ctx)
 }, 300)
+const speech = async (input:string)=>{
+  const {data} = await axios({
+    baseURL:baseURL.value,
+    method:"post",
+    url:"/v1/audio/speech",
+    responseType:"blob",
+    data:{
+      input,
+      "voice": "3559"
+    }
+  })
+  const audio = document.createElement('audio')
+  audio.src = URL.createObjectURL(data)
+  audio.autoplay = true
+  // audio.play()
+}
 onMounted(async ()=>{
   init()
   const canvas = convasRef.value as HTMLCanvasElement
