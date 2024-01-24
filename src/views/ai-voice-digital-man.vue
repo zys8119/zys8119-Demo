@@ -319,7 +319,6 @@ const videoParsing = async (canvas:HTMLCanvasElement, ctx:CanvasRenderingContext
       const timer = setInterval(async () => {
         const tickTime =  Math.round((performance.now() - startTime) * 1000) * times
         const { state, video } = await clip.tick(tickTime);
-        console.log(state, tickTime)
         if (state === 'done') {
           clearInterval(timer);
           clip.destroy();
