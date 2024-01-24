@@ -66,7 +66,7 @@
       </div>
       <div class="text-12px text-#fff">松开发送</div>
     </div>
-    <div class="abs-content z--1 bg-#f00"><canvas class="abs-content" ref="convasRef"></canvas></div>
+    <div class="abs-content z-1 bg-#f00"><canvas class="abs-content" ref="convasRef"></canvas></div>
   </div>
 </template>
 
@@ -100,6 +100,7 @@ type ListItemType = Partial<{
   results:any
 }>
 const list = ref<ListItemType[]>([])
+const videoSpeech = ref();
 const stopChat = ()=>{
   isChat.value = false
   list.value.pop()
@@ -174,9 +175,10 @@ const sendAudio = async (info:ListItemType)=>{
     console.clear()
     const pinyinText = pinyin(data.text, {style:"NORMAL"}).map(e=>e[0]).join('')
     console.log(data.text,pinyinText)
-    const reg = /xiao(zhi|zi)(,)*nihao|nihao|(,)*xiao(zhi|zi)/
+    // const reg = /xiao(zhi|zi)(,)*nihao|nihao|(,)*xiao(zhi|zi)/
+    const reg = /xiao(zhi|zi)/
     if(isChat.value && reg.test(pinyinText)){
-      text.value = data.text.substring(4)
+      text.value = data.text.substring(2)
       await change()
     }
     isChat.value = false
@@ -307,47 +309,50 @@ const chromakey = createChromakey({
   smoothness: 0.05,
   spill: 0.05,
 });
-const videoParsing = async (canvas:HTMLCanvasElement, ctx:CanvasRenderingContext2D)=>{
+const videoParsing = async (canvas:HTMLCanvasElement, ctx:CanvasRenderingContext2D, time:number = 0)=>{
   const resp1 = await fetch(map4Url);
   const clip = new MP4Clip(resp1.body!);
   await clip.ready;
-  function timesSpeedDecode(times: number) {
+  async function timesSpeedDecode(times: number) {
     let startTime = performance.now();
-
-    const timer = setInterval(async () => {
-      const { state, video } = await clip.tick(
-          Math.round((performance.now() - startTime) * 1000) * times,
-      );
-      if (state === 'done') {
-        clearInterval(timer);
-        clip.destroy();
-        return;
-      }
-      if (video != null && state === 'success') {
-        ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
-        const va = await chromakey(video)
-        ctx.drawImage(
-            await chromakey(video),
-            0,
-            0,
-            va.codedWidth,
-            va.codedHeight,
-            (ctx.canvas.width - va.codedWidth)/2,
-            ctx.canvas.height - va.codedHeight,
-            va.codedWidth,
-            va.codedHeight,
+    return new Promise<any>(resolve => {
+      const timer = setInterval(async () => {
+        const { state, video } = await clip.tick(
+            Math.round((performance.now() - startTime + time) * 1000) * times,
         );
+        if (state === 'done') {
+          clearInterval(timer);
+          clip.destroy();
+          resolve()
+          return;
+        }
+        if (video != null && state === 'success') {
+          ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+          const va = await chromakey(video)
+          ctx.drawImage(
+              await chromakey(video),
+              0,
+              0,
+              va.codedWidth,
+              va.codedHeight,
+              (ctx.canvas.width - va.codedWidth)/2,
+              ctx.canvas.height - va.codedHeight,
+              va.codedWidth,
+              va.codedHeight,
+          );
 
-        video.close();
-      }
-    }, 1000 / 30);
+          video.close();
+        }
+      }, 1000 / 30);
+    })
   }
-  timesSpeedDecode(50)
+  return timesSpeedDecode
 }
+
 const resize = debounce(async (canvas:HTMLCanvasElement, ctx:CanvasRenderingContext2D)=>{
   canvas.width = window.innerWidth*window.devicePixelRatio
   canvas.height = window.innerHeight*window.devicePixelRatio
-  await videoParsing(canvas, ctx)
+  videoSpeech.value = await videoParsing(canvas, ctx)
 }, 300)
 const speech = async (input:string)=>{
   const {data} = await axios({
@@ -363,6 +368,8 @@ const speech = async (input:string)=>{
   const audio = document.createElement('audio')
   audio.src = URL.createObjectURL(data)
   audio.autoplay = true
+  console.log(videoSpeech.value)
+  videoSpeech.value?.(1, 0)
   // audio.play()
 }
 onMounted(async ()=>{
