@@ -82,6 +82,7 @@ import 'recorder-core/src/engine/wav'
 import 'recorder-core/src/engine/beta-webm'
 import SvgIcon from "@/src/components/svg-icon";
 import Hammer from "hammerjs";
+import pinyin from "pinyin";
 const voiceBtnRef = ref()
 const isVoice = ref(true)
 const isPress = ref(false)
@@ -159,19 +160,21 @@ const sendAudio = async (info:ListItemType)=>{
     formData.append('file', file)
     info.url = URL.createObjectURL(file)
     list.value.push(info)
-    // const {data} = await axios({
-    //   method:'post',
-    //   baseURL:baseURL.value,
-    //   url:'/v1/audio/transcriptions',
-    //   data:formData
-    // })
-    const data = await new Promise(resolve => setTimeout(()=> {
-      resolve({text:"你好"})
-    }, 1000))
+    const {data} = await axios({
+      method:'post',
+      baseURL:baseURL.value,
+      url:'/v1/audio/transcriptions',
+      data:formData
+    })
+    // const data = await new Promise(resolve => setTimeout(()=> {
+    //   resolve({text:"你好"})
+    // }, 1000))
     console.clear()
-    console.log("你好")
-    if(isChat.value){
-      text.value = data.text
+    const pinyinText = pinyin(data.text, {style:"NORMAL"}).map(e=>e[0]).join('')
+    console.log(data.text,pinyinText)
+    const reg = /xiao(zhi|zi)(,)*nihao|nihao|(,)*xiao(zhi|zi)/
+    if(isChat.value && reg.test(pinyinText)){
+      text.value = data.text.substring(4)
       await change()
     }
     isChat.value = false
@@ -185,6 +188,7 @@ const sendAudio = async (info:ListItemType)=>{
 let rec,wave;
 let time = performance.now()
 let isTalk = false
+let isTalkRequest = false
 const recOpen = (success?:()=>void)=>{//一般在显示出录音按钮或相关的录音界面时进行此方法调用，后面用户点击开始录音时就能畅通无阻了
   rec=Recorder({ //本配置参数请参考下面的文档，有详细介绍
     type:"mp3",sampleRate:16000,bitRate:16 //mp3格式，指定采样率hz、比特率kbps，其他参数使用默认配置；注意：是数字的参数必须提供数字，不要用字符串；需要使用的type类型，需提前把格式支持文件加载进来，比如使用wav格式需要提前加载wav.js编码引擎
@@ -196,15 +200,19 @@ const recOpen = (success?:()=>void)=>{//一般在显示出录音按钮或相关�
       //可实时绘制波形（extensions目录内的waveview.js、wavesurfer.view.js、frequency.histogram.view.js插件功能）
       wave&&wave.input(buffers[buffers.length-1],powerLevel,bufferSampleRate);
       // 音频阀值，音频波动大于1000ms才认为说话
-      if(!isTalk && Math.max.apply(null,buffers.at(-1)) > 1000){
-        time = performance.now()
-        isTalk = true
-      }else {
-        // 当处于说话状态，并音频波动小于3000ms的时候认为说话结束
-        if(isTalk && performance.now() - time > 3000){
-          isTalk = false
-          await recStop()
-          await recStart()
+      if(!isTalkRequest){
+        if(!isTalk && Math.max.apply(null,buffers.at(-1)) > 1000){
+          time = performance.now()
+          isTalk = true
+        }else {
+          // 当处于说话状态，并音频波动小于3000ms的时候认为说话结束
+          if(isTalk && performance.now() - time > 3000){
+            isTalkRequest = true
+            await recStop()
+            await recStart()
+            isTalkRequest = false
+            isTalk = false
+          }
         }
       }
     }
@@ -275,9 +283,9 @@ const hammerInit = async ()=>{
   }
 }
 const init = async ()=>{
-  await nextTick()
-  recOpen(()=>{})
-  hammerInit()
+  // await nextTick()
+  // recOpen(()=>{})
+  // hammerInit()
 }
 watchEffect(()=>{
   if(!rec && isVoice.value){
