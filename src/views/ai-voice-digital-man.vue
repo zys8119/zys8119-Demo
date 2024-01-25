@@ -70,9 +70,13 @@
       </div>
       <div class="text-12px text-#fff">松开发送</div>
     </div>
-    <div class="abs-content z-1" @click="dazhaohu">
+    <div class="abs-content z-1">
       <img class="abs-content" :src="`./ai-bg.jpeg`" alt="">
       <canvas class="abs-content" ref="convasRef"></canvas>
+      <div class="abs-end-bottom rigth-30px bottom-30px flex-center flex-col bg-#fff5 p-15px b-rd-y-10px cursor-pointer text-50px" @click="dazhaohu">
+        <svg-icon name="dazhaohu" not-fill></svg-icon>
+        <div class="text-14px">打招呼</div>
+      </div>
     </div>
   </div>
 </template>
@@ -375,9 +379,25 @@ const resize = debounce(async (canvas: HTMLCanvasElement, ctx: CanvasRenderingCo
   canvas.width = window.innerWidth * window.devicePixelRatio
   canvas.height = window.innerHeight * window.devicePixelRatio
   videoSpeech.value = await videoParsing(canvas, ctx)
-  await videoSpeech.value?.(2.9)
+  await videoSpeech.value?.(2.9,null, 0)
 }, 300)
-const speech = async (input: string) => {
+const audioArrs = ref<Array<HTMLAudioElement>>([])
+const speech = async (input: string, callback?:(duration:number, audio:HTMLAudioElement)=> Promise<void>) => {
+  audioArrs.value.forEach(a=>{
+    a.pause()
+    a.remove()
+  })
+  audioArrs.value = []
+  const audio = document.createElement('audio')
+  audioArrs.value.push(audio)
+  audio.autoplay = true
+  audio.addEventListener('loadedmetadata', async ()=>{
+    if(callback){
+      await callback(audio.duration, audio)
+    }else {
+      await videoSpeech.value?.(null, null, audio.duration)
+    }
+  })
   const {data} = await axios({
     baseURL: baseURL.value,
     method: "post",
@@ -388,18 +408,27 @@ const speech = async (input: string) => {
       "voice": "3559"
     }
   })
-  const audio = document.createElement('audio')
   audio.src = URL.createObjectURL(data)
-  audio.autoplay = true
-  audio.addEventListener('loadedmetadata', async ()=>{
-    console.log(audio.duration);
-    await videoSpeech.value?.(null, null, 3)
-  })
   // audio.play()
 }
-const dazhaohu = async ()=>{
-  await speech("大家好, 我是智加小智； 很高兴与大家见面；大家可以叫我小智加问题来与我对话")
-}
+const dazhaohu = debounce(async ()=>{
+  await speech("大家好；我是智加小智；很高兴与大家见面；大家可以叫我小智来与我对话；比如，小智介绍自己。", async duration => {
+    await videoSpeech.value?.(0.8, 2, 1.2)
+    let time = duration - 2
+    const start = 2
+    const end = 2.9
+    const moveTime = end - start
+    while (true){
+      await videoSpeech.value?.(start,end, moveTime)
+      if(time > 0){
+        time -= moveTime
+      }else {
+        break
+      }
+    }
+    // await videoSpeech.value?.(2.9,null, 0)
+  })
+}, 300)
 onMounted(async () => {
   init()
   const canvas = convasRef.value as HTMLCanvasElement
