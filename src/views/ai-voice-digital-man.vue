@@ -70,7 +70,7 @@
       </div>
       <div class="text-12px text-#fff">松开发送</div>
     </div>
-    <div class="abs-content z-1">
+    <div class="abs-content z-1" @click="dazhaohu">
       <img class="abs-content" :src="`./ai-bg.jpeg`" alt="">
       <canvas class="abs-content" ref="convasRef"></canvas>
     </div>
@@ -375,7 +375,7 @@ const resize = debounce(async (canvas: HTMLCanvasElement, ctx: CanvasRenderingCo
   canvas.width = window.innerWidth * window.devicePixelRatio
   canvas.height = window.innerHeight * window.devicePixelRatio
   videoSpeech.value = await videoParsing(canvas, ctx)
-  await videoSpeech.value?.()
+  await videoSpeech.value?.(2.9)
 }, 300)
 const speech = async (input: string) => {
   const {data} = await axios({
@@ -391,9 +391,14 @@ const speech = async (input: string) => {
   const audio = document.createElement('audio')
   audio.src = URL.createObjectURL(data)
   audio.autoplay = true
-  console.log(videoSpeech.value)
-  videoSpeech.value?.()
+  audio.addEventListener('loadedmetadata', async ()=>{
+    console.log(audio.duration);
+    await videoSpeech.value?.(null, null, 3)
+  })
   // audio.play()
+}
+const dazhaohu = async ()=>{
+  await speech("大家好, 我是智加小智； 很高兴与大家见面；大家可以叫我小智加问题来与我对话")
 }
 onMounted(async () => {
   init()
