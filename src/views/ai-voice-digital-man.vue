@@ -138,6 +138,10 @@ const change = debounce(async () => {
         model: "chatglm3-6b",
         messages: [
           {
+            "content": "你是智加信息科技有限公司的AI助手！",
+            "role": "system"
+          },
+          {
             "content": content,
             "role": "user"
           },
