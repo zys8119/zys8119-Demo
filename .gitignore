@@ -4,3 +4,4 @@
 /web-monitoring
 /pnpm-lock.yaml
 .wireit
+/public/models/

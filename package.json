@@ -57,6 +57,7 @@
         "@vitejs/plugin-vue-jsx": "^3.0.0",
         "@vueuse/core": "^10.1.2",
         "@webav/av-cliper": "^0.3.0",
+        "@xenova/transformers": "^2.14.0",
         "axios": "^1.4.0",
         "css-render": "^0.15.12",
         "d3": "^7.8.5",
@@ -95,6 +96,7 @@
         "vue": "^3.2.47",
         "vue-console-plug": "^0.1.2",
         "vue-router": "^4.1.6",
+        "wavefile": "^11.0.0",
         "winframe": "^0.0.3"
     },
     "devDependencies": {
