@@ -83,7 +83,8 @@
 
 <script setup lang="ts" title="ai数字人">
 import {MP4Clip, MP4Previewer, createChromakey, OffscreenSprite, AudioClip, DEFAULT_AUDIO_CONF} from '@webav/av-cliper';
-import map4Url from './ai-b.mp4?url';
+import map4Url from './ai-zuixing.mp4?url';
+import map4Url2 from './ai-b.mp4?url';
 import axios from "axios"
 import {get, debounce} from "lodash"
 import Recorder from 'recorder-core'
@@ -114,6 +115,7 @@ type ListItemType = Partial<{
 }>
 const list = ref<ListItemType[]>([])
 const videoSpeech = ref();
+const videoSpeech2 = ref();
 const stopChat = () => {
   isChat.value = false
   list.value.pop()
@@ -160,7 +162,10 @@ const change = debounce(async () => {
           type: 'text',
           isSelf: false,
         })
-        await speech(get(e, 'message.content'))
+        await speech(get(e, 'message.content'), async duration => {
+          await videoSpeech.value?.(1, 11, duration)
+          await videoSpeech2.value?.(2.9, null, 0)
+        })
       }))
     }
     isChat.value = false
@@ -327,11 +332,11 @@ const chromakey = createChromakey({
   smoothness: 0.05,
   spill: 0.05,
 });
-const videoParsing = async (canvas: HTMLCanvasElement, ctx: CanvasRenderingContext2D) => {
+const videoParsing = async (canvas: HTMLCanvasElement, ctx: CanvasRenderingContext2D, url?:string) => {
+  const resp1 = await fetch(url || map4Url);
+  const clip = new MP4Previewer(resp1.body!);
+  const body = await clip.ready;
   async function timesSpeedDecode(start: number = 0, end?: number, time?: number) {
-    const resp1 = await fetch(map4Url);
-    const clip = new MP4Previewer(resp1.body!);
-    const body = await clip.ready;
     const mp4Info = await clip.getInfo();
     const mp4Dur = Number((mp4Info.duration / mp4Info.timescale).toFixed(0));
     if (typeof end !== 'number') {
@@ -378,8 +383,9 @@ const videoParsing = async (canvas: HTMLCanvasElement, ctx: CanvasRenderingConte
 const resize = debounce(async (canvas: HTMLCanvasElement, ctx: CanvasRenderingContext2D) => {
   canvas.width = window.innerWidth * window.devicePixelRatio
   canvas.height = window.innerHeight * window.devicePixelRatio
+  videoSpeech2.value = await videoParsing(canvas, ctx, map4Url2)
   videoSpeech.value = await videoParsing(canvas, ctx)
-  await videoSpeech.value?.(2.9,null, 0)
+  await videoSpeech2.value?.(2.9, null, 0)
 }, 300)
 const audioArrs = ref<Array<HTMLAudioElement>>([])
 const speech = async (input: string, callback?:(duration:number, audio:HTMLAudioElement)=> Promise<void>) => {
@@ -411,21 +417,31 @@ const speech = async (input: string, callback?:(duration:number, audio:HTMLAudio
   audio.src = URL.createObjectURL(data)
   // audio.play()
 }
+const isDazhaohuOne = ref(false)
 const dazhaohu = debounce(async ()=>{
   await speech("大家好；我是智加小智；很高兴与大家见面；大家可以叫我小智来与我对话；比如，小智介绍自己。", async duration => {
-    await videoSpeech.value?.(0.8, 2, 1.2)
-    let time = duration - 2
-    const start = 2
-    const end = 2.9
-    const moveTime = end - start
-    while (true){
-      await videoSpeech.value?.(start,end, moveTime)
-      if(time > 0){
-        time -= moveTime
-      }else {
-        break
-      }
+    await videoSpeech.value?.(12, 17, duration)
+    if(!isDazhaohuOne.value){
+      await speech("与此同时小智在此提前祝大家新年快乐", async duration => {
+        await videoSpeech.value?.(18, 21, duration)
+        await videoSpeech2.value?.(2.9, null, 0)
+        isDazhaohuOne.value = true
+      })
+    }else {
+      await videoSpeech2.value?.(2.9, null, 0)
     }
+    // let time = duration - 2
+    // const start = 2
+    // const end = 2.9
+    // const moveTime = end - start
+    // while (true){
+    //   if(time > 0){
+    //     await videoSpeech.value?.(start,end, null)
+    //     time -= moveTime
+    //   }else {
+    //     break
+    //   }
+    // }
     // await videoSpeech.value?.(2.9,null, 0)
   })
 }, 300)
