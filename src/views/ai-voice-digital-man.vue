@@ -70,10 +70,10 @@
       </div>
       <div class="text-12px text-#fff">松开发送</div>
     </div>
-    <div class="abs-content z-1">
+    <div class="abs-content z-1" @click="toggle">
       <img class="abs-content" :src="`./ai-bg2.jpeg`" alt="">
       <canvas class="abs-content" ref="convasRef"></canvas>
-      <div class="abs-end-bottom rigth-30px bottom-30px flex-center flex-col bg-#fff5 p-15px b-rd-y-10px cursor-pointer text-50px" @click="dazhaohu">
+      <div class="abs-end-bottom rigth-30px bottom-30px flex-center flex-col bg-#fff5 p-15px b-rd-y-10px cursor-pointer text-50px" @click.stop="dazhaohu">
         <svg-icon name="dazhaohu" not-fill></svg-icon>
         <div class="text-14px">打招呼</div>
       </div>
@@ -96,7 +96,7 @@ import SvgIcon from "@/src/components/svg-icon";
 import Hammer from "hammerjs";
 import pinyin from "pinyin";
 import winframe from "winframe";
-
+const {toggle} = useFullscreen()
 const voiceBtnRef = ref()
 const isVoice = ref(true)
 const isPress = ref(false)
