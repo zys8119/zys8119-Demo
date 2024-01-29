@@ -77,6 +77,26 @@
         <svg-icon name="dazhaohu" not-fill></svg-icon>
         <div class="text-14px">打招呼</div>
       </div>
+      <div v-if="isLoading" class="abs-center p-15px b-rd-10px flex-center flex-col">
+        <div class="la-line-scale ">
+          <div></div>
+          <div></div>
+          <div></div>
+          <div></div>
+          <div></div>
+        </div>
+        <div class="text-12px text-#fff">模型正在加载中，请耐心等待...</div>
+      </div>
+      <div v-if="!isLoading && !isSpeech" class="abs-end p-15px b-rd-10px flex-center flex-col">
+        <div class="la-line-scale ">
+          <div></div>
+          <div></div>
+          <div></div>
+          <div></div>
+          <div></div>
+        </div>
+        <div class="text-12px text-#fff">正在聆听者...</div>
+      </div>
     </div>
   </div>
 </template>
@@ -101,6 +121,7 @@ const voiceBtnRef = ref()
 const isVoice = ref(true)
 const isPress = ref(false)
 const isChat = ref(false)
+const isLoading = ref(false)
 const convasRef = ref()
 const text = ref('')
 const isDisabled = computed(() => text.value.length === 0 || isChat.value)
@@ -165,7 +186,7 @@ const change = debounce(async () => {
         await speech(get(e, 'message.content'), async duration => {
           let time = duration < 10 ? duration : 10
           while (time > 0){
-            await videoSpeech.value?.(1, 11, time)
+            await videoSpeech.value?.(1, 1+time, time)
             duration -= 10
             time = duration < 10 ? duration : 10
           }
@@ -207,6 +228,9 @@ const sendAudio = async (info: ListItemType) => {
     if (isChat.value && reg.test(pinyinText)) {
       text.value = data.text.substring(2)
       await change()
+    }else {
+      // data.text = "很抱歉！我没有听清您的话，请再说一遍"
+      // await change()
     }
     isChat.value = false
   } catch (e) {
@@ -387,7 +411,9 @@ const videoParsing = async (canvas: HTMLCanvasElement, ctx: CanvasRenderingConte
 
 
 const audioArrs = ref<Array<HTMLAudioElement>>([])
+const isSpeech = ref(false)
 const speech = async (input: string, callback?:(duration:number, audio:HTMLAudioElement)=> Promise<void>) => {
+  isSpeech.value = true
   audioArrs.value.forEach(a=>{
     a.pause()
     a.remove()
@@ -402,6 +428,9 @@ const speech = async (input: string, callback?:(duration:number, audio:HTMLAudio
     }else {
       await videoSpeech.value?.(null, null, audio.duration)
     }
+  })
+  audio.addEventListener('ended', ()=>{
+    isSpeech.value = false
   })
   const {data} = await axios({
     baseURL: baseURL.value,
@@ -463,7 +492,9 @@ const resize = debounce(async (canvas: HTMLCanvasElement, ctx: CanvasRenderingCo
   videoSpeech.value = await videoParsing(canvas, ctx, clipMap.videoSpeech)
   await videoSpeech2.value?.(2.9, null, 0)
 }, 300)
+const isRepeatTime = ref(performance.now())
 onMounted(async () => {
+  isLoading.value = true
   clipMap.videoSpeech2 = await getVideoBody(map4Url2)
   clipMap.videoSpeech = await getVideoBody(map4Url)
   init()
@@ -473,6 +504,14 @@ onMounted(async () => {
   window.addEventListener("resize", () => {
     resize(canvas, ctx)
   })
+  isLoading.value = false
+  setInterval(()=>{
+    // 重复打招呼
+    if(!isLoading.value && performance.now() > isRepeatTime.value + 5000 && !isSpeech.value){
+      dazhaohu()
+      isRepeatTime.value += 5000
+    }
+  },10000)
 })
 </script>
 
