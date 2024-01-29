@@ -72,7 +72,7 @@
     </div>
     <div class="abs-content z-1" @click="toggle">
       <img class="abs-content" :src="`./ai-bg2.jpeg`" alt="">
-      <canvas class="abs-content" ref="convasRef"></canvas>
+      <canvas class="abs-content" ref="convasRef" style="transform: scale(1.5) translateY(-15%)"></canvas>
       <div class="abs-end-bottom rigth-30px bottom-30px flex-center flex-col bg-#fff5 p-15px b-rd-y-10px cursor-pointer text-50px" @click.stop="dazhaohu">
         <svg-icon name="dazhaohu" not-fill></svg-icon>
         <div class="text-14px">打招呼</div>
@@ -163,7 +163,12 @@ const change = debounce(async () => {
           isSelf: false,
         })
         await speech(get(e, 'message.content'), async duration => {
-          await videoSpeech.value?.(1, 11, duration)
+          let time = duration < 10 ? duration : 10
+          while (time > 0){
+            await videoSpeech.value?.(1, 11, time)
+            duration -= 10
+            time = duration < 10 ? duration : 10
+          }
           await videoSpeech2.value?.(2.9, null, 0)
         })
       }))
@@ -337,7 +342,6 @@ const videoParsing = async (canvas: HTMLCanvasElement, ctx: CanvasRenderingConte
   clip:MP4Previewer
 }) => {
   const {clip, mp4Info} = data
-  console.log(clip, mp4Info, 2222)
   async function timesSpeedDecode(start: number = 0, end?: number, time?: number) {
     const mp4Dur = Number((mp4Info.duration / mp4Info.timescale).toFixed(0));
     if (typeof end !== 'number') {
