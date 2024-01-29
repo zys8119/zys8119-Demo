@@ -5,7 +5,7 @@
     "main": "index.js",
     "homepage": "https://zys8119.github.io/zys8119-Demo/#/",
     "scripts": {
-        "dev": "wireit",
+        "dev": "vite --force",
         "build": "vite build",
         "preview": "wireit"
     },
