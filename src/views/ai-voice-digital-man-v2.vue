@@ -509,7 +509,7 @@ onMounted(async () => {
     // 重复打招呼
     if(!isLoading.value && performance.now() > isRepeatTime.value + 5000 && !isSpeech.value){
       dazhaohu()
-      isRepeatTime.value += 5000
+      isRepeatTime.value = performance.now() + 5000
     }
   },10000)
 })
