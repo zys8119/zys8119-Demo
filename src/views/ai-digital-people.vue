@@ -21,26 +21,33 @@ let actionMap:Map<string,AnimationAction> = new Map()
 
 const load = async (three: BaseThreeClass)=>{
   const {scene, lightHelper} = three
-  // const gltf = await three.addGLTFLoader('http://127.0.0.1:3000/659e61dfedd978fd4b26aa29.glb')
-  // console.log(gltf)
-  // const scale2 = 150
-  // gltf.scene.scale.set(scale2,scale2,scale2)
-  // scene.add(gltf.scene)
+  const gltf = await three.addGLTFLoader('http://127.0.0.1:3000/65b73e7df509efbd8355deab.glb')
+  console.log(gltf)
+  const scale2 = 280
+  gltf.scene.scale.set(scale2,scale2,scale2)
+  gltf.scene.position.set(0,-280,0)
+  gltf.scene.rotation.set(0,Math.PI/180*40,0)
+  scene.add(gltf.scene)
+  console.clear()
+  console.log(gltf.scene,22)
+  gltf.scene.traverse(object => {
+    if(object.type === "Bone"){
+      object.name = `mixamorig${object.name}`
+    }
+  })
   const loader = new FBXLoader();
-  const fbx2 = await loader.loadAsync('http://localhost:3000/Idle%20To%20Braced%20Hang.fbx')
-  const fbx = await loader.loadAsync('http://localhost:3000/Standing%20Arguing.fbx')
-  const material = (fbx.children[2].material as MeshPhongMaterial)
-  material.color = new THREE.Color("#ff7238")
-  scene.add(fbx)
-  const scale = 150
-  fbx.parent.scale.set(scale,scale,scale)
-  const mixer = new THREE.AnimationMixer(fbx.parent);
+  const fbx = await loader.loadAsync('http://localhost:3000/Catwalk%20Walk%20Start%20Backwards%20180R.fbx')
+  console.log(fbx)
+  console.log(fbx.animations[0])
+  const mixer = new THREE.AnimationMixer(gltf.scene);
   mixers.push(mixer)
-  const action = mixer.clipAction(fbx2.animations[0])
+  const action = mixer.clipAction(fbx.animations[0])
   actionMap.set('dzh',action)
+  action.reset()
+  action.paused = false
   action.clampWhenFinished = true
   action.loop = THREE.LoopOnce
-  // await play('dzh')
+  play('dzh')
 }
 const play = async (keyName:string)=>{
   actionMap.get(keyName)?.reset()
