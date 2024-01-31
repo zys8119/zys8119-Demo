@@ -90,13 +90,11 @@ const videoSpeech = ref()
 const canvasRef = ref()
 const repeatPlay = async (reverse?:boolean)=>{
   await videoSpeech.value(2.9,3.3,2,reverse)
-  // await new Promise(resolve => setTimeout(resolve, 1000))
   await repeatPlay(!reverse)
 }
 const resize = debounce(async (canvas: HTMLCanvasElement, ctx: CanvasRenderingContext2D) => {
   canvas.width = window.innerWidth * window.devicePixelRatio
   canvas.height = window.innerHeight * window.devicePixelRatio
-  repeatPlay()
 }, 300)
 onMounted(async () => {
   const canvas = canvasRef.value as HTMLCanvasElement
@@ -107,6 +105,7 @@ onMounted(async () => {
   window.addEventListener("resize", () => {
     resize(canvas, ctx)
   })
+  repeatPlay()
 })
 </script>
 
