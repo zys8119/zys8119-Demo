@@ -22,10 +22,15 @@
         <svg-icon name="bainian"></svg-icon>
         <div class="text-14px">拜年</div>
       </div>
+      <div class="bg-#fff1 hover:bg-#fff5 w-100px  p-15px b-rd-y-10px cursor-pointer flex-center flex-col" @click.stop="peroration">
+        <svg-icon name="fu" not-fill></svg-icon>
+        <div class="text-14px">结语</div>
+      </div>
     </div>
     <div class="abs-r z--1">
       <audio :src="bgMp3Url" autoplay ref="audioRef" loop></audio>
       <video ref="bainianRef" :src="bainianUrl"></video>
+      <video ref="perorationRef" :src="bainianUrl"></video>
     </div>
   </div>
 </template>
@@ -33,6 +38,7 @@
 <script setup lang="ts" title="ai数字人">
 import url from "./ai-b.mp4?url"
 import bainianUrl from "./ai-bainian.mp4?url"
+import perorationUrl from "./ai-b.mp4?url"
 import bgMp3Url from "./bg.mp3?url"
 import {createChromakey, MP4Previewer} from "@webav/av-cliper";
 import {debounce} from "lodash";
@@ -40,6 +46,7 @@ import SvgIcon from "@/src/components/svg-icon";
 const {toggle} = useFullscreen()
 const audioRef = ref() as Ref<HTMLAudioElement>
 const bainianRef = ref() as Ref<HTMLVideoElement>
+const perorationRef = ref() as Ref<HTMLVideoElement>
 const play = async ()=>{
   if(audioRef.value.paused){
     audioRef.value.play()
@@ -112,6 +119,7 @@ const getVideoBody = async (url:string)=>{
 }
 const videoSpeech = ref()
 const bainianSpeech = ref()
+const perorationSpeech = ref()
 const canvasRef = ref()
 const isStop = ref(false)
 const repeatPlay = async (reverse?:boolean)=>{
@@ -132,6 +140,8 @@ onMounted(async () => {
   videoSpeech.value = await videoParsing(canvas, ctx, clipMap)
   const clipMapBainianSpeech = await getVideoBody(bainianUrl)
   bainianSpeech.value = await videoParsing(canvas, ctx, clipMapBainianSpeech)
+  const clipMapPerorationSpeech = await getVideoBody(perorationUrl)
+  perorationSpeech.value = await videoParsing(canvas, ctx, clipMapPerorationSpeech)
   resize(canvas, ctx)
   window.addEventListener("resize", () => {
     resize(canvas, ctx)
@@ -144,6 +154,17 @@ const bainian = async ()=>{
     requestAnimationFrame(async ()=>{
       bainianRef.value.play()
       await bainianSpeech.value()
+      isStop.value = false
+      await repeatPlay()
+    })
+  },2000)
+}
+const peroration = async ()=>{
+  isStop.value = true
+  setTimeout(()=>{
+    requestAnimationFrame(async ()=>{
+      perorationRef.value.play()
+      await perorationSpeech.value()
       isStop.value = false
       await repeatPlay()
     })
