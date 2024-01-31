@@ -32,7 +32,7 @@ const videoParsing = async (canvas: HTMLCanvasElement, ctx: CanvasRenderingConte
   clip:MP4Previewer
 }) => {
   const {clip, mp4Info} = data
-  async function timesSpeedDecode(start: number = 0, end?: number, time?: number) {
+  async function timesSpeedDecode(start: number = 0, end?: number, time?: number, reverse?:boolean) {
     const mp4Dur = Number((mp4Info.duration / mp4Info.timescale).toFixed(0));
     if (typeof end !== 'number') {
       end = mp4Dur
@@ -40,7 +40,8 @@ const videoParsing = async (canvas: HTMLCanvasElement, ctx: CanvasRenderingConte
     const remainingTime = (end - start)
     const endTime = (time || remainingTime) * 1000
     const callback = async p => {
-      const video = await clip.getVideoFrame(start + remainingTime * p)
+      const time = reverse ? (end - remainingTime * p) : (start + remainingTime * p)
+      const video = await clip.getVideoFrame(time)
       if (video) {
         ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
         const va:VideoFrame = await chromakey(video) as VideoFrame
@@ -87,10 +88,10 @@ const getVideoBody = async (url:string)=>{
 }
 const videoSpeech = ref()
 const canvasRef = ref()
-const repeatPlay = async ()=>{
-  await videoSpeech.value(2.9,3.3,0.4)
-  await new Promise(resolve => setTimeout(resolve, 1000))
-  await repeatPlay()
+const repeatPlay = async (reverse?:boolean)=>{
+  await videoSpeech.value(2.9,3.3,2,reverse)
+  // await new Promise(resolve => setTimeout(resolve, 1000))
+  await repeatPlay(!reverse)
 }
 const resize = debounce(async (canvas: HTMLCanvasElement, ctx: CanvasRenderingContext2D) => {
   canvas.width = window.innerWidth * window.devicePixelRatio
