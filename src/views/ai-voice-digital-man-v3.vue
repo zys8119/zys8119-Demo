@@ -30,7 +30,7 @@
     <div class="abs-r z--1">
       <audio :src="bgMp3Url" autoplay ref="audioRef" loop></audio>
       <video ref="bainianRef" :src="bainianUrl"></video>
-      <video ref="perorationRef" :src="bainianUrl"></video>
+      <video ref="perorationRef" :src="perorationUrl"></video>
     </div>
   </div>
 </template>
@@ -38,7 +38,7 @@
 <script setup lang="ts" title="ai数字人">
 import url from "./ai-b.mp4?url"
 import bainianUrl from "./ai-bainian.mp4?url"
-import perorationUrl from "./ai-b.mp4?url"
+import perorationUrl from "./ai-jieshu.mp4?url"
 import bgMp3Url from "./bg.mp3?url"
 import {createChromakey, MP4Previewer} from "@webav/av-cliper";
 import {debounce} from "lodash";
