@@ -8,7 +8,7 @@
     <img class="abs-end-bottom right-13% bottom-30px yun-down" :src="`./ai/yun-down.png`" alt="">
     <img class="abs-start w-300px top-10% left--70px jack-left" :src="`./ai/jack-left.png`" alt="">
     <img class="abs-end w-300px top-10% right--70px jack-right" :src="`./ai/jack-right.png`" alt="">
-    <canvas class="abs-content" ref="canvasRef"></canvas>
+    <canvas class="abs-content" ref="canvasRef" :style="`transform: scale(${$route.query.scale || 1}) translateY(${$route.query.y || 0}%)`"></canvas>
     <div class="abs-end-bottom rigth-30px bottom-30px flex-center gap-5px flex-col items-end text-50px  text-#ff0052">
       <div class="bg-#fff1 hover:bg-#fff5 w-100px p-15px b-rd-y-10px cursor-pointer flex-center flex-col" @click.stop="play">
         <svg-icon name="yinyue"></svg-icon>
