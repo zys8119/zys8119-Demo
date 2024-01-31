@@ -1,1 +1,0 @@
-import{d as m,o as d,c as u}from"./index-3551bf4b.js";const l={class:"7"},x=m({__name:"7",setup(p){const t=(o=[])=>new Proxy({},{get(a,r){return r===Symbol.toPrimitive?()=>o.reduce((_,i)=>_+i):t([...o,Number(r)])}}),e=t(),n=e[1][2][3]+4,c=e[10][20]+30,s=e[100][200][300]+400;return console.log(n,c,s),(o,a)=>(d(),u("div",l," 使用代理拦截动态属性 "))}});export{x as default};

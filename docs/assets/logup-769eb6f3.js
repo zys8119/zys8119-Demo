@@ -1,1 +1,0 @@
-import{_ as e,o as _,c as o}from"./index-3551bf4b.js";const s={},c={class:"logup"};function t(a,n){return _(),o("div",c," asdas 哈啥啥啥 ")}const d=e(s,[["render",t],["__scopeId","data-v-a7e40768"]]);export{d as default};
