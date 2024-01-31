@@ -5,3 +5,6 @@
 /pnpm-lock.yaml
 .wireit
 /public/models/
+/docs/models/
+/docs/灰度发布架构.xmind
+/docs/chat-openai-token.json
