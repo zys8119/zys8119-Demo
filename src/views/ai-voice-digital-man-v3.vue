@@ -9,19 +9,44 @@
     <img class="abs-start w-300px top-10% left--70px jack-left" :src="`./ai/jack-left.png`" alt="">
     <img class="abs-end w-300px top-10% right--70px jack-right" :src="`./ai/jack-right.png`" alt="">
     <canvas class="abs-content" ref="canvasRef"></canvas>
-    <div class="abs-end-bottom rigth-30px bottom-30px flex-center flex-col bg-#fff5 p-15px b-rd-y-10px cursor-pointer text-50px" @click.stop="toggle">
-      <svg-icon name="dazhaohu" not-fill></svg-icon>
-      <div class="text-14px">全屏</div>
+    <div class="abs-end-bottom rigth-30px bottom-30px flex-center gap-5px flex-col items-end text-50px  text-#ff0052">
+      <div class="bg-#fff1 hover:bg-#fff5 w-100px p-15px b-rd-y-10px cursor-pointer flex-center flex-col" @click.stop="play">
+        <svg-icon name="yinyue"></svg-icon>
+        <div class="text-14px">背景音乐</div>
+      </div>
+      <div class="bg-#fff1 hover:bg-#fff5 w-100px  p-15px b-rd-y-10px cursor-pointer flex-center flex-col" @click.stop="toggle">
+        <svg-icon name="quanping"></svg-icon>
+        <div class="text-14px">全屏</div>
+      </div>
+      <div class="bg-#fff1 hover:bg-#fff5 w-100px  p-15px b-rd-y-10px cursor-pointer flex-center flex-col" @click.stop="bainian">
+        <svg-icon name="bainian"></svg-icon>
+        <div class="text-14px">拜年</div>
+      </div>
+    </div>
+    <div class="abs-r z--1">
+      <audio :src="bgMp3Url" autoplay ref="audioRef" loop></audio>
+      <video ref="bainianRef" :src="bainianUrl"></video>
     </div>
   </div>
 </template>
 
 <script setup lang="ts" title="ai数字人">
 import url from "./ai-b.mp4?url"
+import bainianUrl from "./ai-bainian.mp4?url"
+import bgMp3Url from "./bg.mp3?url"
 import {createChromakey, MP4Previewer} from "@webav/av-cliper";
 import {debounce} from "lodash";
 import SvgIcon from "@/src/components/svg-icon";
 const {toggle} = useFullscreen()
+const audioRef = ref() as Ref<HTMLAudioElement>
+const bainianRef = ref() as Ref<HTMLVideoElement>
+const play = async ()=>{
+  if(audioRef.value.paused){
+    audioRef.value.play()
+  }else {
+    audioRef.value.pause()
+  }
+}
 const chromakey = createChromakey({
   similarity: 0.4,
   smoothness: 0.05,
@@ -72,7 +97,6 @@ const videoParsing = async (canvas: HTMLCanvasElement, ctx: CanvasRenderingConte
       })()
     })
   }
-
   return timesSpeedDecode
 }
 const getVideoBody = async (url:string)=>{
@@ -87,26 +111,44 @@ const getVideoBody = async (url:string)=>{
   }
 }
 const videoSpeech = ref()
+const bainianSpeech = ref()
 const canvasRef = ref()
+const isStop = ref(false)
 const repeatPlay = async (reverse?:boolean)=>{
   await videoSpeech.value(2.9,3.3,2,reverse)
-  await repeatPlay(!reverse)
+  if(!isStop.value){
+    await repeatPlay(!reverse)
+  }
 }
 const resize = debounce(async (canvas: HTMLCanvasElement, ctx: CanvasRenderingContext2D) => {
   canvas.width = window.innerWidth * window.devicePixelRatio
   canvas.height = window.innerHeight * window.devicePixelRatio
 }, 300)
 onMounted(async () => {
+  audioRef.value.volume = 0.05
   const canvas = canvasRef.value as HTMLCanvasElement
   const ctx = canvas.getContext('2d') as CanvasRenderingContext2D
   const clipMap = await getVideoBody(url)
   videoSpeech.value = await videoParsing(canvas, ctx, clipMap)
+  const clipMapBainianSpeech = await getVideoBody(bainianUrl)
+  bainianSpeech.value = await videoParsing(canvas, ctx, clipMapBainianSpeech)
   resize(canvas, ctx)
   window.addEventListener("resize", () => {
     resize(canvas, ctx)
   })
-  repeatPlay()
+  await repeatPlay()
 })
+const bainian = async ()=>{
+  isStop.value = true
+  setTimeout(()=>{
+    requestAnimationFrame(async ()=>{
+      bainianRef.value.play()
+      await bainianSpeech.value()
+      isStop.value = false
+      await repeatPlay()
+    })
+  },2000)
+}
 </script>
 
 <style scoped lang="less">
