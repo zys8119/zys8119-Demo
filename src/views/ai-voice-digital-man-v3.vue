@@ -9,28 +9,18 @@
     <img class="abs-start w-300px top-10% left--70px jack-left" :src="`./ai/jack-left.png`" alt="">
     <img class="abs-end w-300px top-10% right--70px jack-right" :src="`./ai/jack-right.png`" alt="">
     <canvas class="abs-content" ref="canvasRef" :style="`transform: scale(${$route.query.scale || 1}) translateY(${$route.query.y || 0}%)`"></canvas>
-    <div class="abs-end-bottom rigth-30px bottom-30px flex-center gap-5px flex-col items-end text-50px  text-#ff0052">
-      <div class="bg-#fff1 hover:bg-#fff5 w-100px p-15px b-rd-y-10px cursor-pointer flex-center flex-col" @click.stop="play">
-        <svg-icon name="yinyue"></svg-icon>
-        <div class="text-14px">背景音乐</div>
-      </div>
-      <div class="bg-#fff1 hover:bg-#fff5 w-100px  p-15px b-rd-y-10px cursor-pointer flex-center flex-col" @click.stop="toggle">
-        <svg-icon name="quanping"></svg-icon>
-        <div class="text-14px">全屏</div>
-      </div>
-      <div class="bg-#fff1 hover:bg-#fff5 w-100px  p-15px b-rd-y-10px cursor-pointer flex-center flex-col" @click.stop="bainian">
-        <svg-icon name="bainian"></svg-icon>
-        <div class="text-14px">拜年</div>
-      </div>
-      <div class="bg-#fff1 hover:bg-#fff5 w-100px  p-15px b-rd-y-10px cursor-pointer flex-center flex-col" @click.stop="peroration">
-        <svg-icon name="fu" not-fill></svg-icon>
-        <div class="text-14px">结语</div>
+    <div class="abs-end-bottom rigth-30px bottom-30px flex-center gap-5px flex-col items-end text-50px  text-#ff0052" :style="{display:isKey ? 'none' : 'flex'}">
+      <div v-for="(item,key) in btns" :key="key" class="bg-#fff1 hover:bg-#fff5 w-100px p-15px b-rd-y-10px cursor-pointer flex-center flex-col"
+           @click.stop="item.click">
+        <svg-icon :name="item.icon" :not-fill="item.notFill"></svg-icon>
+        <div class="text-14px">{{ item.name }}</div>
       </div>
     </div>
     <div class="abs-r z--1">
       <audio :src="bgMp3Url" autoplay ref="audioRef" loop></audio>
       <video ref="bainianRef" :src="bainianUrl"></video>
       <video ref="perorationRef" :src="perorationUrl"></video>
+      <video ref="peroration2Ref" :src="peroration2Url"></video>
     </div>
   </div>
 </template>
@@ -39,14 +29,19 @@
 import url from "./ai-b.mp4?url"
 import bainianUrl from "./ai-bainian.mp4?url"
 import perorationUrl from "./ai-jieshu.mp4?url"
+import peroration2Url from "./ai-jieshu2.mp4?url"
 import bgMp3Url from "./bg.mp3?url"
 import {createChromakey, MP4Previewer} from "@webav/av-cliper";
 import {debounce} from "lodash";
 import SvgIcon from "@/src/components/svg-icon";
+const route = useRoute()
 const {toggle} = useFullscreen()
 const audioRef = ref() as Ref<HTMLAudioElement>
 const bainianRef = ref() as Ref<HTMLVideoElement>
 const perorationRef = ref() as Ref<HTMLVideoElement>
+const peroration2Ref = ref() as Ref<HTMLVideoElement>
+const isKey = computed(()=> route.query.key === 'true')
+
 const play = async ()=>{
   if(audioRef.value.paused){
     audioRef.value.play()
@@ -120,6 +115,7 @@ const getVideoBody = async (url:string)=>{
 const videoSpeech = ref()
 const bainianSpeech = ref()
 const perorationSpeech = ref()
+const peroration2Speech = ref()
 const canvasRef = ref()
 const isStop = ref(false)
 const repeatPlay = async (reverse?:boolean)=>{
@@ -142,6 +138,8 @@ onMounted(async () => {
   bainianSpeech.value = await videoParsing(canvas, ctx, clipMapBainianSpeech)
   const clipMapPerorationSpeech = await getVideoBody(perorationUrl)
   perorationSpeech.value = await videoParsing(canvas, ctx, clipMapPerorationSpeech)
+  const clipMapPeroration2Speech = await getVideoBody(peroration2Url)
+  peroration2Speech.value = await videoParsing(canvas, ctx, clipMapPeroration2Speech)
   resize(canvas, ctx)
   window.addEventListener("resize", () => {
     resize(canvas, ctx)
@@ -170,6 +168,48 @@ const peroration = async ()=>{
     })
   },2000)
 }
+const peroration2 = async ()=>{
+  isStop.value = true
+  setTimeout(()=>{
+    requestAnimationFrame(async ()=>{
+      peroration2Ref.value.play()
+      await peroration2Speech.value()
+      isStop.value = false
+      await repeatPlay()
+    })
+  },2000)
+}
+const btns = ref<Array<{
+  name:string
+  icon:string
+  click():void
+  notFill?:boolean
+  key?:any
+}>>([
+  {name:"背景音乐", icon:'yinyue', click(){
+      play()
+    }, key:'1'},
+  {name:"全屏", icon:'quanping', click(){
+      toggle()
+    }, key:'2'},
+  {name:"拜年", icon:'bainian', click(){
+      bainian()
+    }, key:'3'},
+  {name:"结语", icon:'fu', click(){
+      peroration()
+    },notFill:true, key:'4'},
+  {name:"结语2", icon:'fu', click(){
+      peroration2()
+    },notFill:true, key:'9'},
+])
+useMagicKeys({
+  onEventFired:debounce((event:KeyboardEvent)=> {
+    const obj = btns.value.find(e=>e.key === event.key)
+    if(obj && obj.click){
+      obj.click()
+    }
+  },300)
+})
 </script>
 
 <style scoped lang="less">
