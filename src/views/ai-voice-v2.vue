@@ -117,63 +117,6 @@ const list = ref<ListItemType[]>([
     isSelf:false,
     id:'3'
   },
-  {
-    content:"在JavaScript中，要去重一个数组，可以使用以下方法：\n" +
-        "\n" +
-        "1. 使用Set对象：\n" +
-        "```javascript\n" +
-        "const arr = [1, 2, 3, 4, 4, 5, 6, 6];\n" +
-        "const uniqueArr = [...new Set(arr)];\n" +
-        "console.log(uniqueArr); // 输出: [1, 2, 3, 4, 5, 6]\n" +
-        "```\n" +
-        "\n" +
-        "2. 使用indexOf方法：\n" +
-        "```javascript\n" +
-        "const arr = [1, 2, 3, 4, 4, 5, 6, 6];\n" +
-        "const uniqueArr = [];\n" +
-        "for (let i = 0; i < arr.length; i++) {\n" +
-        "  if (uniqueArr.indexOf(arr[i]) === -1) {\n" +
-        "    uniqueArr.push(arr[i]);\n" +
-        "  }\n" +
-        "}\n" +
-        "console.log(uniqueArr); // 输出: [1, 2, 3, 4, 5, 6]\n" +
-        "```\n" +
-        "\n" +
-        "这两种方法都可以有效地去除数组中的重复元素。使用Set对象的性能更好，代码更简洁。",
-    type:'text',
-    isSelf:false,
-    id:'2'
-  },
-  {
-    type: 'text',
-    isSelf: true,
-    content: '内容测试',
-    id:'1'
-  },
-  {
-    type: 'text',
-    isSelf: true,
-    content: '内容测试',
-    id:'1'
-  },
-  {
-    type: 'text',
-    isSelf: true,
-    content: '内容测试',
-    id:'1'
-  },
-  {
-    type: 'text',
-    isSelf: true,
-    content: '内容测试',
-    id:'1'
-  },
-  {
-    type: 'text',
-    isSelf: true,
-    content: '内容测试',
-    id:'1'
-  }
 ])
 const aiScrollTo = ()=>{
   nextTick(()=>{

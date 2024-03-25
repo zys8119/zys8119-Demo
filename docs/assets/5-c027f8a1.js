@@ -1,1 +1,0 @@
-import{d as e,o as a,c}from"./index-71ff745c.js";const n={class:"5"},i=e({__name:"5",setup(s){Object.prototype[Symbol.iterator]=function(){return Object.values(this)[Symbol.iterator]()};const[t,o]={a:1,b:2};return console.log(t,o),(r,l)=>(a(),c("div",n," 怎样使 const [a, b] = {a:1, b:2} "))}});export{i as default};
