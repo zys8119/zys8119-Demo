@@ -1,14 +1,17 @@
 <template>
-  <div class="ai-voice bg-#e8e8e8 abs-content of-x-hidden">
+  <div ref="aiRef" class="ai-voice bg-#e8e8e8 abs-content of-x-hidden">
     <div class="p-15px">
       <div v-for="(item,key) in list" :key="key" :style="{'--color':item.isSelf ? '#3ab370':'cadetblue'}">
-        <div class="m-b-10px flex items-center gap-10px justify-end flex-shrink-0" :class="{
+        <div class="m-b-10px flex items-start gap-10px justify-end flex-shrink-0" :class="{
         'flex-row-reverse': !item.isSelf,
       }">
           <div class="flex-1 flex justify-end " :class="{
             'flex-row-reverse': !item.isSelf,
           }">
-            <div class="bg-$color b-rd-10px p-10px b-1px b-solid b-#fff text-#fff " @click="playAudio(`audio${key}`)">
+            <div class="jiantouBox bg-$color b-rd-10px p-10px b-1px b-solid b-#fff text-#fff " @click="playAudio(`audio${key}`)">
+              <span class="jiantou" :class="{
+                right:item.isSelf
+              }"><svg-icon name="jiantou"></svg-icon></span>
               <div v-if="item.type === 'audio'" class="flex flex-col items-start">
                 <div class="flex-center gap-10px">
                   <svg-icon name="yuyin"></svg-icon>
@@ -18,7 +21,8 @@
                 <div class="w-100% b-t-solid b-1px b-#fff m-t-10px" v-if="item.content">{{item.content}}</div>
               </div>
               <div  v-if="item.type === 'text'">
-                <div>{{item.content}}</div>
+                <div v-if="item.done" class="type_text_content" v-html="item.content"></div>
+                <div v-else class="type_text_content" :id="`type_text_content_${item.id}`" v-html="item.content"></div>
               </div>
               <div  v-if="item.type === 'loading'">
                 <div style="color: #ffffff" class="la-ball-spin-clockwise-fade-rotating la-sm">
@@ -34,18 +38,19 @@
               </div>
             </div>
           </div>
-          <div class="w-30px h-30px bg-$color flex text-12px b-rd-50% of-hidden flex-center text-#fff">
-            {{item.isSelf ? '我': '对方'}}
+          <div class="w-30px h-30px bg-#fff flex text-12px b-rd-50% of-hidden flex-center text-#fff p-5px">
+            <span v-if="item.isSelf" class="text-#3ab370">我</span>
+            <img class="w-100% h-100%" v-else :src="logo" alt="">
           </div>
         </div>
       </div>
     </div>
     <footer-fixed>
       <div class="p-x-15px flex items-center gap-10px">
-        <div @click="isVoice = !isVoice" class="w-30px h-30px flex-center b-1px b-solid b-#38b06d text-#38b06d b-rd-50% text-18px flex-shrink-0">
-          <svg-icon name="jianpan" v-if="isVoice"></svg-icon>
-          <svg-icon name="yuyin" v-else></svg-icon>
-        </div>
+<!--        <div @click="isVoice = !isVoice" class="w-30px h-30px flex-center b-1px b-solid b-#38b06d text-#38b06d b-rd-50% text-18px flex-shrink-0">-->
+<!--          <svg-icon name="jianpan" v-if="isVoice"></svg-icon>-->
+<!--          <svg-icon name="yuyin" v-else></svg-icon>-->
+<!--        </div>-->
         <div v-if="isVoice" ref="voiceBtnRef" class="flex-1 touch-callout select-none" @click.stop.prevent="void 0"><n-button class="flex-1 w-100% select-none" :disabled="isChat">按住说话</n-button></div>
         <n-input v-else class="flex-1" clearable type="textarea" autosize v-model:value='text' placeholder="请输入"></n-input>
         <div class="flex-center gap-10px">
@@ -78,11 +83,14 @@ import 'recorder-core/src/engine/mp3-engine'
 import 'recorder-core/src/engine/wav'
 import 'recorder-core/src/engine/beta-webm'
 import SvgIcon from "@/src/components/svg-icon";
+import logo from "@/src/assets/logo.png";
 import Hammer from "hammerjs";
 const voiceBtnRef = ref()
 const isVoice = ref(false)
 const isPress = ref(false)
 const isChat = ref(false)
+const listRef = ref([])
+const aiRef = ref()
 const text= ref('')
 const isDisabled = computed(()=> text.value.length === 0 || isChat.value)
 type ListItemType = Partial<{
@@ -93,25 +101,137 @@ type ListItemType = Partial<{
   type:'text' | 'audio' | 'loading'
   isSelf:boolean
   results:any
+  id:string
+  done?:boolean
 }>
-const list = ref<ListItemType[]>([])
+const list = ref<ListItemType[]>([
+  {
+    content:"你好，我是智加大语言模型。",
+    type:'text',
+    isSelf:false,
+    id:'4'
+  },
+  {
+    content:"作为你的智能伙伴，我既能写文案、想点子，又能陪你聊天、答疑解惑。",
+    type:'text',
+    isSelf:false,
+    id:'3'
+  },
+  {
+    content:"在JavaScript中，要去重一个数组，可以使用以下方法：\n" +
+        "\n" +
+        "1. 使用Set对象：\n" +
+        "```javascript\n" +
+        "const arr = [1, 2, 3, 4, 4, 5, 6, 6];\n" +
+        "const uniqueArr = [...new Set(arr)];\n" +
+        "console.log(uniqueArr); // 输出: [1, 2, 3, 4, 5, 6]\n" +
+        "```\n" +
+        "\n" +
+        "2. 使用indexOf方法：\n" +
+        "```javascript\n" +
+        "const arr = [1, 2, 3, 4, 4, 5, 6, 6];\n" +
+        "const uniqueArr = [];\n" +
+        "for (let i = 0; i < arr.length; i++) {\n" +
+        "  if (uniqueArr.indexOf(arr[i]) === -1) {\n" +
+        "    uniqueArr.push(arr[i]);\n" +
+        "  }\n" +
+        "}\n" +
+        "console.log(uniqueArr); // 输出: [1, 2, 3, 4, 5, 6]\n" +
+        "```\n" +
+        "\n" +
+        "这两种方法都可以有效地去除数组中的重复元素。使用Set对象的性能更好，代码更简洁。",
+    type:'text',
+    isSelf:false,
+    id:'2'
+  },
+  {
+    type: 'text',
+    isSelf: true,
+    content: '内容测试',
+    id:'1'
+  },
+  {
+    type: 'text',
+    isSelf: true,
+    content: '内容测试',
+    id:'1'
+  },
+  {
+    type: 'text',
+    isSelf: true,
+    content: '内容测试',
+    id:'1'
+  },
+  {
+    type: 'text',
+    isSelf: true,
+    content: '内容测试',
+    id:'1'
+  },
+  {
+    type: 'text',
+    isSelf: true,
+    content: '内容测试',
+    id:'1'
+  }
+])
+const aiScrollTo = ()=>{
+  nextTick(()=>{
+    aiRef.value.scrollTo(0, aiRef.value.scrollHeight);
+  })
+}
+const inputAnimation = ()=>{
+  aiScrollTo()
+  nextTick(()=>{
+    list.value.forEach((item)=>{
+      if(item.isSelf === false && item.type === 'text' && !item.done){
+        console.log(3)
+        const txts = item.content.split("")
+        let time = performance.now()
+        const el = document.getElementById(`type_text_content_${item.id}`)
+        el.innerHTML = ''
+        ;(async function aa(){
+          requestAnimationFrame(()=>{
+            if(txts.length > 0){
+              if( performance.now() > time+2){
+                el.innerHTML += txts.shift()
+                time = performance.now()
+                el.clientWidth
+              }
+              aa()
+            }else {
+              item.done = true
+            }
+            aiScrollTo()
+          })
+        })()
+      }
+    })
+  })
+}
+onMounted(()=>{
+  inputAnimation()
+})
 const stopChat = ()=>{
   isChat.value = false
   list.value.pop()
 }
 const baseURL = ref('http://192.168.110.46:8000')
 const change = debounce(async ()=>{
-  const content = text.value;
+  const content = text.value.replace(/\n/img,'<br/>');
   list.value.push({
     content,
     type:'text',
     isSelf:true,
+    id:Date.now().toString()
   })
   list.value.push({
     type:'loading',
     isSelf:false,
+    id:Date.now().toString()
   })
   text.value = ''
+  aiScrollTo()
   try {
     isChat.value = true
     const {data} = await axios({
@@ -135,12 +255,15 @@ const change = debounce(async ()=>{
           content:get(e,'message.content'),
           type:'text',
           isSelf:false,
+          id:Date.now().toString()
         })
       })
+      inputAnimation()
     }
     isChat.value = false
   }catch (e){
     isChat.value = false
+    inputAnimation()
   }
 },300)
 /**
@@ -216,6 +339,7 @@ function recStop(){
       blob,
       type:'audio',
       isSelf:true,
+      id:Date.now().toString(),
     }
     sendAudio(info as any)
     // rec.close();//释放录音资源，当然可以不释放，后面可以连续调用start；但不释放时系统或浏览器会一直提示在录音，最佳操作是录完就close掉
@@ -272,6 +396,22 @@ onMounted(async ()=>{
 
 <style scoped lang="less">
 .ai-voice {
+  .jiantouBox{
+    position: relative;
+    .jiantou{
+      position: absolute;
+      left: 0;
+      top: 0;
+      transform: translateX(-74%) translateY(13px) rotateY(180deg);
+      color: cadetblue;
+      &.right{
+        left: initial;
+        right: 0;
+        color: #3ab370;
+        transform: translateX(74%) translateY(13px);
+      }
+    }
+  }
   .la-line-scale,
   .la-line-scale > div {
     position: relative;
