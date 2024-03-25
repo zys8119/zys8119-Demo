@@ -52,7 +52,7 @@
 <!--          <svg-icon name="yuyin" v-else></svg-icon>-->
 <!--        </div>-->
         <div v-if="isVoice" ref="voiceBtnRef" class="flex-1 touch-callout select-none" @click.stop.prevent="void 0"><n-button class="flex-1 w-100% select-none" :disabled="isChat">按住说话</n-button></div>
-        <n-input v-else class="flex-1" clearable type="textarea" autosize v-model:value='text' placeholder="请输入"></n-input>
+        <n-input :disabled="disabled" v-else class="flex-1" clearable type="textarea" autosize v-model:value='text' placeholder="请输入"></n-input>
         <div class="flex-center gap-10px">
           <n-button type="primary" v-if="!isVoice && !isChat" @click="change" :disabled="isDisabled">发送</n-button>
           <n-button class="text-28px" type="default" v-if="isChat" @click="stopChat">
@@ -212,6 +212,10 @@ const inputAnimation = ()=>{
 onMounted(()=>{
   inputAnimation()
 })
+const disabled = computed(()=> list.value.filter(e=>e.isSelf === false && e.type === 'text' && !e.done).length > 0)
+watch(list, ()=>{
+  console.log(list.value, disabled.value)
+}, {deep:true, immediate:true})
 const stopChat = ()=>{
   isChat.value = false
   list.value.pop()
