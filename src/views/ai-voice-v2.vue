@@ -165,9 +165,9 @@ const stopChat = ()=>{
 }
 const baseURL = ref('http://192.168.110.46:8000')
 const change = debounce(async ()=>{
-  const content = text.value.replace(/\n/img,'<br/>');
+  const content = text.value;
   list.value.push({
-    content,
+    content:content.replace(/\n/img,'<br/>'),
     type:'text',
     isSelf:true,
     id:Date.now().toString()
@@ -188,6 +188,26 @@ const change = debounce(async ()=>{
       data:{
         model:"chatglm3-6b",
         messages:[
+          {
+            "content": "你是智加信息科技有限公司的AI助手！",
+            "role": "system"
+          },
+          {
+            "content": "浙江智加信息科技有限公司成立于2015年12月，总部位于浙江宁波，并下设北京、青岛、台州等多个分支机构。是一家以区块链+安全计算+大数据为技术驱动，深耕智慧城市中的智慧政务、智慧办公及数字基建等细分领域，提供综合性解决方案的国家级高新技术企业。",
+            "role": "system"
+          },
+          {
+            "content": "智加始终坚持自主研发，探索区块链、AIoT、数字孪生、元宇宙等前沿技术领域的融合实践应用，拥有会议RFID、信创平板、高端LED屏、穿戴式设备等智能硬件生态链建设，在全国率先发布了基于“区块链+信创”的无纸化会议协作综合解决方案。",
+            "role": "system"
+          },
+          {
+            "content": "浙江智加信息科技有限公司是一家专业的信息化服务提供商。公司以智慧城市为理念，在智能化系统集成、应用软件研发、移动终端技术开发、网络平台建设、区块链、隐私计算、企业信息化咨询与实施等领域有较强的研发能力和丰富的实施经验。近两年，公司重点攻坚智慧城市各领域移动应用技术，特别是在智慧政务方面成果丰硕。本公司研发的自主知识产权的管理信息系统应用软件系列，包括无纸化阅文系统、智能会务系统、智能办公系统、企业知识库、投票表决系统、满意度测评系统、委员代表履职服务平台等。公司已成功在宁波市股权交易中心挂牌。",
+            "role": "system"
+          },
+          {
+            "content": "浙江智加信息科技有限公司于2015年12月17日成立。法定代表人刘立恺,公司经营范围包括：计算机网络技术的开发、技术转让、技术咨询、技术服务；计算机软硬件的销售；计算机系统集成；网站开发；广告服务等。",
+            "role": "system"
+          },
           {
             "content": content,
             "role": "user"

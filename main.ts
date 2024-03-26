@@ -11,7 +11,7 @@ import  "@/src/less/style.less"
 import 'virtual:uno.css'
 import './global'
 route.beforeEach((to, from, next)=>{
-    document.title = import.meta.env.DEV ? '本地测试' :`张云山-${to.meta.title || '个人博客'}`
+    // document.title = import.meta.env.DEV ? '本地测试' :`张云山-${to.meta.title || '个人博客'}`
     next()
 })
 const app = createApp(App)
