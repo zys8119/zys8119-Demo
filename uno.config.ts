@@ -18,6 +18,8 @@ export default defineConfig({
         'abs-end-bottom': 'absolute right-0 bottom-0',
         'abs-start-bottom': 'absolute left-0 bottom-0',
         'abs-center': 'absolute left-50% top-50% translate--50%',
+        'abs-x': 'absolute left-50% translate-x--50%',
+        'abs-y': 'absolute top-50% translate-y--50%',
         bold: 'font-bold',
     },
     rules: [
