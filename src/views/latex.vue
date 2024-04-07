@@ -39,18 +39,18 @@ onMounted(async ()=>{
     if (!items) {
       return;
     }
-    console.log(clipboardData.types, clipboardData.files, items)
-    const str = await Promise.all([...items].map(e=>{
-      return new Promise(resolve => {
-        e.getAsString(resolve)
-      })
-    }))
-    console.log([...items])
-    console.log([...items].map(e=>e.getAsFile()).filter(e=>/image/.test(e?.type)))
-    render.innerHTML = str[1] as string
-    // await Promise.all([...items].map(e=>e.getAsFile()).filter(e=>/image/.test(e?.type)).map(e=>{
-    //   return change({target:{files:[e]}} as any)
+    // console.log(clipboardData.types, clipboardData.files, items)
+    // const str = await Promise.all([...items].map(e=>{
+    //   return new Promise(resolve => {
+    //     e.getAsString(resolve)
+    //   })
     // }))
+    // console.log([...items])
+    // console.log([...items].map(e=>e.getAsFile()).filter(e=>/image/.test(e?.type)))
+    // render.innerHTML = str[1] as string
+    await Promise.all([...items].map(e=>e.getAsFile()).filter(e=>/image/.test(e?.type)).map(e=>{
+      return change({target:{files:[e]}} as any)
+    }))
   });
 
 })
