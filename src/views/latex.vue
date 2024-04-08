@@ -25,7 +25,21 @@ const change = async (ev:{target:HTMLInputElement})=>{
   console.log(data)
   katex.render(data, render,{})
 }
+function restoreHtmlEscapes(str) {
+  // 使用正则表达式替换转义符号
+  var map = {
+    '&lt;': '<',
+    '&gt;': '>',
+    '&amp;': '&',
+    '&quot;': '"',
+    '&#39;': '\''
+    // 添加其他需要恢复的转义符号和它们对应的实体字符
+  };
 
+  return str.replace(/&[a-zA-Z0-9]+;/g, function (match) {
+    return map[match] || match;
+  });
+}
 onMounted(async ()=>{
   document.addEventListener('paste', async function(event) {
     const clipboardData = event.clipboardData || window.clipboardData;
@@ -52,6 +66,11 @@ onMounted(async ()=>{
       return change({target:{files:[e]}} as any)
     }))
   });
+
+   katex.render('\\cfrac{\\vec{F}f\\lparen{n}\\rparen}{\\sqrt[1]{12}}1',render,{
+    throwOnError: false,
+    output:"html",
+  })
 
 })
 </script>
