@@ -53,24 +53,28 @@ onMounted(async ()=>{
     if (!items) {
       return;
     }
-    // console.log(clipboardData.types, clipboardData.files, items)
-    // const str = await Promise.all([...items].map(e=>{
-    //   return new Promise(resolve => {
-    //     e.getAsString(resolve)
-    //   })
-    // }))
-    // console.log([...items])
-    // console.log([...items].map(e=>e.getAsFile()).filter(e=>/image/.test(e?.type)))
-    // render.innerHTML = str[1] as string
+    console.log(clipboardData.types, clipboardData.files, items)
+    for (const type of clipboardData.types){
+      switch (type) {
+        case "Files":
+          for (const file of clipboardData.files){
+            if(!file.type){
+              console.log(file)
+            }
+            // await change({target:{files:[e]}})
+          }
+          break
+      }
+    }
     await Promise.all([...items].map(e=>e.getAsFile()).filter(e=>/image/.test(e?.type)).map(e=>{
       return change({target:{files:[e]}} as any)
     }))
   });
 
-   katex.render('\\cfrac{\\vec{F}f\\lparen{n}\\rparen}{\\sqrt[1]{12}}1',render,{
-    throwOnError: false,
-    output:"html",
-  })
+  //  katex.render('\\cfrac{\\vec{F}f\\lparen{n}\\rparen}{\\sqrt[1]{12}}1',render,{
+  //   throwOnError: false,
+  //   output:"html",
+  // })
 
 })
 </script>

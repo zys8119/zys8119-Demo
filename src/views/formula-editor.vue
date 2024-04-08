@@ -6,15 +6,19 @@
 </template>
 
 <script setup lang="ts">
-import {Boot, createEditor, createToolbar} from "@wangeditor/editor"
+import {Boot, createEditor, createToolbar, IButtonMenu, IDomEditor} from "@wangeditor/editor"
 import "@wangeditor/editor/dist/css/style.css"
-import formulaModule from '@wangeditor/plugin-formula'
 import formulaLatexModule from 'plugin-formula-latex'
+import editorModule from '@/src/components/editor'
+
 const toolRef = $ref() as HTMLDivElement
 const editorRef = $ref() as HTMLDivElement
+// Extend menu
+
+Boot.registerModule(formulaLatexModule)
+Boot.registerModule(editorModule)
 onMounted(async ()=>{
   // Boot.registerModule(formulaModule)
-  Boot.registerModule(formulaLatexModule)
   const editor = createEditor({
     selector:editorRef,
     config:{
@@ -24,7 +28,7 @@ onMounted(async ()=>{
           menuKeys: ['editFormula'], // “编辑公式”菜单
         },
       },
-    }
+    },
   })
 
   const tool = createToolbar({
@@ -35,7 +39,8 @@ onMounted(async ()=>{
         index: 0,
         keys: [
           'insertFormula', // “插入公式”菜单
-          'editFormula' // “编辑公式”菜单
+          // 'editFormula' // “编辑公式”菜单
+          'editorModule', // “插入公式”菜单
         ],
       },
     }
@@ -49,6 +54,12 @@ onMounted(async ()=>{
 
 <style scoped lang="less">
 .formula-editor {
-
+    :deep(math-field){
+      width: 100% !important;
+    }
+    :deep(.w-e-modal){
+      width: 90% !important;
+      font-size: 50px;
+    }
 }
 </style>
