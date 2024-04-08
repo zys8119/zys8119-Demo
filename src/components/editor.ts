@@ -1,5 +1,6 @@
 import {IButtonMenu, IModuleConf,IDomEditor,SlateNode,SlateElement} from "@wangeditor/editor"
-import {Key, VNodeData} from "snabbdom/build/vnode";
+import { h, VNode } from 'snabbdom'
+import { h as vh } from 'vue'
 export const keyName = 'editorModule'
 class MyMenu implements IButtonMenu{
     readonly title: string;
@@ -9,7 +10,7 @@ class MyMenu implements IButtonMenu{
         this.tag = 'button'
     }
     getValue(editor:IDomEditor) {
-        return ' <div>asda</div> '
+        return '<div></div> '
     }
     isActive(editor:IDomEditor) {
         return false // or true
@@ -18,17 +19,29 @@ class MyMenu implements IButtonMenu{
         return false // or true
     }
     exec(editor:IDomEditor, value:any) {
-        // const id = `${keyName}_${Date.now().toString(16)}`
-        // createApp(defineComponent({
-        //     setup(){
-        //         console.log(333)
-        //     }
-        // })).mount(`#${id}`)
-        console.log(SlateNode)
+        const id = `${keyName}_${Date.now().toString(16)}`
         editor.insertNode({
             type: 'attachment',
+            elId:id,
             children: [{ text: '' }]  // void 元素必须有一个 children ，其中只有一个空字符串，重要！！！
         } as any)
+        console.log(7777)
+        setTimeout(()=>{
+            createApp(defineComponent({
+                setup(){
+                    console.log(333)
+                },
+                render(){
+                    return vh('div',{
+                        onClick(){
+                            console.log(777)
+                        },
+                        class:"text-#f00"
+                    },"asdad")
+                }
+            })).mount(`#${id}`)
+            console.log(888)
+        })
     }
 }
 const editorModule: Partial<IModuleConf> = {
@@ -41,32 +54,13 @@ const editorModule: Partial<IModuleConf> = {
     renderElems:[
         {
             type:'attachment',
-            renderElem:()=>{
-                const el = document.createElement('div')
-                el.innerHTML = 'asdasd'
-                // 生成 HTML 代码
-                const html = `<span
-                    data-w-e-type="attachment"
-                    data-w-e-is-void
-                    data-w-e-is-inline
-                >fileName</span>`
-                return {
-                    sel:undefined,
-                    data: {
-                        attrs:{
-                            id:"asdas"
-                        },
-                        on: {
-                            click: () => {
-                                console.log(111)
-                            }
-                        }
+            renderElem:(s:any)=>{
+                console.log(s)
+                return h('div',{
+                    attrs:{
+                        id:s.elId
                     },
-                    children:[html],
-                    elm:undefined,
-                    text:html,
-                    key:'asadsad',
-                }
+                },'')
             }
         }
     ]

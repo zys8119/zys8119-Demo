@@ -90,6 +90,7 @@
         "recorder-core": "^1.3.23122400",
         "sass": "^1.59.3",
         "segmentit": "^2.0.3",
+        "snabbdom": "^3.6.2",
         "swiper": "^9.1.1",
         "tesseract.js": "^5.0.5",
         "three": "^0.160.0",
