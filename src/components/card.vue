@@ -1,9 +1,14 @@
 <template>
-  <div class="card w-30px">
+  <div class="card">
+    {{test.a}}
+    <input v-model="test.a">
   </div>
 </template>
 
 <script setup lang="ts">
+const props = defineProps<{
+  test:any
+}>()
 </script>
 
 <style scoped lang="less">

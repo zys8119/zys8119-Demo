@@ -13,14 +13,36 @@ import useEditorModule from '@/src/components/editor'
 
 const toolRef = $ref() as HTMLDivElement
 const editorRef = $ref() as HTMLDivElement
+const test = ref({
+  a:"askdasdjasdja"
+})
+watch(test,()=>{
+  console.log(test.value)
+},{deep:true})
 // Extend menu
 Boot.registerModule(formulaLatexModule)
+// Boot.registerModule(useEditorModule({
+//   title:"填空",
+//   exec({selector}){
+//     (document.querySelector(selector) as any)?.__vue_app__?.unmount?.()
+//     createApp(defineAsyncComponent({
+//       loader:()=> import('@/src/components/card.vue')
+//     })).mount(selector)
+//   }
+// }))
 Boot.registerModule(useEditorModule({
-  title:"填空",
+  type:"saasd",
+  title:"填空2",
   exec({selector}){
     (document.querySelector(selector) as any)?.__vue_app__?.unmount?.()
-    createApp(defineAsyncComponent({
-      loader:()=> import('@/src/components/card.vue')
+    createApp(defineComponent({
+      render(){
+        return h(defineAsyncComponent({
+          loader:()=> import('@/src/components/card.vue')
+        }),{
+          test:test.value,
+        })
+      }
     })).mount(selector)
   }
 }))
@@ -53,7 +75,8 @@ onMounted(async ()=>{
         keys: [
           'insertFormula', // “插入公式”菜单
           // 'editFormula' // “编辑公式”菜单
-          'customEditorModule', // “插入公式”菜单
+          // 'customEditorModule', // “插入公式”菜单
+          'saasd', // “插入公式”菜单
         ],
       },
     }
@@ -61,6 +84,15 @@ onMounted(async ()=>{
   editor.on('change',()=>{
     console.log(editor.getHtml())
   })
+  editor.setHtml(`<p><span
+                    data-w-e-type="saasd"
+                    data-w-e-is-void
+                    data-w-e-is-inline
+                    id="saasd_18ec169ed9e"
+                ></span></p><p>asdasdasdasdasdas\\\\\\</p><p><br></p><h1>assda<span data-w-e-type="formula" data-w-e-is-void data-w-e-is-inline data-value="\\sqrt[3]{122}\\leftarrow"></span>
+                <span data-w-e-type="formula" data-w-e-is-void data-w-e-is-inline data-value="\\lparen x+a)^2={\\textstyle\\sum_{k=0}^{n}}\\tbinom{n}{k}"></span>
+                <span data-w-e-type="formula" data-w-e-is-void data-w-e-is-inline data-value="\\nabla\\times\\vec{\\mathrm{B}}-\\frac{1}{C}\\frac{\\delta\\vec{\\mathrm{E}}}{\\delta t}=4\\pi\\rho"></span>
+                </h1>`)
   // console.log(editor)
 })
 </script>
