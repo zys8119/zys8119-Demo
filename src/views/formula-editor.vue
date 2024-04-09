@@ -9,16 +9,25 @@
 import {Boot, createEditor, createToolbar, IButtonMenu, IDomEditor} from "@wangeditor/editor"
 import "@wangeditor/editor/dist/css/style.css"
 import formulaLatexModule from 'plugin-formula-latex'
-import editorModule from '@/src/components/editor'
+import useEditorModule from '@/src/components/editor'
 
 const toolRef = $ref() as HTMLDivElement
 const editorRef = $ref() as HTMLDivElement
 // Extend menu
-
 Boot.registerModule(formulaLatexModule)
-Boot.registerModule(editorModule)
+const appMap = new Map<any,any>()
+Boot.registerModule(useEditorModule({
+  exec({selector}){
+    if(appMap.has(selector)){
+      appMap.get(selector).unmount?.()
+    }
+    const app = createApp(defineAsyncComponent({
+      loader:()=> import('@/src/components/card.vue')
+    })).mount(selector)
+    appMap.set(selector, app)
+  }
+}))
 onMounted(async ()=>{
-  // Boot.registerModule(formulaModule)
   const editor = createEditor({
     selector:editorRef,
     config:{
@@ -28,6 +37,7 @@ onMounted(async ()=>{
           menuKeys: ['editFormula'], // “编辑公式”菜单
         },
       },
+      placeholder:"请输入大纲",
     },
   })
 
@@ -40,7 +50,7 @@ onMounted(async ()=>{
         keys: [
           'insertFormula', // “插入公式”菜单
           // 'editFormula' // “编辑公式”菜单
-          'editorModule', // “插入公式”菜单
+          'customEditorModule', // “插入公式”菜单
         ],
       },
     }
@@ -48,7 +58,7 @@ onMounted(async ()=>{
   editor.on('change',()=>{
     console.log(editor.getHtml())
   })
-  console.log(editor)
+  // console.log(editor)
 })
 </script>
 
