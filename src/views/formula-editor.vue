@@ -5,7 +5,7 @@
   </div>
 </template>
 
-<script setup lang="ts">
+<script setup lang="ts" title="富文本编辑器">
 import {Boot, createEditor, createToolbar, IButtonMenu, IDomEditor} from "@wangeditor/editor"
 import "@wangeditor/editor/dist/css/style.css"
 import formulaLatexModule from 'plugin-formula-latex'
@@ -17,6 +17,7 @@ const editorRef = $ref() as HTMLDivElement
 Boot.registerModule(formulaLatexModule)
 const appMap = new Map<any,any>()
 Boot.registerModule(useEditorModule({
+  title:"填空",
   exec({selector}){
     if(appMap.has(selector)){
       appMap.get(selector).unmount?.()
