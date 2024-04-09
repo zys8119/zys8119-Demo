@@ -15,17 +15,13 @@ const toolRef = $ref() as HTMLDivElement
 const editorRef = $ref() as HTMLDivElement
 // Extend menu
 Boot.registerModule(formulaLatexModule)
-const appMap = new Map<any,any>()
 Boot.registerModule(useEditorModule({
   title:"填空",
   exec({selector}){
-    if(appMap.has(selector)){
-      appMap.get(selector).unmount?.()
-    }
-    const app = createApp(defineAsyncComponent({
+    (document.querySelector(selector) as any)?.__vue_app__?.unmount?.()
+    createApp(defineAsyncComponent({
       loader:()=> import('@/src/components/card.vue')
     })).mount(selector)
-    appMap.set(selector, app)
   }
 }))
 onMounted(async ()=>{
@@ -39,6 +35,12 @@ onMounted(async ()=>{
         },
       },
       placeholder:"请输入大纲",
+      MENU_CONF:{
+        uploadImage:{
+          server: '/api/upload',
+          fieldName:"file",
+        }
+      }
     },
   })
 

@@ -65,6 +65,7 @@ export const useEditorModule = function (options:Partial<UseEditorModuleType> = 
         title:"自定义插件",
         tag:"button",
     } as Partial<UseEditorModuleType> ,options) as  UseEditorModuleType
+    const rectMap = new Map<any, any>()
     return {
         menus:[
             {
@@ -76,12 +77,21 @@ export const useEditorModule = function (options:Partial<UseEditorModuleType> = 
             {
                 type:config.type,
                 renderElem:(s:any)=>{
+                    const selector = getIdSelector(s.elId)
+                    const selectorRect = rectMap.get(selector) || {}
                     return h('span',{
                         attrs:{
                             id:s.elId
                         },
                         props: { contentEditable: false }, // HTML 属性，驼峰式写法
-                        style: { display: 'inline-block', marginLeft: '3px', marginRight: '3px', /* 其他... */ }, // style ，驼峰式写法
+                        style: {
+                            display: 'inline-block',
+                            marginLeft: '3px',
+                            marginRight: '3px',
+                            width:`${selectorRect.width}px`,
+                            height:`${selectorRect.height}px`
+                            /* 其他... */
+                        }, // style ，驼峰式写法
                     },'')
                 },
             }
@@ -92,13 +102,16 @@ export const useEditorModule = function (options:Partial<UseEditorModuleType> = 
                 elemToHtml(elem: any, childrenHtml: string, editor): string {  // TS 语法
                     // 获取附件元素的数据
                     // 生成 HTML 代码
+                    const selector = getIdSelector(elem.elId)
                     requestAnimationFrame(()=>{
                         config.exec({
-                            selector:getIdSelector(elem.elId),
+                            selector,
                             editor,
                             config
                         })
                     })
+                    const rect = document.querySelector(selector)?.getBoundingClientRect?.() || {}
+                    rectMap.set(selector, rect)
                     return `<span
                     data-w-e-type="${config.type}"
                     data-w-e-is-void
@@ -146,4 +159,17 @@ export const useEditorModule = function (options:Partial<UseEditorModuleType> = 
         }
     }
 }
+
+/**
+ * @使用方式
+ Boot.registerModule(useEditorModule({
+     title:"填空",
+     exec({selector}){
+         (document.querySelector(selector) as any)?.__vue_app__?.unmount?.()
+         createApp(defineAsyncComponent({
+            loader:()=> import('@/src/components/card.vue')
+         })).mount(selector)
+     }
+ }))
+ */
 export default useEditorModule
