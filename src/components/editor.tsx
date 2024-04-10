@@ -100,11 +100,12 @@ export const useEditorModule = function (
                             },
                             props: { contentEditable: false }, // HTML 属性，驼峰式写法
                             style: {
-                                display: 'inline-block',
+                                // display: 'inline-block',
                                 marginLeft: '3px',
                                 marginRight: '3px',
-                                width: `${selectorRect.width}px`,
-                                height: `${selectorRect.height}px`
+                                width: selectorRect.width ? selectorRect.width +'px' : 'auto',
+                                height: selectorRect.height ? selectorRect.height +'px' : 'auto',
+                                overflow:"hidden"
                                 /* 其他... */
                             } // style ，驼峰式写法
                         },
@@ -133,6 +134,11 @@ export const useEditorModule = function (
                                 ?.getBoundingClientRect?.() || {};
                         rectMap.set(selector, rect);
                     });
+                    const rect =
+                        document
+                            .querySelector(selector)
+                            ?.getBoundingClientRect?.() || {};
+                    rectMap.set(selector, rect);
 
                     return `<span
                     data-w-e-type="${config.type}"
