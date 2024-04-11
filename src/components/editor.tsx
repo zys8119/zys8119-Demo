@@ -27,7 +27,7 @@ class MyMenu implements IButtonMenu, ISelectMenu, IModalMenu, IDropPanelMenu {
         this.modalWidth = this.config.modalWidth;
         this.showDropPanel = this.config.showDropPanel;
     }
-    getModalPositionNode(editor: IDomEditor): SlateNode | null {
+    getModalPositionNode(): SlateNode | null {
         return null;
     }
     // 定义 modal 内部的 DOM Element
