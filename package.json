@@ -58,7 +58,7 @@
         "@vinejs/vine": "^1.7.0",
         "@vitejs/plugin-vue": "^4.0.0",
         "@vitejs/plugin-vue-jsx": "^3.0.0",
-        "@vueuse/core": "^10.1.2",
+        "@vueuse/core": "^10.9.0",
         "@wangeditor/editor": "^5.1.23",
         "@wangeditor/plugin-formula": "^1.0.11",
         "@webav/av-cliper": "^0.3.0",
