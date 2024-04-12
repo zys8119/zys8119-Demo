@@ -25,7 +25,7 @@
   </div>
 </template>
 
-<script setup lang="ts">
+<script setup lang="ts" title="自定义video播放器控件">
 import * as dayjs from "dayjs"
 import SvgIcon from "@/src/components/svg-icon";
 const video = ref()
