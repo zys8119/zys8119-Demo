@@ -225,7 +225,7 @@ export const useEditorModule = function (
                     data-w-e-type="${config.type}"
                     data-w-e-is-void
                     data-w-e-is-inline
-                    data-value="${elem.dataValue}"
+                    data-value="${elem.dataValue || ''}"
                     id="${elem.elId}" ${
                             config.getHtmlConfig(
                                 'html',
