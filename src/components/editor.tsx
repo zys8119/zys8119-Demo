@@ -113,6 +113,7 @@ type UseEditorModuleType = {
         styleForRenderMenuList?: Record<any, any>;
     }>;
     getValue(editor: IDomEditor): any;
+    getHtmlConfig(type: 'render' | 'parse' | 'html', ...arg: any[]): any;
     // 建议用于下拉选择控件回调
     change(editor: IDomEditor, value: string | boolean): any;
 };
@@ -124,12 +125,16 @@ export const useEditorModule = function (
             exec() {
                 void 0;
             },
+            getHtmlConfig() {
+                return;
+            },
             type: 'customEditorModule',
             title: '自定义插件',
             tag: 'button',
             isRenderExec: true,
             showModal: false,
-            showDropPanel: false
+            showDropPanel: false,
+            style: {}
         } as Partial<UseEditorModuleType>,
         options
     ) as UseEditorModuleType;
@@ -145,31 +150,40 @@ export const useEditorModule = function (
             ? [
                 {
                     type: config.type,
-                    renderElem: (s: any) => {
+                    renderElem: (s: any, children, editor) => {
                         const selector = getIdSelector(s.elId);
                         const selectorRect = rectMap.get(selector) || {};
                         return h(
                             'span',
-                            {
-                                attrs: {
-                                    id: s.elId
+                            merge(
+                                {
+                                    attrs: {
+                                        id: s.elId,
+                                        'data-value': s.dataValue
+                                    },
+                                    props: { contentEditable: false }, // HTML 属性，驼峰式写法
+                                    style: {
+                                        // display: 'inline-block',
+                                        marginLeft: '3px',
+                                        marginRight: '3px',
+                                        width: selectorRect.width
+                                            ? selectorRect.width + 'px'
+                                            : 'auto',
+                                        height: selectorRect.height
+                                            ? selectorRect.height + 'px'
+                                            : 'auto',
+                                        overflow: 'hidden',
+                                        position: 'relative'
+                                        /* 其他... */
+                                    } // style ，驼峰式写法
                                 },
-                                props: { contentEditable: false }, // HTML 属性，驼峰式写法
-                                style: {
-                                    // display: 'inline-block',
-                                    marginLeft: '3px',
-                                    marginRight: '3px',
-                                    width: selectorRect.width
-                                        ? selectorRect.width + 'px'
-                                        : 'auto',
-                                    height: selectorRect.height
-                                        ? selectorRect.height + 'px'
-                                        : 'auto',
-                                    overflow: 'hidden',
-                                    position: 'relative'
-                                    /* 其他... */
-                                } // style ，驼峰式写法
-                            },
+                                config.getHtmlConfig(
+                                    'render',
+                                    s,
+                                    children,
+                                    editor
+                                )
+                            ),
                             ''
                         );
                     }
@@ -211,7 +225,15 @@ export const useEditorModule = function (
                     data-w-e-type="${config.type}"
                     data-w-e-is-void
                     data-w-e-is-inline
-                    id="${elem.elId}"
+                    data-value="${elem.dataValue}"
+                    id="${elem.elId}" ${
+                            config.getHtmlConfig(
+                                'html',
+                                elem,
+                                childrenHtml,
+                                editor
+                            ) || ''
+                        }
                 ></span>`;
                     }
                 }
@@ -228,11 +250,22 @@ export const useEditorModule = function (
                     ): SlateElement {
                         // TS 语法
                         // 生成“附件”元素（按照此前约定的数据结构）
-                        const myResume = {
-                            type: config.type,
-                            elId: domElem.id,
-                            children: [{ text: '' }] // void node 必须有 children ，其中有一个空字符串，重要！！！
-                        };
+                        const myResume = merge(
+                            {
+                                type: config.type,
+                                elId: domElem.id,
+                                dataValue: (
+                                    domElem as HTMLDivElement
+                                ).getAttribute('data-value'),
+                                children: [{ text: '' }] // void node 必须有 children ，其中有一个空字符串，重要！！！
+                            },
+                            config.getHtmlConfig(
+                                'parse',
+                                domElem,
+                                children,
+                                editor
+                            )
+                        );
                         requestAnimationFrame(async () => {
                             await config.exec({
                                 selector: getIdSelector(domElem.id),
