@@ -1,8 +1,9 @@
-import { defineConfig } from 'unocss';
+import { defineConfig, presetIcons, presetAttributify } from 'unocss';
 import presetWind from '@unocss/preset-wind'
-
 export default defineConfig({
     presets:[
+        presetAttributify({}),
+        presetIcons({}),
         presetWind()
     ],
     shortcuts: {

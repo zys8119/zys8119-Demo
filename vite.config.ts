@@ -13,7 +13,6 @@ import AutoConfig from 'vitejs-plugin-config-auto-import/vite'
 import ReactivityTransform from '@vue-macros/reactivity-transform/vite'
 import UnoCss from 'unocss/vite'
 import VineBrowser from './vite/VineBrowser'
-
 export default defineConfig({
     base:"",
     build:{
@@ -25,8 +24,9 @@ export default defineConfig({
         vueJsx(),
         ReactivityTransform(),
         Components({
+            dts:"components.d.ts",
             resolvers:[
-                NaiveUiResolver()
+                NaiveUiResolver(),
             ]
         }),
         AutoImport({
@@ -99,10 +99,15 @@ export default defineConfig({
             },
             "/v1":{
                 target:"http://192.168.110.46:8000"
+            },
+            "/bpm":{
+                target:"http://c2b7a201a62f9c86.zhijiasoft.com",
+                rewrite:path => path.replace(/^\/bpm/,''),
             }
         }
     },
     optimizeDeps:{
-        exclude:['pdfjs-dist']
+        include:[],
+        exclude:['pdfjs-dist','@zys/wujue-vue/wujie-vue.vue']
     }
 })

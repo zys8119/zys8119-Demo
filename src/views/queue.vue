@@ -1,13 +1,6 @@
 <template>
   <div class="w-full coloe-#f00 text-50px">
     <h3>任务并发控制，请查看控制台</h3>
-    <div class="i-ic-baseline-30fps"/>
-    <div class="i-ic-delete"/>
-    <div class="i-ic-baseline-alarm-off"/>
-    <div class="i-logos-nodejs"/>
-    <div class="i-logos-vue"/>
-    <div class="i-logos-webstorm"/>
-    <div class="i-logos-idea" bg="~ #f00"/>
   </div>
 </template>
 

@@ -23,8 +23,11 @@
         "packages/*"
     ],
     "dependencies": {
+        "@9elt/miniframe": "^0.8.4",
         "@css-render/plugin-bem": "^0.15.12",
         "@css-render/vue3-ssr": "^0.15.12",
+        "@iconify-json/ic": "^1.1.17",
+        "@iconify-json/logos": "^1.1.42",
         "@mediapipe/face_mesh": "^0.4.1633559619",
         "@microsoft/fetch-event-source": "^2.0.1",
         "@openobserve/browser-logs": "^0.2.10",
@@ -65,6 +68,7 @@
         "@wangeditor/plugin-formula": "^1.0.11",
         "@webav/av-cliper": "^0.3.0",
         "@xenova/transformers": "^2.14.0",
+        "@zys/wujie-vue": "^0.0.7",
         "axios": "^1.4.0",
         "css-render": "^0.15.12",
         "d3": "^7.8.5",
@@ -110,9 +114,11 @@
         "vue-console-plug": "^0.1.2",
         "vue-router": "^4.1.6",
         "wavefile": "^11.0.0",
-        "winframe": "^0.0.3"
+        "winframe": "^0.0.3",
+        "wujie": "^1.0.22"
     },
     "devDependencies": {
+        "@unocss/preset-icons": "^0.59.4",
         "@unocss/preset-wind": "^0.53.1",
         "@vue-macros/reactivity-transform": "^0.2.5",
         "lil-gui": "^0.18.1",
