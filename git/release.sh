@@ -1,7 +1,9 @@
 cd dist
 git init
-git remote add origin 仓库地址
-git fetch
+giturl=仓库地址
+git remote add origin $giturl
+git fetch origin main
+git --no-pager log origin/main -1
 result=$(git --no-pager log origin/main -1  | grep "commit .*" | sed "s/commit //g")
 result=$(git ls-tree $result | grep ".*package.json" | sed "s/.*blob \([a-z0-9]*\).*/\1/")
 result=$(git show $result | grep 'version' | sed "s/.*\"\([0-9.]*\)\".*/\1/")
@@ -24,8 +26,8 @@ fi
 new_version="$major.$minor.$patch"
 
 echo "$(cat package.json | sed "s/\(version\": \"\).*\(\"\)/\1$new_version\2/")" > package.json
-
-git pull origin main
 git add .
 git commit -m "[add] update version $new_version"
+git pull origin main --rebase
+git rebase --skip
 git push origin main
