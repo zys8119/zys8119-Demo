@@ -9,6 +9,14 @@
                        @touchstart="touchstart"
                        @ontouchmove="touchstart"
     ></CanvasInteraction>
+    <n-space class="abs w-full lef-0 top-10px text-#fff text-20px" justify="center">
+      <svg-icon name="revoke" @click="revoke" :class="{
+        '!opacity-50':penPointsHistorys.length === 0
+      }"></svg-icon>
+      <svg-icon name="redo" @click="redo" :class="{
+        '!opacity-50':revokeCache.length === 0
+      }"></svg-icon>
+    </n-space>
     <div class="abs w-full lef-0 bottom-10px flex justify-center items-center">
       <n-space class="flex-1 p-x-15px" justify="space-between" align="center">
         <n-popover>
@@ -39,7 +47,7 @@
             </div>
           </div>
         </n-popover>
-        <div>sada</div>
+        <div class="text-#fff" @click="clear"><svg-icon name="clear"></svg-icon></div>
         <div>sada</div>
       </n-space>
     </div>
@@ -87,6 +95,10 @@ const touchstart =(ev:TouchEvent) => {
   ev.preventDefault()
 }
 const penPointsHistorys = ref([])
+const drawPenPointsHistorys = computed(()=>{
+  const clearIndex = penPointsHistorys.value.findLastIndex(e=>e?.[0]?.type === 'clear')
+  return clearIndex > -1 ? penPointsHistorys.value.slice(clearIndex  + 1) : penPointsHistorys.value
+})
 const penPoints = ref([])
 const penStart = (obj, ev)=>{
   if(!obj){
@@ -115,6 +127,19 @@ const penEnd = ()=>{
     if(penPoints.value.length < 2){return}
     penPointsHistorys.value.push([penPoints.value[0], penPoints.value[penPoints.value.length - 1]])
   }
+  penPoints.value = []
+}
+const clear = ()=>{
+  penPointsHistorys.value.push([{type:'clear'}])
+}
+const revokeCache = ref([])
+const revoke = ()=>{
+  if(penPointsHistorys.value.length === 0){return}
+  revokeCache.value.push(penPointsHistorys.value.pop())
+}
+const redo = ()=>{
+  if(revokeCache.value.length === 0){return}
+  penPointsHistorys.value.push(revokeCache.value.pop())
 }
 const xGap = 100
 const yGap = 200
@@ -163,7 +188,7 @@ const load = async ({ scene, ObjectBase, width, height, ctx}:{
       erase(ctx: CanvasRenderingContext2D, mouseX:number,mouseY:number,eraserSize=20) {
         ctx.clearRect(mouseX - eraserSize / 2, mouseY - eraserSize / 2, eraserSize, eraserSize);
       }
-      drawPoint(ctx: CanvasRenderingContext2D, penPoints:Array<{x:number, y:number, color:string, type:string}>){
+      drawPoint(ctx: CanvasRenderingContext2D,canvas: HTMLCanvasElement, penPoints:Array<{x:number, y:number, color:string, type:string}>){
         if(penPoints.length < 2){
           return
         }
@@ -207,10 +232,10 @@ const load = async ({ scene, ObjectBase, width, height, ctx}:{
         ctx.closePath()
       }
       draw(ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement): Promise<any> | void {
-        penPointsHistorys.value.forEach((penPoints, i) => {
-          this.drawPoint(ctx, penPoints)
+        drawPenPointsHistorys.value.forEach((penPoints, i) => {
+          this.drawPoint(ctx, canvas, penPoints)
         })
-        this.drawPoint(ctx, penPoints.value)
+        this.drawPoint(ctx, canvas, penPoints.value)
       }
       isInside(): boolean {
         return  false
