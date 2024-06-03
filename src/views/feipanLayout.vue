@@ -1,10 +1,16 @@
 <template>
   <div class="feipanLayout w-full h-full bg-#71b52c abs-f"  @touchstart="touchstart">
-    <CanvasInteraction @load="load" :gap="0" @pen="pen"></CanvasInteraction>
+    <svg ref="target" class="abs w-full h-full"></svg>
+    <CanvasInteraction @load="load"
+                       :gap="0"
+                       @pen="pen"
+                       @penStart="penStart"
+                       @penMove="penMove"
+                       @penEnd="penEnd"
+    ></CanvasInteraction>
     <div class="abs w-full lef-0 bottom-0 flex justify-center items-center">
       asdas
     </div>
-
   </div>
 </template>
 
@@ -19,11 +25,23 @@ const pen = (ev:{srcEven: MouseEvent }) => {
 const touchstart =(ev:TouchEvent) => {
   ev.preventDefault()
 }
+const penStart = ()=>{
+  console.log(1)
+}
+const penMove = ()=>{
+  console.log(2)
+}
+const penEnd = ()=>{
+  console.log(3)
+}
+const xGap = 100
+const yGap = 200
+const winW = window.innerWidth*window.devicePixelRatio
+const winH = window.innerHeight*window.devicePixelRatio
 const load = async ({ scene, ObjectBase, width, height, ctx}:{
   [key:string]:any
   scene:Array<ObjectBaseType>
 })=>{
-
   class Line extends ObjectBase implements ObjectBaseType {
       type = "line"
       constructor(public x:number, public  y:number, public lineWidth:number, public horizontal:boolean = false) {
@@ -112,10 +130,6 @@ const load = async ({ scene, ObjectBase, width, height, ctx}:{
       ctx.closePath()
     }
   }
-  const xGap = 100
-  const yGap = 200
-  const winW = window.innerWidth*window.devicePixelRatio
-  const winH = window.innerHeight*window.devicePixelRatio
   // 布局线
   scene.push(new Line(xGap,0, winH))
   scene.push(new Line(winW - xGap,0, winH))

@@ -86,6 +86,7 @@ export interface ObjectBaseType {
     panmove?(event: any): [xName: string, yName: string]
 
     mousePointCalc?(rotationAngle: number, isReverse?:boolean): number[]
+    isShowHelp?(): boolean
 
     visible?: boolean
     readonly width?: number
@@ -248,7 +249,9 @@ const CanvasInteraction = defineComponent({
                 }
                 return false
             }
-
+            isShowHelp(){
+                return true
+            }
             get gapSize() {
                 return props.gap + props.gapLineWidth * 2
             }
@@ -737,7 +740,7 @@ const CanvasInteraction = defineComponent({
                             ctx.rotate(Math.PI/180*(object.rotationAngle || 0))
                             ctx.translate(-object.centerX, -object.centerY)
                             await object.draw(ctx, canvas)
-                            if (props.showHelp && currObject.value === object) {
+                            if (props.showHelp && currObject.value === object && typeof object.isShowHelp === 'function' && object.isShowHelp()) {
                                 await drawAuxiliaryLine(object)
                                 await object.drawRotation?.(ctx, canvas)
                             }
