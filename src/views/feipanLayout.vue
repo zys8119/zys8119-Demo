@@ -1,5 +1,5 @@
 <template>
-  <div class="feipanLayout w-full h-full bg-#71b52c abs-f">
+  <div class="feipanLayout w-full h-full bg-$canvasBg abs-f">
     <CanvasInteraction @load="load"
                        :gap="0"
                        @pen="pen"
@@ -48,7 +48,7 @@
           </div>
         </n-popover>
         <div class="text-#fff" @click="clear"><svg-icon name="clear"></svg-icon></div>
-        <div>sada</div>
+        <div class="text-#fff" @click="download"><svg-icon name="download"></svg-icon></div>
       </n-space>
     </div>
   </div>
@@ -57,6 +57,8 @@
 <script setup lang="ts" title="飞盘战术布局">
 import CanvasInteraction, {ObjectBaseType} from "@/src/components/CanvasInteraction"
 import SvgIcon from "@/src/components/svg-icon";
+import logo from "@/src/assets/logo.png";
+const canvas = ref()
 const colors = ref([
     "#f00",
     "#0f0",
@@ -83,9 +85,11 @@ const config = ref({
   color:"#f00",
   penType:"pen"
 })
+const canvasBg = ref('#71b52c')
 useCssVars(()=>{
   return {
-    "penColor":config.value.color
+    "penColor":config.value.color,
+    "canvasBg":canvasBg.value,
   }
 })
 const pen = (ev:{srcEven: MouseEvent }) => {
@@ -141,14 +145,39 @@ const redo = ()=>{
   if(revokeCache.value.length === 0){return}
   penPointsHistorys.value.push(revokeCache.value.pop())
 }
+const download = ()=>{
+  const a = document.createElement('a')
+  a.href = canvas.value.toDataURL()
+  a.download = '飞盘战术图.png'
+  a.click()
+  a.remove()
+}
 const xGap = 100
 const yGap = 200
 const winW = window.innerWidth*window.devicePixelRatio
 const winH = window.innerHeight*window.devicePixelRatio
-const load = async ({ scene, ObjectBase, width, height, ctx}:{
+const load = async ({ scene, ObjectBase, canvas:canvasObj}:{
   [key:string]:any
   scene:Array<ObjectBaseType>
 })=>{
+  canvas.value = canvasObj
+  class DrawCanvasInit extends ObjectBase implements ObjectBaseType {
+    type:'DrawCanvasInit'
+    constructor() {
+      super();
+    }
+    draw(ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement): Promise<any> | void {
+      ctx.beginPath()
+      ctx.fillStyle = canvasBg.value
+      ctx.rect(0,0,canvas.width, canvas.height)
+      ctx.fill()
+      ctx.closePath()
+    }
+
+    isInside(): boolean {
+      return  false
+    }
+  }
   class DrawPenPoints extends ObjectBase implements ObjectBaseType {
       type = "DrawPenPoints"
       constructor() {
@@ -286,13 +315,14 @@ const load = async ({ scene, ObjectBase, width, height, ctx}:{
         ctx.restore()
       }
   }
-  class disc extends ObjectBase implements ObjectBaseType {
+  class Disc extends ObjectBase implements ObjectBaseType {
     type = 'disc'
     size = 0
     constructor(public x:number, public y:number,public config?: Partial<{
       size:number
       color:string
       text:any,
+      logo:any,
     }>) {
       super();
       this.size = this.config?.size || 30
@@ -309,7 +339,19 @@ const load = async ({ scene, ObjectBase, width, height, ctx}:{
     set h(v){
       this.size = v
     }
-    draw(ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement): Promise<any> | void {
+    async loadImage(url){
+      return new Promise(resolve => {
+        const img = new Image()
+        img.src = url
+        img.onload = () => {
+            resolve(img)
+        }
+        img.onerror = ()=>{
+          resolve(img)
+        }
+      })
+    }
+    async draw(ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement): Promise<any> | void {
       ctx.beginPath()
       ctx.lineWidth = 3;
       ctx.strokeStyle = '#ffffff';
@@ -319,6 +361,10 @@ const load = async ({ scene, ObjectBase, width, height, ctx}:{
       ctx.arc(x, y, this.w / 2, 0, 2 * Math.PI)
       ctx.stroke()
       ctx.fill()
+      if(this.config?.logo){
+        const logo = await this.loadImage(this.config?.logo)
+        ctx.drawImage(logo as any,x,y,this.w,this.h)
+      }
       if(this.config?.text){
         ctx.font = `${this.w*0.7}px Arial`
         ctx.fillStyle = '#ffffff';
@@ -329,6 +375,8 @@ const load = async ({ scene, ObjectBase, width, height, ctx}:{
       ctx.closePath()
     }
   }
+  // canvas 背景初始化
+  scene.push(new DrawCanvasInit())
   // 绘制笔记
   scene.push(new DrawPenPoints())
   // 布局线
@@ -347,7 +395,7 @@ const load = async ({ scene, ObjectBase, width, height, ctx}:{
   // 红方
   feipanMax.forEach((_,i,array)=> {
     const x = xGap + (winW - xGap * 2) / (array.length + 1) * (i+1) - feipanSize/2
-    scene.push(new disc(x,yGap-feipanSize/2,{
+    scene.push(new Disc(x,yGap-feipanSize/2,{
       color: "#c8112a",
       text: i+1,
       size:feipanSize
@@ -356,12 +404,21 @@ const load = async ({ scene, ObjectBase, width, height, ctx}:{
   // 蓝方
   feipanMax.forEach((_,i,array)=> {
     const x = xGap + (winW - xGap * 2) / (array.length + 1) * (i+1) - feipanSize/2
-    scene.push(new disc(x,winH - yGap -feipanSize/2,{
+    scene.push(new Disc(x,winH - yGap -feipanSize/2,{
       color: "#2866aa",
       text: i+1,
       size:feipanSize
     }))
+    if(i === 3){
+      // 黄色主飞盘,logo
+      scene.push(new Disc(x,winH - yGap -feipanSize/2 - feipanSize - 30,{
+        color: "#fbff33",
+        logo: logo,
+        size:feipanSize
+      }))
+    }
   })
+
 }
 </script>
 
