@@ -56,16 +56,6 @@ const load = async ({ scene, ObjectBase, width, height, ctx}:{
         ctx.restore()
       }
   }
-  const xGap = 50
-  const yGap = 100
-  scene.push(new Line(xGap,0, window.innerHeight))
-  scene.push(new Line(window.innerWidth - xGap,0, window.innerHeight))
-  scene.push(new Line(xGap,yGap, window.innerWidth-xGap*2, true))
-  scene.push(new Line(xGap,window.innerHeight - yGap, window.innerWidth-xGap*2, true))
-  scene.push(new RectText(0,0,xGap,window.innerHeight, "away side", true))
-  scene.push(new RectText(window.innerWidth - xGap,0,xGap,window.innerHeight, "home Side", true))
-  scene.push(new RectText(xGap,0,window.innerWidth - xGap*2,yGap, "end zone"))
-  scene.push(new RectText(xGap,window.innerHeight - yGap,window.innerWidth - xGap*2,yGap, "end zone"))
   class disc extends ObjectBase implements ObjectBaseType {
     type = 'disc'
     size = 0
@@ -91,7 +81,7 @@ const load = async ({ scene, ObjectBase, width, height, ctx}:{
     }
     draw(ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement): Promise<any> | void {
       ctx.beginPath()
-      ctx.lineWidth = 1;
+      ctx.lineWidth = 3;
       ctx.strokeStyle = '#ffffff';
       ctx.fillStyle = this.config?.color || '#2866aa';
       const x = this.x + this.w / 2
@@ -109,12 +99,39 @@ const load = async ({ scene, ObjectBase, width, height, ctx}:{
       ctx.closePath()
     }
   }
-  // new Array(7).fill(0).forEach((_,i)=> {
-  //   scene.push(new disc(0,0,{
-  //     color: "#2866aa",
-  //     text: i+1
-  //   }))
-  // })
+  const xGap = 50
+  const yGap = 100
+  // 布局线
+  scene.push(new Line(xGap,0, window.innerHeight))
+  scene.push(new Line(window.innerWidth - xGap,0, window.innerHeight))
+  scene.push(new Line(xGap,yGap, window.innerWidth-xGap*2, true))
+  scene.push(new Line(xGap,window.innerHeight - yGap, window.innerWidth-xGap*2, true))
+  // 布局文字节点
+  scene.push(new RectText(0,0,xGap,window.innerHeight, "away side", true))
+  scene.push(new RectText(window.innerWidth - xGap,0,xGap,window.innerHeight, "home Side", true))
+  scene.push(new RectText(xGap,0,window.innerWidth - xGap*2,yGap, "end zone"))
+  scene.push(new RectText(xGap,window.innerHeight - yGap,window.innerWidth - xGap*2,yGap, "end zone"))
+  // 飞盘占位
+  const feipanSize = 25
+  const feipanMax = new Array(7).fill(0)
+  // 红方
+  feipanMax.forEach((_,i,array)=> {
+    const x = xGap + (window.innerWidth - xGap * 2) / (array.length + 1) * (i+1) - feipanSize/2
+    scene.push(new disc(x,yGap-feipanSize/2,{
+      color: "#c8112a",
+      text: i+1,
+      size:feipanSize
+    }))
+  })
+  // 蓝方
+  feipanMax.forEach((_,i,array)=> {
+    const x = xGap + (window.innerWidth - xGap * 2) / (array.length + 1) * (i+1) - feipanSize/2
+    scene.push(new disc(x,window.innerHeight - yGap -feipanSize/2,{
+      color: "#2866aa",
+      text: i+1,
+      size:feipanSize
+    }))
+  })
 }
 </script>
 
