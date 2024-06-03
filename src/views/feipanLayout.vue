@@ -81,7 +81,7 @@ const penType = ref([
 ])
 const config = ref({
   color:"#f00",
-  penType:"solid-arrow"
+  penType:"pen"
 })
 useCssVars(()=>{
   return {
