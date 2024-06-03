@@ -321,8 +321,12 @@ const load = async ({ scene, ObjectBase, canvas:canvasObj}:{
     constructor(public x:number, public y:number,public config?: Partial<{
       size:number
       color:string
-      text:any,
-      logo:any,
+      strokeStyle:string
+      text:any
+      logo:any
+      logoSize:number
+      isInside:boolean
+      lineWidth:number
     }>) {
       super();
       this.size = this.config?.size || 30
@@ -339,9 +343,21 @@ const load = async ({ scene, ObjectBase, canvas:canvasObj}:{
     set h(v){
       this.size = v
     }
+    isInside(): boolean {
+      if(typeof this.config?.isInside === 'boolean'){
+        return this.config.isInside
+      }
+      return  super.isInside()
+    }
+
+    assetsMap = new Map()
     async loadImage(url){
+      if(this.assetsMap.has(url)){
+        return this.assetsMap.get(url)
+      }
       return new Promise(resolve => {
         const img = new Image()
+        this.assetsMap.set(url, img)
         img.src = url
         img.onload = () => {
             resolve(img)
@@ -353,17 +369,21 @@ const load = async ({ scene, ObjectBase, canvas:canvasObj}:{
     }
     async draw(ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement): Promise<any> | void {
       ctx.beginPath()
-      ctx.lineWidth = 3;
-      ctx.strokeStyle = '#ffffff';
+      ctx.lineWidth = typeof this.config?.lineWidth === 'number' ? this.config?.lineWidth : (this.config?.lineWidth || 3);
+      ctx.strokeStyle = this.config?.strokeStyle || '#ffffff';
       ctx.fillStyle = this.config?.color || '#2866aa';
       const x = this.x + this.w / 2
       const y = this.y + this.h / 2
       ctx.arc(x, y, this.w / 2, 0, 2 * Math.PI)
-      ctx.stroke()
+      if(typeof this.config?.lineWidth === 'number' && this.config?.lineWidth !== 0){
+        ctx.stroke()
+      }
       ctx.fill()
       if(this.config?.logo){
         const logo = await this.loadImage(this.config?.logo)
-        ctx.drawImage(logo as any,x,y,this.w,this.h)
+        const logoSize = this.config?.logoSize || 0.8
+        const logoSizeMerge = 1 - logoSize
+        ctx.drawImage(logo as any,this.x + (this.w*logoSizeMerge)/2,this.y + (this.h*logoSizeMerge)/2,this.w*logoSize,this.h*logoSize)
       }
       if(this.config?.text){
         ctx.font = `${this.w*0.7}px Arial`
@@ -414,7 +434,15 @@ const load = async ({ scene, ObjectBase, canvas:canvasObj}:{
       scene.push(new Disc(x,winH - yGap -feipanSize/2 - feipanSize - 30,{
         color: "#fbff33",
         logo: logo,
-        size:feipanSize
+        size:feipanSize,
+        lineWidth:0
+      }))
+      scene.push(new Disc(x,winH - yGap -feipanSize/2 - feipanSize - 30-50,{
+        color: "#0000",
+        logo: logo,
+        size:feipanSize,
+        isInside:false,
+        lineWidth:0
       }))
     }
   })
