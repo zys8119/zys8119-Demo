@@ -1,6 +1,5 @@
 <template>
   <div class="feipanLayout w-full h-full bg-#71b52c abs-f"  @touchstart="touchstart">
-    <svg ref="target" class="abs w-full h-full"></svg>
     <CanvasInteraction @load="load"
                        :gap="0"
                        @pen="pen"
@@ -8,31 +7,96 @@
                        @penMove="penMove"
                        @penEnd="penEnd"
     ></CanvasInteraction>
-    <div class="abs w-full lef-0 bottom-0 flex justify-center items-center">
-      asdas
+    <div class="abs w-full lef-0 bottom-10px flex justify-center items-center">
+      <n-space class="flex-1 p-x-15px" justify="space-between" align="center">
+        <n-popover trigger="click">
+          <template #trigger>
+            <div class="w-30px h-30px b-rd-100% b-#fff b-solid b-2px bg-$penColor"></div>
+          </template>
+          <div class="flex flex-col gap-5px">
+            <div v-for="(item, i) in colors" :key="i" class="w-30px h-30px b-rd-100% bg-$color flex-center abs-r" :style="{'--color':item}" @click="config.color = item">
+              <div class="w-20px h-20px  b-rd-100%  b-solid b-2px b-#fff abs-center" v-if="config.color === item"></div>
+            </div>
+          </div>
+        </n-popover>
+        <n-popover trigger="click">
+          <template #trigger>
+            <div class="text-#fff flex-center text-30px bold">
+              <svg-icon name="pen"></svg-icon>
+              <svg-icon name="shangla" class="text-10px"></svg-icon>
+            </div>
+          </template>
+          <div class="flex flex-col gap-5px">
+            <div v-for="(item, i) in penType" :key="i" @click="config.penType = item.value">
+              <div v-if="config.penType === item.value"></div>
+            </div>
+          </div>
+        </n-popover>
+        <div>sada</div>
+        <div>sada</div>
+      </n-space>
     </div>
   </div>
 </template>
 
 <script setup lang="ts" title="飞盘战术布局">
 import CanvasInteraction, {ObjectBaseType} from "@/src/components/CanvasInteraction"
-import { useDrauu } from '@vueuse/integrations/useDrauu'
-const target = ref()
-const { undo, redo, canUndo, canRedo, brush } = useDrauu(target)
+import SvgIcon from "@/src/components/svg-icon";
+const colors = ref([
+    "#f00",
+    "#0f0",
+    "#00f",
+    "#ff0",
+    "#0ff",
+    "#f0f",
+    "#000",
+    "#fff",
+    "#000",
+    "#f00",
+    "#0f0",
+])
+const penType = ref([
+  {name:"铅笔", value:'pen', icon:'pen'},
+  {name:"实线", value:'solid-line', icon:'solid-line'},
+  {name:"虚线", value:'dashed-line', icon:'dashed-line'},
+])
+const config = ref({
+  color:"#f00",
+  penType:"pen"
+})
+useCssVars(()=>{
+  return {
+    "penColor":config.value.color
+  }
+})
 const pen = (ev:{srcEven: MouseEvent }) => {
   ev?.srcEven?.preventDefault?.()
 }
 const touchstart =(ev:TouchEvent) => {
-  ev.preventDefault()
+  // ev.preventDefault()
 }
-const penStart = ()=>{
-  console.log(1)
+const penPointsHistorys = ref([])
+const penPoints = ref([])
+const penStart = (obj, ev)=>{
+  if(!obj){
+    penPoints.value = [{
+      x:ev.center.x*window.devicePixelRatio,
+      y:ev.center.y*window.devicePixelRatio,
+      color: config.value.color
+    }]
+  }
 }
-const penMove = ()=>{
-  console.log(2)
+const penMove = (obj, ev)=>{
+  if(!obj){
+    penPoints.value.push({
+      x:ev.center.x*window.devicePixelRatio,
+      y:ev.center.y*window.devicePixelRatio,
+      color: config.value.color
+    })
+  }
 }
 const penEnd = ()=>{
-  console.log(3)
+  penPointsHistorys.value.push(penPoints.value)
 }
 const xGap = 100
 const yGap = 200
@@ -42,6 +106,35 @@ const load = async ({ scene, ObjectBase, width, height, ctx}:{
   [key:string]:any
   scene:Array<ObjectBaseType>
 })=>{
+  class DrawPenPoints extends ObjectBase implements ObjectBaseType {
+      type = "DrawPenPoints"
+      constructor() {
+        super();
+      }
+      drawPoint(ctx: CanvasRenderingContext2D, penPoints:Array<{x:number, y:number, color:string}>){
+        ctx.beginPath()
+        ctx.lineWidth = 5
+        penPoints.forEach((p, i) => {
+          ctx.strokeStyle = p.color
+          if (i === 0) {
+            ctx.moveTo(p.x, p.y)
+            return
+          }
+          ctx.lineTo(p.x, p.y)
+        })
+        ctx.stroke()
+        ctx.closePath()
+      }
+      draw(ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement): Promise<any> | void {
+        penPointsHistorys.value.forEach((penPoints, i) => {
+          this.drawPoint(ctx, penPoints)
+        })
+        this.drawPoint(ctx, penPoints.value)
+      }
+      isInside(): boolean {
+        return  false
+      }
+  }
   class Line extends ObjectBase implements ObjectBaseType {
       type = "line"
       constructor(public x:number, public  y:number, public lineWidth:number, public horizontal:boolean = false) {
@@ -130,6 +223,8 @@ const load = async ({ scene, ObjectBase, width, height, ctx}:{
       ctx.closePath()
     }
   }
+  // 绘制笔记
+  scene.push(new DrawPenPoints())
   // 布局线
   scene.push(new Line(xGap,0, winH))
   scene.push(new Line(winW - xGap,0, winH))
