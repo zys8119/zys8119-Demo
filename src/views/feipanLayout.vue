@@ -1,0 +1,125 @@
+<template>
+  <div class="feipanLayout w-full h-full bg-#71b52c abs-f">
+    <CanvasInteraction @load="load" :gap="0"></CanvasInteraction>
+  </div>
+</template>
+
+<script setup lang="ts" title="飞盘战术布局">
+import CanvasInteraction, {ObjectBaseType} from "@/src/components/CanvasInteraction"
+const load = async ({ scene, ObjectBase, width, height, ctx}:{
+  [key:string]:any
+  scene:Array<ObjectBaseType>
+})=>{
+
+  class Line extends ObjectBase implements ObjectBaseType {
+      type = "line"
+      constructor(public x:number, public  y:number, public lineWidth:number, public horizontal:boolean = false) {
+        super();
+      }
+      draw(ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement): Promise<any> | void {
+        ctx.beginPath()
+        ctx.moveTo(this.x, this.y)
+        if(this.horizontal){
+            ctx.lineTo(this.x + this.lineWidth, this.y)
+        }else {
+          ctx.lineTo(this.x, this.lineWidth)
+        }
+        ctx.lineWidth = 1
+        ctx.strokeStyle = "#fff"
+        ctx.stroke()
+        ctx.closePath()
+      }
+      isInside(): boolean {
+        return  false
+      }
+  }
+  class RectText extends ObjectBase implements ObjectBaseType {
+      type = 'RectText'
+      constructor(public x:number, public  y:number, public rectW: number, public rectH: number, public text: string, public horizontal:boolean = false) {
+        super();
+      }
+      draw(ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement): Promise<any> | void {
+        ctx.save()
+        ctx.beginPath()
+        const x = this.rectW / 2 + this.x
+        const y = this.rectH / 2 + this.y
+        ctx.translate(x, y)
+        if(this.horizontal){
+          ctx.rotate(-Math.PI/2)
+        }
+        ctx.fillStyle = "#fff"
+        ctx.textAlign = 'center'
+        ctx.font = `18px Arial`
+        ctx.textBaseline = "middle"
+        ctx.fillText(this.text?.toUpperCase?.(), 0,0)
+        ctx.closePath()
+        ctx.restore()
+      }
+  }
+  const xGap = 50
+  const yGap = 100
+  scene.push(new Line(xGap,0, window.innerHeight))
+  scene.push(new Line(window.innerWidth - xGap,0, window.innerHeight))
+  scene.push(new Line(xGap,yGap, window.innerWidth-xGap*2, true))
+  scene.push(new Line(xGap,window.innerHeight - yGap, window.innerWidth-xGap*2, true))
+  scene.push(new RectText(0,0,xGap,window.innerHeight, "away side", true))
+  scene.push(new RectText(window.innerWidth - xGap,0,xGap,window.innerHeight, "home Side", true))
+  scene.push(new RectText(xGap,0,window.innerWidth - xGap*2,yGap, "end zone"))
+  scene.push(new RectText(xGap,window.innerHeight - yGap,window.innerWidth - xGap*2,yGap, "end zone"))
+  class disc extends ObjectBase implements ObjectBaseType {
+    type = 'disc'
+    size = 0
+    constructor(public x:number, public y:number,public config?: Partial<{
+      size:number
+      color:string
+      text:any,
+    }>) {
+      super();
+      this.size = this.config?.size || 30
+    }
+    get w(){
+      return this.size
+    }
+    set w(v){
+      this.size = v
+    }
+    get h(){
+      return this.size
+    }
+    set h(v){
+      this.size = v
+    }
+    draw(ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement): Promise<any> | void {
+      ctx.beginPath()
+      ctx.lineWidth = 1;
+      ctx.strokeStyle = '#ffffff';
+      ctx.fillStyle = this.config?.color || '#2866aa';
+      const x = this.x + this.w / 2
+      const y = this.y + this.h / 2
+      ctx.arc(x, y, this.w / 2, 0, 2 * Math.PI)
+      ctx.stroke()
+      ctx.fill()
+      if(this.config?.text){
+        ctx.font = `${this.w*0.7}px Arial`
+        ctx.fillStyle = '#ffffff';
+        ctx.textAlign= "center"
+        ctx.textBaseline = "middle"
+        ctx.fillText(this.config?.text, x,y, this.w)
+      }
+      ctx.closePath()
+    }
+  }
+  // new Array(7).fill(0).forEach((_,i)=> {
+  //   scene.push(new disc(0,0,{
+  //     color: "#2866aa",
+  //     text: i+1
+  //   }))
+  // })
+}
+</script>
+
+<style scoped lang="less">
+.feipanLayout {
+
+}
+</style>
