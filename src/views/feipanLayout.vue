@@ -4,11 +4,15 @@
     <div class="abs w-full lef-0 bottom-0 flex justify-center items-center">
       asdas
     </div>
+
   </div>
 </template>
 
 <script setup lang="ts" title="飞盘战术布局">
 import CanvasInteraction, {ObjectBaseType} from "@/src/components/CanvasInteraction"
+import { useDrauu } from '@vueuse/integrations/useDrauu'
+const target = ref()
+const { undo, redo, canUndo, canRedo, brush } = useDrauu(target)
 const pen = (ev:{srcEven: MouseEvent }) => {
   ev?.srcEven?.preventDefault?.()
 }
