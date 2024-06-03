@@ -58,6 +58,7 @@
 import CanvasInteraction, {ObjectBaseType} from "@/src/components/CanvasInteraction"
 import SvgIcon from "@/src/components/svg-icon";
 import logo from "@/src/assets/logo.png";
+import closeLogo from "@/src/assets/close.png";
 const canvas = ref()
 const colors = ref([
     "#f00",
@@ -420,6 +421,15 @@ const load = async ({ scene, ObjectBase, canvas:canvasObj}:{
       text: i+1,
       size:feipanSize
     }))
+    if(i === 3) {
+      scene.push(new Disc(x,yGap-feipanSize/2 - feipanSize +150,{
+        color: "#0000",
+        logo: closeLogo,
+        size:feipanSize,
+        isInside:false,
+        lineWidth:0
+      }))
+    }
   })
   // 蓝方
   feipanMax.forEach((_,i,array)=> {
@@ -437,9 +447,9 @@ const load = async ({ scene, ObjectBase, canvas:canvasObj}:{
         size:feipanSize,
         lineWidth:0
       }))
-      scene.push(new Disc(x,winH - yGap -feipanSize/2 - feipanSize - 30-50,{
+      scene.push(new Disc(x,winH - yGap -feipanSize/2 - feipanSize - 110,{
         color: "#0000",
-        logo: logo,
+        logo: closeLogo,
         size:feipanSize,
         isInside:false,
         lineWidth:0
