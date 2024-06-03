@@ -21,14 +21,19 @@
         </n-popover>
         <n-popover trigger="click">
           <template #trigger>
-            <div class="text-#fff flex-center text-30px bold">
-              <svg-icon name="pen"></svg-icon>
-              <svg-icon name="shangla" class="text-10px"></svg-icon>
+            <div class="flex-center">
+              <div v-for="(item, i) in penType" :key="i"  class="text-#fff flex-center text-30px bold" v-show="config.penType === item.value">
+                <svg-icon :name="item.icon"></svg-icon>
+                <svg-icon name="shangla" class="text-10px"></svg-icon>
+              </div>
             </div>
           </template>
           <div class="flex flex-col gap-5px">
-            <div v-for="(item, i) in penType" :key="i" @click="config.penType = item.value">
-              <div v-if="config.penType === item.value"></div>
+            <div class="flex-center !justify-start gap-5px text-#999" :class="{
+              '!text-#f00':config.penType === item.value
+            }" v-for="(item, i) in penType" :key="i" @click="config.penType = item.value">
+              <svg-icon :name="item.icon"></svg-icon>
+              <div>{{item.name}}</div>
             </div>
           </div>
         </n-popover>
@@ -57,8 +62,8 @@ const colors = ref([
 ])
 const penType = ref([
   {name:"铅笔", value:'pen', icon:'pen'},
-  {name:"实线", value:'solid-line', icon:'solid-line'},
-  {name:"虚线", value:'dashed-line', icon:'dashed-line'},
+  {name:"实线", value:'solid-line', icon:'solidLine'},
+  {name:"虚线", value:'dashed-line', icon:'dashedLine'},
 ])
 const config = ref({
   color:"#f00",
@@ -82,7 +87,8 @@ const penStart = (obj, ev)=>{
     penPoints.value = [{
       x:ev.center.x*window.devicePixelRatio,
       y:ev.center.y*window.devicePixelRatio,
-      color: config.value.color
+      color: config.value.color,
+      type:config.value.penType,
     }]
   }
 }
@@ -91,12 +97,18 @@ const penMove = (obj, ev)=>{
     penPoints.value.push({
       x:ev.center.x*window.devicePixelRatio,
       y:ev.center.y*window.devicePixelRatio,
-      color: config.value.color
+      color: config.value.color,
+      type:config.value.penType,
     })
   }
 }
 const penEnd = ()=>{
-  penPointsHistorys.value.push(penPoints.value)
+  if(['pen'].includes(config.value.penType)) {
+    penPointsHistorys.value.push(penPoints.value)
+  }else {
+    if(penPoints.value.length < 2){return}
+    penPointsHistorys.value.push([penPoints.value[0], penPoints.value[penPoints.value.length - 1]])
+  }
 }
 const xGap = 100
 const yGap = 200
@@ -111,17 +123,28 @@ const load = async ({ scene, ObjectBase, width, height, ctx}:{
       constructor() {
         super();
       }
-      drawPoint(ctx: CanvasRenderingContext2D, penPoints:Array<{x:number, y:number, color:string}>){
+      drawPoint(ctx: CanvasRenderingContext2D, penPoints:Array<{x:number, y:number, color:string, type:string}>){
+        if(penPoints.length < 2){
+          return
+        }
         ctx.beginPath()
         ctx.lineWidth = 5
-        penPoints.forEach((p, i) => {
-          ctx.strokeStyle = p.color
-          if (i === 0) {
-            ctx.moveTo(p.x, p.y)
-            return
-          }
-          ctx.lineTo(p.x, p.y)
-        })
+        ctx.strokeStyle = penPoints[0].color
+        switch (penPoints[0].type){
+          case 'solid-line':
+            ctx.moveTo(penPoints[0].x, penPoints[0].y)
+            ctx.lineTo(penPoints[penPoints.length - 1].x, penPoints[penPoints.length - 1].y)
+            break
+          default:
+            penPoints.forEach((p, i) => {
+              if (i === 0) {
+                ctx.moveTo(p.x, p.y)
+                return
+              }
+              ctx.lineTo(p.x, p.y)
+            })
+            break
+        }
         ctx.stroke()
         ctx.closePath()
       }
