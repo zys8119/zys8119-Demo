@@ -109,7 +109,7 @@ const penMove = (obj, ev)=>{
   }
 }
 const penEnd = ()=>{
-  if(['pen'].includes(config.value.penType)) {
+  if(['pen','eraser'].includes(config.value.penType)) {
     penPointsHistorys.value.push(penPoints.value)
   }else {
     if(penPoints.value.length < 2){return}
@@ -129,7 +129,7 @@ const load = async ({ scene, ObjectBase, width, height, ctx}:{
       constructor() {
         super();
       }
-      drawArrow(context:CanvasRenderingContext2D, fromX:number, fromY:number, toX:number, toY:number,headLength = 30,offset = 10) {
+      drawArrow(ctx:CanvasRenderingContext2D, fromX:number, fromY:number, toX:number, toY:number,headLength = 30,offset = 10) {
         const dx = toX - fromX;
         const dy = toY - fromY;
         const angle = Math.atan2(dy, dx);
@@ -139,10 +139,10 @@ const load = async ({ scene, ObjectBase, width, height, ctx}:{
         const toYOffset = toY - offset * Math.sin(angle);
 
         // 绘制箭头的主线
-        context.beginPath();
-        context.moveTo(fromX, fromY);
-        context.lineTo(toXOffset, toYOffset);
-        context.stroke();
+        ctx.beginPath();
+        ctx.moveTo(fromX, fromY);
+        ctx.lineTo(toXOffset, toYOffset);
+        ctx.stroke();
 
         // 计算箭头头部的两个点
         const arrowX1 = toX - headLength * Math.cos(angle - Math.PI / 6);
@@ -151,12 +151,17 @@ const load = async ({ scene, ObjectBase, width, height, ctx}:{
         const arrowY2 = toY - headLength * Math.sin(angle + Math.PI / 6);
 
         // 绘制箭头的两条边
-        context.beginPath();
-        context.moveTo(toX, toY);
-        context.lineTo(arrowX1, arrowY1);
-        context.lineTo(arrowX2, arrowY2);
-        context.closePath();
-        context.fill();
+        ctx.setLineDash([]);
+        ctx.beginPath();
+        ctx.moveTo(toX, toY);
+        ctx.lineTo(arrowX1, arrowY1);
+        ctx.lineTo(arrowX2, arrowY2);
+        ctx.closePath();
+        ctx.fill();
+      }
+      // 橡皮擦功能的具体实现
+      erase(ctx: CanvasRenderingContext2D, mouseX:number,mouseY:number,eraserSize=20) {
+        ctx.clearRect(mouseX - eraserSize / 2, mouseY - eraserSize / 2, eraserSize, eraserSize);
       }
       drawPoint(ctx: CanvasRenderingContext2D, penPoints:Array<{x:number, y:number, color:string, type:string}>){
         if(penPoints.length < 2){
@@ -186,6 +191,10 @@ const load = async ({ scene, ObjectBase, width, height, ctx}:{
             break
           default:
             penPoints.forEach((p, i) => {
+              if(type === 'eraser'){
+                this.erase(ctx, p.x, p.y,50)
+                return;
+              }
               if (i === 0) {
                 ctx.moveTo(p.x, p.y)
                 return
