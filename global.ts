@@ -31,5 +31,4 @@ declare global{
         groupBy<T,S extends string | number | symbol>(obj:T[], callback:(item:T)=> S):Record<S, T[]>
     }
 }
-
 export {}

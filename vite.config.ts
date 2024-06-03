@@ -71,7 +71,7 @@ export default defineConfig({
                 "b":"bbbb"
             }
         }),
-        VineBrowser()
+        VineBrowser(),
     ],
     resolve:{
         alias:{
@@ -108,6 +108,6 @@ export default defineConfig({
     },
     optimizeDeps:{
         include:[],
-        exclude:['pdfjs-dist','@zys/wujue-vue/wujie-vue.vue']
-    }
+        exclude:['pdfjs-dist','@zys/wujue-vue/wujie-vue.vue'],
+    },
 })
