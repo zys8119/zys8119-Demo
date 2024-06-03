@@ -1,15 +1,17 @@
 <template>
-  <div class="feipanLayout w-full h-full bg-#71b52c abs-f"  @touchstart="touchstart">
+  <div class="feipanLayout w-full h-full bg-#71b52c abs-f">
     <CanvasInteraction @load="load"
                        :gap="0"
                        @pen="pen"
                        @penStart="penStart"
                        @penMove="penMove"
                        @penEnd="penEnd"
+                       @touchstart="touchstart"
+                       @ontouchmove="touchstart"
     ></CanvasInteraction>
     <div class="abs w-full lef-0 bottom-10px flex justify-center items-center">
       <n-space class="flex-1 p-x-15px" justify="space-between" align="center">
-        <n-popover trigger="click">
+        <n-popover>
           <template #trigger>
             <div class="w-30px h-30px b-rd-100% b-#fff b-solid b-2px bg-$penColor"></div>
           </template>
@@ -19,7 +21,7 @@
             </div>
           </div>
         </n-popover>
-        <n-popover trigger="click">
+        <n-popover>
           <template #trigger>
             <div class="flex-center">
               <div v-for="(item, i) in penType" :key="i"  class="text-#fff flex-center text-30px bold" v-show="config.penType === item.value">
@@ -64,10 +66,14 @@ const penType = ref([
   {name:"铅笔", value:'pen', icon:'pen'},
   {name:"实线", value:'solid-line', icon:'solidLine'},
   {name:"虚线", value:'dashed-line', icon:'dashedLine'},
+  {name:"矩形", value:'rect', icon:'rect'},
+  {name:"箭头", value:'solid-arrow', icon:'solidArrow'},
+  {name:"虚箭头", value:'dashed-arrow', icon:'dashedArrow'},
+  {name:"橡皮擦", value:'eraser', icon:'eraser'},
 ])
 const config = ref({
   color:"#f00",
-  penType:"pen"
+  penType:"solid-arrow"
 })
 useCssVars(()=>{
   return {
@@ -78,7 +84,7 @@ const pen = (ev:{srcEven: MouseEvent }) => {
   ev?.srcEven?.preventDefault?.()
 }
 const touchstart =(ev:TouchEvent) => {
-  // ev.preventDefault()
+  ev.preventDefault()
 }
 const penPointsHistorys = ref([])
 const penPoints = ref([])
@@ -123,17 +129,60 @@ const load = async ({ scene, ObjectBase, width, height, ctx}:{
       constructor() {
         super();
       }
+      drawArrow(context:CanvasRenderingContext2D, fromX:number, fromY:number, toX:number, toY:number,headLength = 30,offset = 10) {
+        const dx = toX - fromX;
+        const dy = toY - fromY;
+        const angle = Math.atan2(dy, dx);
+
+        // 计算箭头顶端的偏移位置
+        const toXOffset = toX - offset * Math.cos(angle);
+        const toYOffset = toY - offset * Math.sin(angle);
+
+        // 绘制箭头的主线
+        context.beginPath();
+        context.moveTo(fromX, fromY);
+        context.lineTo(toXOffset, toYOffset);
+        context.stroke();
+
+        // 计算箭头头部的两个点
+        const arrowX1 = toX - headLength * Math.cos(angle - Math.PI / 6);
+        const arrowY1 = toY - headLength * Math.sin(angle - Math.PI / 6);
+        const arrowX2 = toX - headLength * Math.cos(angle + Math.PI / 6);
+        const arrowY2 = toY - headLength * Math.sin(angle + Math.PI / 6);
+
+        // 绘制箭头的两条边
+        context.beginPath();
+        context.moveTo(toX, toY);
+        context.lineTo(arrowX1, arrowY1);
+        context.lineTo(arrowX2, arrowY2);
+        context.closePath();
+        context.fill();
+      }
       drawPoint(ctx: CanvasRenderingContext2D, penPoints:Array<{x:number, y:number, color:string, type:string}>){
         if(penPoints.length < 2){
           return
         }
         ctx.beginPath()
         ctx.lineWidth = 5
+        ctx.fillStyle = penPoints[0].color
         ctx.strokeStyle = penPoints[0].color
-        switch (penPoints[0].type){
+        const type = penPoints[0].type
+        if(['dashed-arrow','dashed-line'].includes(type)){
+          // 设置虚线
+          ctx.setLineDash([10, 10]);
+        }
+        switch (type){
+          case 'solid-arrow':
+          case 'dashed-arrow':
+            this.drawArrow(ctx, penPoints[0].x, penPoints[0].y, penPoints[penPoints.length - 1].x, penPoints[penPoints.length - 1].y)
+            break
           case 'solid-line':
+          case 'dashed-line':
             ctx.moveTo(penPoints[0].x, penPoints[0].y)
             ctx.lineTo(penPoints[penPoints.length - 1].x, penPoints[penPoints.length - 1].y)
+            break
+          case 'rect':
+            ctx.rect(penPoints[0].x, penPoints[0].y, penPoints[penPoints.length - 1].x - penPoints[0].x, penPoints[penPoints.length - 1].y - penPoints[0].y)
             break
           default:
             penPoints.forEach((p, i) => {
