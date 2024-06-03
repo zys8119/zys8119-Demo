@@ -142,9 +142,13 @@ const CanvasInteraction = defineComponent({
         const canvasRef = ref()
         const canvas = $computed(() => canvasRef.value) as HTMLCanvasElement
         const ctx = $computed(() => canvas.getContext('2d'))
-        const {width, height} = useWindowSize()
+        const {width:winWidth, height:winHeight} = useWindowSize()
+        const width = computed(()=> winWidth.value * window.devicePixelRatio)
+        const height = computed(()=> winHeight.value * window.devicePixelRatio)
         const objectCache = ref([])
-        const {x, y} = useMouseInElement(canvas)
+        const {x:elX, y:elY} = useMouseInElement(canvas)
+        const x = computed(()=> elX.value * window.devicePixelRatio)
+        const y = computed(()=> elY.value * window.devicePixelRatio)
         const {Shift,
             Alt,
             Shift_keyX,
@@ -497,6 +501,8 @@ const CanvasInteraction = defineComponent({
                 enable(r, event) {
                     emit('pen', event)
                     if (event) {
+                        event.deltaX =  event.deltaX* window.devicePixelRatio
+                        event.deltaY =  event.deltaY* window.devicePixelRatio
                         const [deltaX, deltaY] = [
                             event.deltaX/(ctxScale.value*canvas.width)*canvas.width,
                             event.deltaY/(ctxScale.value*canvas.height)*canvas.height

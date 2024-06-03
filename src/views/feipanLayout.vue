@@ -1,11 +1,20 @@
 <template>
-  <div class="feipanLayout w-full h-full bg-#71b52c abs-f">
-    <CanvasInteraction @load="load" :gap="0"></CanvasInteraction>
+  <div class="feipanLayout w-full h-full bg-#71b52c abs-f"  @touchstart="touchstart">
+    <CanvasInteraction @load="load" :gap="0" @pen="pen"></CanvasInteraction>
+    <div class="abs w-full lef-0 bottom-0 flex justify-center items-center">
+      asdas
+    </div>
   </div>
 </template>
 
 <script setup lang="ts" title="飞盘战术布局">
 import CanvasInteraction, {ObjectBaseType} from "@/src/components/CanvasInteraction"
+const pen = (ev:{srcEven: MouseEvent }) => {
+  ev?.srcEven?.preventDefault?.()
+}
+const touchstart =(ev:TouchEvent) => {
+  ev.preventDefault()
+}
 const load = async ({ scene, ObjectBase, width, height, ctx}:{
   [key:string]:any
   scene:Array<ObjectBaseType>
@@ -49,7 +58,7 @@ const load = async ({ scene, ObjectBase, width, height, ctx}:{
         }
         ctx.fillStyle = "#fff"
         ctx.textAlign = 'center'
-        ctx.font = `18px Arial`
+        ctx.font = `40px Arial`
         ctx.textBaseline = "middle"
         ctx.fillText(this.text?.toUpperCase?.(), 0,0)
         ctx.closePath()
@@ -99,24 +108,26 @@ const load = async ({ scene, ObjectBase, width, height, ctx}:{
       ctx.closePath()
     }
   }
-  const xGap = 50
-  const yGap = 100
+  const xGap = 100
+  const yGap = 200
+  const winW = window.innerWidth*window.devicePixelRatio
+  const winH = window.innerHeight*window.devicePixelRatio
   // 布局线
-  scene.push(new Line(xGap,0, window.innerHeight))
-  scene.push(new Line(window.innerWidth - xGap,0, window.innerHeight))
-  scene.push(new Line(xGap,yGap, window.innerWidth-xGap*2, true))
-  scene.push(new Line(xGap,window.innerHeight - yGap, window.innerWidth-xGap*2, true))
+  scene.push(new Line(xGap,0, winH))
+  scene.push(new Line(winW - xGap,0, winH))
+  scene.push(new Line(xGap,yGap, winW-xGap*2, true))
+  scene.push(new Line(xGap,winH - yGap, winW-xGap*2, true))
   // 布局文字节点
-  scene.push(new RectText(0,0,xGap,window.innerHeight, "away side", true))
-  scene.push(new RectText(window.innerWidth - xGap,0,xGap,window.innerHeight, "home Side", true))
-  scene.push(new RectText(xGap,0,window.innerWidth - xGap*2,yGap, "end zone"))
-  scene.push(new RectText(xGap,window.innerHeight - yGap,window.innerWidth - xGap*2,yGap, "end zone"))
+  scene.push(new RectText(0,0,xGap,winH, "away side", true))
+  scene.push(new RectText(winW - xGap,0,xGap,winH, "home Side", true))
+  scene.push(new RectText(xGap,0,winW - xGap*2,yGap, "end zone"))
+  scene.push(new RectText(xGap,winH - yGap,winW - xGap*2,yGap, "end zone"))
   // 飞盘占位
-  const feipanSize = 25
+  const feipanSize = 50
   const feipanMax = new Array(7).fill(0)
   // 红方
   feipanMax.forEach((_,i,array)=> {
-    const x = xGap + (window.innerWidth - xGap * 2) / (array.length + 1) * (i+1) - feipanSize/2
+    const x = xGap + (winW - xGap * 2) / (array.length + 1) * (i+1) - feipanSize/2
     scene.push(new disc(x,yGap-feipanSize/2,{
       color: "#c8112a",
       text: i+1,
@@ -125,8 +136,8 @@ const load = async ({ scene, ObjectBase, width, height, ctx}:{
   })
   // 蓝方
   feipanMax.forEach((_,i,array)=> {
-    const x = xGap + (window.innerWidth - xGap * 2) / (array.length + 1) * (i+1) - feipanSize/2
-    scene.push(new disc(x,window.innerHeight - yGap -feipanSize/2,{
+    const x = xGap + (winW - xGap * 2) / (array.length + 1) * (i+1) - feipanSize/2
+    scene.push(new disc(x,winH - yGap -feipanSize/2,{
       color: "#2866aa",
       text: i+1,
       size:feipanSize
