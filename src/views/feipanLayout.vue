@@ -47,8 +47,9 @@
             </div>
           </div>
         </n-popover>
-        <div class="text-#fff" @click="clear"><svg-icon name="clear"></svg-icon></div>
-        <div class="text-#fff" @click="download"><svg-icon name="download"></svg-icon></div>
+        <div class="text-#fff text-20px" @click="clear"><svg-icon name="clear"></svg-icon></div>
+        <div class="text-#fff text-25px" @click="addRoadblock"><svg-icon name="roadblock"></svg-icon></div>
+        <div class="text-#fff text-20px" @click="download"><svg-icon name="download"></svg-icon></div>
       </n-space>
     </div>
   </div>
@@ -59,6 +60,23 @@ import CanvasInteraction, {ObjectBaseType} from "@/src/components/CanvasInteract
 import SvgIcon from "@/src/components/svg-icon";
 import logo from "@/src/assets/logo.png";
 import closeLogo from "@/src/assets/close.png";
+import roadblockFill from "@/src/assets/roadblock.png";
+import roadblockDelete from "@/src/assets/delete.png";
+const config = ref({
+  color:"#f00",
+  penType:"pen"
+})
+const canvasBg = ref('#71b52c')
+// 边界设置
+const xGap = 100
+const yGap = 300
+const winW = window.innerWidth*window.devicePixelRatio
+const winH = window.innerHeight*window.devicePixelRatio
+// 飞盘占位
+const feipanSize = 80
+const feipanMax = new Array(7).fill(0)
+const feipanOffset = 100
+const sceneObjects = ref([])
 const canvas = ref()
 const colors = ref([
     "#f00",
@@ -82,11 +100,6 @@ const penType = ref([
   {name:"虚箭头", value:'dashed-arrow', icon:'dashedArrow'},
   {name:"橡皮擦", value:'eraser', icon:'eraser'},
 ])
-const config = ref({
-  color:"#f00",
-  penType:"pen"
-})
-const canvasBg = ref('#71b52c')
 useCssVars(()=>{
   return {
     "penColor":config.value.color,
@@ -104,8 +117,12 @@ const drawPenPointsHistorys = computed(()=>{
   const clearIndex = penPointsHistorys.value.findLastIndex(e=>e?.[0]?.type === 'clear')
   return clearIndex > -1 ? penPointsHistorys.value.slice(clearIndex  + 1) : penPointsHistorys.value
 })
+const isMove = ref(false)
+const moveObject = ref(null)
 const penPoints = ref([])
 const penStart = (obj, ev)=>{
+  isMove.value = false
+  moveObject.value = null
   if(!obj){
     penPoints.value = [{
       x:ev.center.x*window.devicePixelRatio,
@@ -114,8 +131,12 @@ const penStart = (obj, ev)=>{
       type:config.value.penType,
     }]
   }
+  if(obj){
+    moveObject.value = obj
+  }
 }
 const penMove = (obj, ev)=>{
+  isMove.value = true
   if(!obj){
     penPoints.value.push({
       x:ev.center.x*window.devicePixelRatio,
@@ -124,8 +145,11 @@ const penMove = (obj, ev)=>{
       type:config.value.penType,
     })
   }
+  if(obj){
+    moveObject.value = obj
+  }
 }
-const penEnd = ()=>{
+const penEnd = (obj)=>{
   if(['pen','eraser'].includes(config.value.penType)) {
     penPointsHistorys.value.push(penPoints.value)
   }else {
@@ -133,8 +157,12 @@ const penEnd = ()=>{
     penPointsHistorys.value.push([penPoints.value[0], penPoints.value[penPoints.value.length - 1]])
   }
   penPoints.value = []
+  deleteRoadblock()
+  isMove.value = false
+  moveObject.value = null
 }
 const clear = ()=>{
+  if(penPointsHistorys.value.length === 0 || penPointsHistorys.value[penPointsHistorys.value.length - 1]?.[0]?.type === 'clear'){return}
   penPointsHistorys.value.push([{type:'clear'}])
 }
 const revokeCache = ref([])
@@ -153,14 +181,31 @@ const download = ()=>{
   a.click()
   a.remove()
 }
-const xGap = 100
-const yGap = 200
-const winW = window.innerWidth*window.devicePixelRatio
-const winH = window.innerHeight*window.devicePixelRatio
+// 路障集合
+const roadblocks = ref<Array<{
+  x:number,
+  y:number,
+  id:any
+}>>([])
+const roadblocksMapCache = new Map()
+const addRoadblock = ()=>{
+  roadblocks.value.push({
+    x:(winW-feipanSize)/2,
+    y:(winH-feipanSize)/2,
+    id:Date.now().toString()
+  })
+}
+const deleteRoadblock = ()=>{
+  if(moveObject.value?.type === "roadblock" && sceneObjects.value.find(e=>e.type === 'RoadblockDelete').isDelete){
+    const roadblock_id = moveObject.value.roadblock_id
+    console.log(roadblock_id)
+  }
+}
 const load = async ({ scene, ObjectBase, canvas:canvasObj}:{
   [key:string]:any
   scene:Array<ObjectBaseType>
 })=>{
+  sceneObjects.value = scene
   canvas.value = canvasObj
   class DrawCanvasInit extends ObjectBase implements ObjectBaseType {
     type:'DrawCanvasInit'
@@ -282,9 +327,9 @@ const load = async ({ scene, ObjectBase, canvas:canvasObj}:{
         if(this.horizontal){
             ctx.lineTo(this.x + this.lineWidth, this.y)
         }else {
-          ctx.lineTo(this.x, this.lineWidth)
+            ctx.lineTo(this.x, this.lineWidth)
         }
-        ctx.lineWidth = 1
+        ctx.lineWidth = 3
         ctx.strokeStyle = "#fff"
         ctx.stroke()
         ctx.closePath()
@@ -319,6 +364,7 @@ const load = async ({ scene, ObjectBase, canvas:canvasObj}:{
   class Disc extends ObjectBase implements ObjectBaseType {
     type = 'disc'
     size = 0
+    logoOffset = [0,0]
     constructor(public x:number, public y:number,public config?: Partial<{
       size:number
       color:string
@@ -328,9 +374,12 @@ const load = async ({ scene, ObjectBase, canvas:canvasObj}:{
       logoSize:number
       isInside:boolean
       lineWidth:number
+      logoOffsetX:number
+      logoOffsetY:number
     }>) {
       super();
       this.size = this.config?.size || 30
+      this.logoOffset = [this.config?.logoOffsetX || 0,this.config?.logoOffsetY || 0]
     }
     get w(){
       return this.size
@@ -368,7 +417,7 @@ const load = async ({ scene, ObjectBase, canvas:canvasObj}:{
         }
       })
     }
-    async draw(ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement): Promise<any> | void {
+    async draw(ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement) {
       ctx.beginPath()
       ctx.lineWidth = typeof this.config?.lineWidth === 'number' ? this.config?.lineWidth : (this.config?.lineWidth || 3);
       ctx.strokeStyle = this.config?.strokeStyle || '#ffffff';
@@ -384,7 +433,7 @@ const load = async ({ scene, ObjectBase, canvas:canvasObj}:{
         const logo = await this.loadImage(this.config?.logo)
         const logoSize = this.config?.logoSize || 0.8
         const logoSizeMerge = 1 - logoSize
-        ctx.drawImage(logo as any,this.x + (this.w*logoSizeMerge)/2,this.y + (this.h*logoSizeMerge)/2,this.w*logoSize,this.h*logoSize)
+        ctx.drawImage(logo as any,this.x + (this.w*logoSizeMerge)/2+this.logoOffset[0],this.y + (this.h*logoSizeMerge)/2+this.logoOffset[1],this.w*logoSize,this.h*logoSize)
       }
       if(this.config?.text){
         ctx.font = `${this.w*0.7}px Arial`
@@ -394,6 +443,54 @@ const load = async ({ scene, ObjectBase, canvas:canvasObj}:{
         ctx.fillText(this.config?.text, x,y, this.w)
       }
       ctx.closePath()
+    }
+  }
+  class Roadblock extends ObjectBase implements ObjectBaseType {
+    type = 'roadblock'
+    constructor(public roadblocks:Array<{
+      x:number,
+      y:number,
+      id:any
+    }>) {
+      super();
+    }
+    async draw(ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement){
+      ctx.beginPath()
+      this.roadblocks.forEach(e=>{
+        if(e.id && !roadblocksMapCache.has(e.id)) {
+          const object = new Disc(e.x,e.y,{
+            color: "#0000",
+            logo: roadblockFill,
+            size:feipanSize,
+            lineWidth:0
+          })
+          object.type = 'roadblock'
+          object.roadblock_id = e.id
+          scene.push(object)
+          roadblocksMapCache.set(e.id, object)
+        }
+      })
+      ctx.closePath()
+    }
+  }
+  class RoadblockDelete extends Disc implements ObjectBaseType {
+    type = 'RoadblockDelete'
+    isDelete = false
+    constructor(public x:number, public y:number,public config?:Record<any, any>) {
+      super(x,y,config);
+    }
+    async draw(ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement) {
+      this.isDelete = super.isInside()
+      ctx.save()
+      ctx.beginPath()
+      ctx.globalAlpha = 0;
+      if(moveObject.value && moveObject.value.type === 'roadblock'){
+        ctx.globalAlpha = this.isDelete ? 1 : .5;
+      }
+      await super.draw(ctx, canvas);
+      ctx.closePath()
+      ctx.globalAlpha = 1.0;
+      ctx.restore()
     }
   }
   // canvas 背景初始化
@@ -410,9 +507,6 @@ const load = async ({ scene, ObjectBase, canvas:canvasObj}:{
   scene.push(new RectText(winW - xGap,0,xGap,winH, "home Side", true))
   scene.push(new RectText(xGap,0,winW - xGap*2,yGap, "end zone"))
   scene.push(new RectText(xGap,winH - yGap,winW - xGap*2,yGap, "end zone"))
-  // 飞盘占位
-  const feipanSize = 50
-  const feipanMax = new Array(7).fill(0)
   // 红方
   feipanMax.forEach((_,i,array)=> {
     const x = xGap + (winW - xGap * 2) / (array.length + 1) * (i+1) - feipanSize/2
@@ -422,7 +516,7 @@ const load = async ({ scene, ObjectBase, canvas:canvasObj}:{
       size:feipanSize
     }))
     if(i === 3) {
-      scene.push(new Disc(x,yGap-feipanSize/2 - feipanSize +150,{
+      scene.push(new Disc(x,yGap-feipanSize/2 + feipanSize + feipanOffset,{
         color: "#0000",
         logo: closeLogo,
         size:feipanSize,
@@ -445,9 +539,10 @@ const load = async ({ scene, ObjectBase, canvas:canvasObj}:{
         color: "#fbff33",
         logo: logo,
         size:feipanSize,
-        lineWidth:0
+        lineWidth:0,
+        logoSize:0.7
       }))
-      scene.push(new Disc(x,winH - yGap -feipanSize/2 - feipanSize - 110,{
+      scene.push(new Disc(x,winH - yGap -feipanSize/2 - feipanSize - 30 - feipanSize - feipanOffset,{
         color: "#0000",
         logo: closeLogo,
         size:feipanSize,
@@ -456,7 +551,18 @@ const load = async ({ scene, ObjectBase, canvas:canvasObj}:{
       }))
     }
   })
-
+  // 路障回收删除
+  scene.push(new RoadblockDelete(winW - 150,-150,{
+    color: "#f00",
+    logo: roadblockDelete,
+    size:300,
+    lineWidth:0,
+    logoSize:0.25,
+    logoOffsetX:-55,
+    logoOffsetY:55
+  }))
+  // 路障
+  scene.push(new Roadblock(roadblocks.value))
 }
 </script>
 
