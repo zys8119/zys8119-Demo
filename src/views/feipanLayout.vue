@@ -563,8 +563,11 @@ const load = async (loadData:any)=>{
   scene.push(new DrawPenPoints())
   if(horizontalLayout.value){
     // 布局文字节点
+    scene.push(new Line(0,0, winW, true))
+    scene.push(new Line(0,0, winH))
     scene.push(new Line(winW/2,0, winH))
     scene.push(new Line(0,winH, winW, true))
+    scene.push(new Line(winW,0, winH))
     scene.push(new RectText(winW - xGap,0,xGap,winH, "home Side", true))
     // 红方
     feipanMax.forEach((_,i,array)=> {
