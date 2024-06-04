@@ -253,7 +253,6 @@ const load = async ({ scene, ObjectBase, canvas:canvasObj}:{
         const arrowY2 = toY - headLength * Math.sin(angle + Math.PI / 6);
 
         // 绘制箭头的两条边
-        ctx.setLineDash([]);
         ctx.beginPath();
         ctx.moveTo(toX, toY);
         ctx.lineTo(arrowX1, arrowY1);
@@ -277,6 +276,8 @@ const load = async ({ scene, ObjectBase, canvas:canvasObj}:{
         if(['dashed-arrow','dashed-line'].includes(type)){
           // 设置虚线
           ctx.setLineDash([10, 10]);
+        }else {
+          ctx.setLineDash([]);
         }
         switch (type){
           case 'solid-arrow':
