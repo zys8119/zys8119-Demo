@@ -71,7 +71,7 @@ const canvasBg = ref('#71b52c')
 const xGap = 100
 const yGap = 300
 const winW = window.innerWidth*window.devicePixelRatio
-const winH = window.innerHeight*window.devicePixelRatio
+const winH = window.innerHeight*window.devicePixelRatio - 54*window.devicePixelRatio
 // 飞盘占位
 const feipanSize = 80
 const feipanMax = new Array(7).fill(0)
@@ -522,6 +522,10 @@ const load = async ({ scene, ObjectBase, canvas:canvasObj}:{
   scene.push(new Line(winW - xGap,0, winH))
   scene.push(new Line(xGap,yGap, winW-xGap*2, true))
   scene.push(new Line(xGap,winH - yGap, winW-xGap*2, true))
+  scene.push(new Line(0,0, winH))
+  scene.push(new Line(winW,0, winH))
+  scene.push(new Line(0,0, winW, true))
+  scene.push(new Line(0,winH, winW, true))
   // 布局文字节点
   scene.push(new RectText(0,0,xGap,winH, "away side", true))
   scene.push(new RectText(winW - xGap,0,xGap,winH, "home Side", true))
@@ -530,11 +534,6 @@ const load = async ({ scene, ObjectBase, canvas:canvasObj}:{
   // 红方
   feipanMax.forEach((_,i,array)=> {
     const x = xGap + (winW - xGap * 2) / (array.length + 1) * (i+1) - feipanSize/2
-    scene.push(new Disc(x,yGap-feipanSize/2,{
-      color: "#c8112a",
-      text: i+1,
-      size:feipanSize
-    }))
     if(i === 3) {
       scene.push(new Disc(x,yGap-feipanSize/2 + feipanSize + feipanOffset,{
         color: "#0000",
@@ -544,15 +543,17 @@ const load = async ({ scene, ObjectBase, canvas:canvasObj}:{
         lineWidth:0
       }))
     }
+    setTimeout(()=> {
+      scene.push(new Disc(x, yGap - feipanSize / 2, {
+        color: "#c8112a",
+        text: i + 1,
+        size: feipanSize
+      }))
+    })
   })
   // 蓝方
   feipanMax.forEach((_,i,array)=> {
     const x = xGap + (winW - xGap * 2) / (array.length + 1) * (i+1) - feipanSize/2
-    scene.push(new Disc(x,winH - yGap -feipanSize/2,{
-      color: "#2866aa",
-      text: i+1,
-      size:feipanSize
-    }))
     if(i === 3){
       // 黄色主飞盘,logo
       scene.push(new Disc(x,winH - yGap -feipanSize/2 - feipanSize - 30,{
@@ -570,6 +571,13 @@ const load = async ({ scene, ObjectBase, canvas:canvasObj}:{
         lineWidth:0
       }))
     }
+    setTimeout(()=>{
+      scene.push(new Disc(x,winH - yGap -feipanSize/2,{
+        color: "#2866aa",
+        text: i+1,
+        size:feipanSize
+      }))
+    })
   })
   // 路障回收删除
   scene.push(new RoadblockDelete(winW - 150,-150,{
