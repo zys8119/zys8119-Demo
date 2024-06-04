@@ -17,39 +17,41 @@
         '!opacity-50':revokeCache.length === 0
       }"></svg-icon>
     </n-space>
-    <div class="abs w-full lef-0 bottom-10px flex justify-center items-center">
+    <div class="abs w-full lef-0 bottom-10px flex justify-center items-center tools">
       <n-space class="flex-1 p-x-15px" justify="space-between" align="center">
-        <n-popover>
+        <n-popover trigger="click" :show="showColor">
           <template #trigger>
-            <div class="w-30px h-30px b-rd-100% b-#fff b-solid b-2px bg-$penColor"></div>
+            <div class="w-30px h-30px b-rd-100% b-#fff b-solid b-2px bg-$penColor tools-item" @click="showColor = !showColor,showPen = false"></div>
           </template>
           <div class="flex flex-col gap-5px">
-            <div v-for="(item, i) in colors" :key="i" class="w-30px h-30px b-rd-100% bg-$color flex-center abs-r" :style="{'--color':item}" @click="config.color = item">
+            <div v-for="(item, i) in colors" :key="i" class="w-30px h-30px b-rd-100% bg-$color flex-center abs-r" :style="{'--color':item}" @click="config.color = item, showColor = false">
               <div class="w-20px h-20px  b-rd-100%  b-solid b-2px b-#fff abs-center" v-if="config.color === item"></div>
             </div>
           </div>
         </n-popover>
-        <n-popover>
+        <n-popover trigger="click" :show="showPen">
           <template #trigger>
-            <div class="flex-center">
-              <div v-for="(item, i) in penType" :key="i"  class="text-#fff flex-center text-30px bold" v-show="config.penType === item.value">
+            <div class="flex-center tools-item" @click="showPen = !showPen, showColor = false">
+              <div v-for="(item, i) in penType" :key="i"  class="text-#fff flex-center text-30px bold"  v-show="config.penType === item.value">
                 <svg-icon :name="item.icon"></svg-icon>
                 <svg-icon name="shangla" class="text-10px"></svg-icon>
               </div>
             </div>
           </template>
-          <div class="flex flex-col gap-5px">
+          <div class="flex gap-15px flex-col">
             <div class="flex-center !justify-start gap-5px text-#999" :class="{
-              '!text-#f00':config.penType === item.value
-            }" v-for="(item, i) in penType" :key="i" @click="config.penType = item.value">
-              <svg-icon :name="item.icon"></svg-icon>
-              <div>{{item.name}}</div>
+              '!text-#f00':config.penType === item.value,
+              'flex-row-reverse':horizontaLayout,
+              'text-30px':horizontaLayout,
+            }" v-for="(item, i) in penType" :key="i" @click="config.penType = item.value, showPen = false">
+              <svg-icon :name="item.icon" :style="{transform:horizontaLayout ? 'rotate(90deg)' : null}"></svg-icon>
+              <div v-if="!horizontaLayout">{{item.name}}</div>
             </div>
           </div>
         </n-popover>
-        <div class="text-#fff text-20px" @click="clear"><svg-icon name="clear"></svg-icon></div>
-        <div class="text-#fff text-25px" @click="addRoadblock"><svg-icon name="roadblock"></svg-icon></div>
-        <div class="text-#fff text-20px" @click="download"><svg-icon name="download"></svg-icon></div>
+        <div class="text-#fff text-20px tools-item" @click="clear"><svg-icon name="clear"></svg-icon></div>
+        <div class="text-#fff text-25px tools-item" @click="addRoadblock"><svg-icon name="roadblock"></svg-icon></div>
+        <div class="text-#fff text-20px tools-item" @click="download"><svg-icon name="download"></svg-icon></div>
       </n-space>
     </div>
   </div>
@@ -72,6 +74,7 @@ const xGap = 100
 const yGap = 300
 const winW = window.innerWidth*window.devicePixelRatio
 const winH = window.innerHeight*window.devicePixelRatio - 54*window.devicePixelRatio
+const horizontaLayout = ref(false)
 // 飞盘占位
 const feipanSize = 80
 const feipanMax = new Array(7).fill(0)
@@ -101,8 +104,15 @@ useCssVars(()=>{
   return {
     "penColor":config.value.color,
     "canvasBg":canvasBg.value,
+    "horizontaLayoutRotate":horizontaLayout.value ? '90deg' : '0deg'
   }
 })
+const showColor = ref(false)
+const showPen = ref(false)
+const clearShowPopover = ()=>{
+  showColor.value = false
+  showPen.value = false
+}
 const pen = (ev:{srcEven: MouseEvent }) => {
   ev?.srcEven?.preventDefault?.()
 }
@@ -118,6 +128,7 @@ const isMove = ref(false)
 const moveObject = ref(null)
 const penPoints = ref([])
 const penStart = (obj, ev)=>{
+  clearShowPopover()
   isMove.value = false
   moveObject.value = null
   if(!obj){
@@ -186,11 +197,15 @@ const roadblocks = ref<Array<{
 }>>([])
 const roadblocksMapCache = new Map()
 const addRoadblock = ()=>{
-  roadblocks.value.push({
+  const data = {
     x:(winW-feipanSize)/2,
     y:(winH-feipanSize)/2,
     id:Date.now().toString()
-  })
+  }
+  if(horizontaLayout.value){
+      data.x += feipanSize+15
+  }
+  roadblocks.value.push(data)
 }
 const deleteRoadblock = ()=>{
   if(moveObject.value?.type === "roadblock" && sceneObjects.value.find(e=>e.type === 'RoadblockDelete').isDelete){
@@ -351,7 +366,7 @@ const load = async ({ scene, ObjectBase, canvas:canvasObj}:{
         const y = this.rectH / 2 + this.y
         ctx.translate(x, y)
         if(this.horizontal){
-          ctx.rotate(-Math.PI/2)
+          ctx.rotate(horizontaLayout.value ? Math.PI/2 :-Math.PI/2)
         }
         ctx.fillStyle = "#fff"
         ctx.textAlign = 'center'
@@ -420,6 +435,7 @@ const load = async ({ scene, ObjectBase, canvas:canvasObj}:{
       })
     }
     async draw(ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement) {
+      ctx.save()
       const lineWidth = typeof this.config?.lineWidth === 'number' ? this.config?.lineWidth : (this.config?.lineWidth || 4)
       ctx.globalAlpha = typeof this.config?.globalAlpha === 'number' ? this.config?.globalAlpha : (this.config?.globalAlpha || 1)
       ctx.beginPath()
@@ -437,17 +453,32 @@ const load = async ({ scene, ObjectBase, canvas:canvasObj}:{
         const logo = await this.loadImage(this.config?.logo)
         const logoSize = this.config?.logoSize || 0.8
         const logoSizeMerge = 1 - logoSize
-        ctx.drawImage(logo as any,this.x + (this.w*logoSizeMerge)/2+this.logoOffset[0],this.y + (this.h*logoSizeMerge)/2+this.logoOffset[1],this.w*logoSize,this.h*logoSize)
+        const w = (this.w*logoSizeMerge)/2
+        const h = (this.h*logoSizeMerge)/2
+        if(horizontaLayout.value){
+          ctx.translate(this.x+this.w*logoSize*0.5+w+this.logoOffset[0],this.y+this.h*logoSize*0.5+h+this.logoOffset[1])
+          ctx.rotate(Math.PI/2)
+          ctx.drawImage(logo as any,-this.w*logoSize*0.5,-this.h*logoSize*0.5,this.w*logoSize,this.h*logoSize)
+        }else {
+          ctx.drawImage(logo as any,this.x + w+this.logoOffset[0],this.y + h+this.logoOffset[1],this.w*logoSize,this.h*logoSize)
+        }
       }
       if(this.config?.text){
         ctx.font = `${this.w*0.7}px Arial`
         ctx.fillStyle = '#ffffff';
         ctx.textAlign= "center"
         ctx.textBaseline = "middle"
-        ctx.fillText(this.config?.text, x,y, this.w)
+        if(horizontaLayout.value){
+          ctx.translate(x,y)
+          ctx.rotate(Math.PI/2)
+          ctx.fillText(this.config?.text, 0,0, this.w)
+        }else {
+          ctx.fillText(this.config?.text, x,y, this.w)
+        }
       }
       ctx.closePath()
       ctx.globalAlpha = 1
+      ctx.restore()
     }
   }
   class Roadblock extends ObjectBase implements ObjectBaseType {
@@ -517,6 +548,51 @@ const load = async ({ scene, ObjectBase, canvas:canvasObj}:{
   }))
   // 绘制笔记
   scene.push(new DrawPenPoints())
+  if(horizontaLayout.value){
+    // 布局文字节点
+    scene.push(new Line(winW/2,0, winH))
+    scene.push(new Line(0,winH, winW, true))
+    scene.push(new RectText(winW - xGap,0,xGap,winH, "home Side", true))
+    // 红方
+    feipanMax.forEach((_,i,array)=> {
+      const y = xGap + (winH - xGap * 2) / (array.length + 1) * (i+1) - feipanSize/2
+      scene.push(new Disc(winW/4*3, y, {
+        color: "#c8112a",
+        text: i + 1,
+        size: feipanSize
+      }))
+    })
+    // 蓝方
+    feipanMax.forEach((_,i,array)=> {
+      const y = xGap + (winH - xGap * 2) / (array.length + 1) * (i+1) - feipanSize/2
+      scene.push(new Disc(winW/4,y,{
+        color: "#2866aa",
+        text: i+1,
+        size:feipanSize
+      }))
+    })
+    // 黄色主飞盘,logo
+    scene.push(new Disc((winW - feipanSize)/2,(winH - feipanSize)/2,{
+      color: "#fbff33",
+      logo: logo,
+      size:feipanSize,
+      lineWidth:0,
+      logoSize:0.7
+    }))
+    // 路障回收删除
+    scene.push(new RoadblockDelete(winW - 150,-150,{
+      color: "#f00",
+      logo: roadblockDelete,
+      size:300,
+      lineWidth:0,
+      logoSize:0.25,
+      logoOffsetX:-55,
+      logoOffsetY:55
+    }))
+    // 路障
+    scene.push(new Roadblock(roadblocks.value))
+    return
+  }
   // 布局线
   scene.push(new Line(xGap,0, winH))
   scene.push(new Line(winW - xGap,0, winH))
@@ -596,6 +672,10 @@ const load = async ({ scene, ObjectBase, canvas:canvasObj}:{
 
 <style scoped lang="less">
 .feipanLayout {
-
+  .tools{
+    .tools-item{
+      transform: rotate(var(--horizontaLayoutRotate));
+    }
+  }
 }
 </style>
