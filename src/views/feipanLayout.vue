@@ -495,9 +495,9 @@ const load = async ({ scene, ObjectBase, canvas:canvasObj}:{
       this.isDelete = super.isInside()
       ctx.save()
       ctx.beginPath()
-      ctx.globalAlpha = 0;
+      this.config.globalAlpha = 0;
       if(moveObject.value && moveObject.value.type === 'roadblock'){
-        ctx.globalAlpha = this.isDelete ? 1 : .5;
+        this.config.globalAlpha = this.isDelete ? 1 : .5;
       }
       await super.draw(ctx, canvas);
       ctx.closePath()
