@@ -41,16 +41,17 @@
           <div class="flex gap-15px flex-col">
             <div class="flex-center !justify-start gap-5px text-#999" :class="{
               '!text-#f00':config.penType === item.value,
-              'flex-row-reverse':horizontaLayout,
-              'text-30px':horizontaLayout,
+              'flex-row-reverse':horizontalLayout,
+              'text-30px':horizontalLayout,
             }" v-for="(item, i) in penType" :key="i" @click="config.penType = item.value, showPen = false">
-              <svg-icon :name="item.icon" :style="{transform:horizontaLayout ? 'rotate(90deg)' : null}"></svg-icon>
-              <div v-if="!horizontaLayout">{{item.name}}</div>
+              <svg-icon :name="item.icon" :style="{transform:horizontalLayout ? 'rotate(90deg)' : null}"></svg-icon>
+              <div v-if="!horizontalLayout">{{item.name}}</div>
             </div>
           </div>
         </n-popover>
         <div class="text-#fff text-20px tools-item" @click="clear"><svg-icon name="clear"></svg-icon></div>
         <div class="text-#fff text-25px tools-item" @click="addRoadblock"><svg-icon name="roadblock"></svg-icon></div>
+        <div class="text-#fff text-25px tools-item" @click="addRoadblock"><svg-icon name="rotatingScreen"></svg-icon></div>
         <div class="text-#fff text-20px tools-item" @click="download"><svg-icon name="download"></svg-icon></div>
       </n-space>
     </div>
@@ -66,7 +67,8 @@ import roadblockFill from "@/src/assets/roadblock.png";
 import roadblockDelete from "@/src/assets/delete.png";
 const config = ref({
   color:"#f00",
-  penType:"pen"
+  penType:"pen",
+  horizontal:true
 })
 const canvasBg = ref('#71b52c')
 // 边界设置
@@ -74,7 +76,7 @@ const xGap = 100
 const yGap = 300
 const winW = window.innerWidth*window.devicePixelRatio
 const winH = window.innerHeight*window.devicePixelRatio - 54*window.devicePixelRatio
-const horizontaLayout = ref(false)
+const horizontalLayout = computed(()=> config.value.horizontal)
 // 飞盘占位
 const feipanSize = 80
 const feipanMax = new Array(7).fill(0)
@@ -104,7 +106,7 @@ useCssVars(()=>{
   return {
     "penColor":config.value.color,
     "canvasBg":canvasBg.value,
-    "horizontaLayoutRotate":horizontaLayout.value ? '90deg' : '0deg'
+    "horizontalLayoutRotate":horizontalLayout.value ? '90deg' : '0deg'
   }
 })
 const showColor = ref(false)
@@ -202,7 +204,7 @@ const addRoadblock = ()=>{
     y:(winH-feipanSize)/2,
     id:Date.now().toString()
   }
-  if(horizontaLayout.value){
+  if(horizontalLayout.value){
       data.x += feipanSize+15
   }
   roadblocks.value.push(data)
@@ -366,7 +368,7 @@ const load = async ({ scene, ObjectBase, canvas:canvasObj}:{
         const y = this.rectH / 2 + this.y
         ctx.translate(x, y)
         if(this.horizontal){
-          ctx.rotate(horizontaLayout.value ? Math.PI/2 :-Math.PI/2)
+          ctx.rotate(horizontalLayout.value ? Math.PI/2 :-Math.PI/2)
         }
         ctx.fillStyle = "#fff"
         ctx.textAlign = 'center'
@@ -455,7 +457,7 @@ const load = async ({ scene, ObjectBase, canvas:canvasObj}:{
         const logoSizeMerge = 1 - logoSize
         const w = (this.w*logoSizeMerge)/2
         const h = (this.h*logoSizeMerge)/2
-        if(horizontaLayout.value){
+        if(horizontalLayout.value){
           ctx.translate(this.x+this.w*logoSize*0.5+w+this.logoOffset[0],this.y+this.h*logoSize*0.5+h+this.logoOffset[1])
           ctx.rotate(Math.PI/2)
           ctx.drawImage(logo as any,-this.w*logoSize*0.5,-this.h*logoSize*0.5,this.w*logoSize,this.h*logoSize)
@@ -468,7 +470,7 @@ const load = async ({ scene, ObjectBase, canvas:canvasObj}:{
         ctx.fillStyle = '#ffffff';
         ctx.textAlign= "center"
         ctx.textBaseline = "middle"
-        if(horizontaLayout.value){
+        if(horizontalLayout.value){
           ctx.translate(x,y)
           ctx.rotate(Math.PI/2)
           ctx.fillText(this.config?.text, 0,0, this.w)
@@ -548,7 +550,7 @@ const load = async ({ scene, ObjectBase, canvas:canvasObj}:{
   }))
   // 绘制笔记
   scene.push(new DrawPenPoints())
-  if(horizontaLayout.value){
+  if(horizontalLayout.value){
     // 布局文字节点
     scene.push(new Line(winW/2,0, winH))
     scene.push(new Line(0,winH, winW, true))
@@ -674,7 +676,7 @@ const load = async ({ scene, ObjectBase, canvas:canvasObj}:{
 .feipanLayout {
   .tools{
     .tools-item{
-      transform: rotate(var(--horizontaLayoutRotate));
+      transform: rotate(var(--horizontalLayoutRotate));
     }
   }
 }
