@@ -68,7 +68,7 @@ import roadblockDelete from "@/src/assets/delete.png";
 const config = ref({
   color:"#f00",
   penType:"pen",
-  horizontal:true
+  horizontal:false
 })
 const canvasBg = ref('#71b52c')
 // 边界设置
