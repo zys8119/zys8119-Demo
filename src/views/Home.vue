@@ -47,7 +47,7 @@
     </div>
 </template>
 
-<script setup lang="ts" path="/">
+<script setup lang="ts" path="/" redirect="/feipanLayout">
 import {Swiper, Navigation, Pagination, Mousewheel, EffectFade} from "swiper"
 import {marked} from "marked"
 import route from "@/route"
