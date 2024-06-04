@@ -51,7 +51,7 @@
         </n-popover>
         <div class="text-#fff text-20px tools-item" @click="clear"><svg-icon name="clear"></svg-icon></div>
         <div class="text-#fff text-25px tools-item" @click="addRoadblock"><svg-icon name="roadblock"></svg-icon></div>
-        <div class="text-#fff text-25px tools-item" @click="addRoadblock"><svg-icon name="rotatingScreen"></svg-icon></div>
+        <div class="text-#fff text-25px tools-item" @click="switchHorizontal"><svg-icon name="rotatingScreen"></svg-icon></div>
         <div class="text-#fff text-20px tools-item" @click="download"><svg-icon name="download"></svg-icon></div>
       </n-space>
     </div>
@@ -197,7 +197,7 @@ const roadblocks = ref<Array<{
   y:number,
   id:any
 }>>([])
-const roadblocksMapCache = new Map()
+let roadblocksMapCache = new Map()
 const addRoadblock = ()=>{
   const data = {
     x:(winW-feipanSize)/2,
@@ -217,12 +217,23 @@ const deleteRoadblock = ()=>{
     sceneObjects.value.splice(sceneObjects.value.findIndex(e=>e.roadblock_id === roadblock_id),1)
   }
 }
-const load = async ({ scene, ObjectBase, canvas:canvasObj}:{
-  [key:string]:any
-  scene:Array<ObjectBaseType>
-})=>{
-  sceneObjects.value = scene
+const loadDataInfo = shallowRef({})
+const switchHorizontal = async()=>{
+  config.value.horizontal = !config.value.horizontal
+  roadblocksMapCache = new Map()
+  roadblocks.value = []
+  penPoints.value = []
+  revokeCache.value = []
+  penPointsHistorys.value = []
+  await load(loadDataInfo.value)
+}
+const load = async (loadData:any)=>{
+  const { ObjectBase, canvas:canvasObj, sceneRef} = loadData
+  loadDataInfo.value = loadData
+  sceneObjects.value = sceneRef.value
   canvas.value = canvasObj
+  sceneRef.value = []
+  const scene = sceneRef.value
   class DrawCanvasInit extends ObjectBase implements ObjectBaseType {
     type:'DrawCanvasInit'
     constructor() {
