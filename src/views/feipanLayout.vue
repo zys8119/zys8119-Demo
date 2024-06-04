@@ -198,7 +198,9 @@ const addRoadblock = ()=>{
 const deleteRoadblock = ()=>{
   if(moveObject.value?.type === "roadblock" && sceneObjects.value.find(e=>e.type === 'RoadblockDelete').isDelete){
     const roadblock_id = moveObject.value.roadblock_id
-    console.log(roadblock_id)
+    roadblocks.value.splice(roadblocks.value.findIndex(e=>e.id === roadblock_id),1)
+    roadblocksMapCache.delete(roadblock_id)
+    sceneObjects.value.splice(sceneObjects.value.findIndex(e=>e.id === roadblock_id),1)
   }
 }
 const load = async ({ scene, ObjectBase, canvas:canvasObj}:{
@@ -476,6 +478,13 @@ const load = async ({ scene, ObjectBase, canvas:canvasObj}:{
   class RoadblockDelete extends Disc implements ObjectBaseType {
     type = 'RoadblockDelete'
     isDelete = false
+    isInside(){
+      return false
+    }
+    isShowHelp(): boolean {
+      return false
+    }
+
     constructor(public x:number, public y:number,public config?:Record<any, any>) {
       super(x,y,config);
     }
