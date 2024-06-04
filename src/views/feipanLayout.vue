@@ -87,9 +87,6 @@ const colors = ref([
     "#f0f",
     "#000",
     "#fff",
-    "#000",
-    "#f00",
-    "#0f0",
 ])
 const penType = ref([
   {name:"铅笔", value:'pen', icon:'pen'},
@@ -423,13 +420,14 @@ const load = async ({ scene, ObjectBase, canvas:canvasObj}:{
     }
     async draw(ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement) {
       ctx.beginPath()
-      ctx.lineWidth = typeof this.config?.lineWidth === 'number' ? this.config?.lineWidth : (this.config?.lineWidth || 3);
+      const lineWidth = typeof this.config?.lineWidth === 'number' ? this.config?.lineWidth : (this.config?.lineWidth || 4)
+      ctx.lineWidth = lineWidth;
       ctx.strokeStyle = this.config?.strokeStyle || '#ffffff';
       ctx.fillStyle = this.config?.color || '#2866aa';
       const x = this.x + this.w / 2
       const y = this.y + this.h / 2
       ctx.arc(x, y, this.w / 2, 0, 2 * Math.PI)
-      if(typeof this.config?.lineWidth === 'number' && this.config?.lineWidth !== 0){
+      if(typeof lineWidth === 'number' && lineWidth !== 0){
         ctx.stroke()
       }
       ctx.fill()
