@@ -377,6 +377,7 @@ const load = async ({ scene, ObjectBase, canvas:canvasObj}:{
       lineWidth:number
       logoOffsetX:number
       logoOffsetY:number
+      globalAlpha:number
     }>) {
       super();
       this.size = this.config?.size || 30
@@ -419,8 +420,9 @@ const load = async ({ scene, ObjectBase, canvas:canvasObj}:{
       })
     }
     async draw(ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement) {
-      ctx.beginPath()
       const lineWidth = typeof this.config?.lineWidth === 'number' ? this.config?.lineWidth : (this.config?.lineWidth || 4)
+      ctx.globalAlpha = typeof this.config?.globalAlpha === 'number' ? this.config?.globalAlpha : (this.config?.globalAlpha || 1)
+      ctx.beginPath()
       ctx.lineWidth = lineWidth;
       ctx.strokeStyle = this.config?.strokeStyle || '#ffffff';
       ctx.fillStyle = this.config?.color || '#2866aa';
@@ -445,6 +447,7 @@ const load = async ({ scene, ObjectBase, canvas:canvasObj}:{
         ctx.fillText(this.config?.text, x,y, this.w)
       }
       ctx.closePath()
+      ctx.globalAlpha = 1
     }
   }
   class Roadblock extends ObjectBase implements ObjectBaseType {
@@ -504,6 +507,14 @@ const load = async ({ scene, ObjectBase, canvas:canvasObj}:{
   }
   // canvas 背景初始化
   scene.push(new DrawCanvasInit())
+  scene.push(new Disc(winW/4,(winH -winW/2) /2,{
+    color: "#548a2a",
+    logo: logo,
+    size:winW/2,
+    isInside:false,
+    lineWidth:0,
+    globalAlpha:0.1
+  }))
   // 绘制笔记
   scene.push(new DrawPenPoints())
   // 布局线
