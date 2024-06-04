@@ -9,11 +9,11 @@
                        @touchstart="touchstart"
                        @ontouchmove="touchstart"
     ></CanvasInteraction>
-    <n-space class="abs w-full lef-0 top-10px text-#fff text-20px" justify="center">
-      <svg-icon name="revoke" @click="revoke" :class="{
+    <n-space class="abs w-full lef-0 top-10px text-#fff text-20px tools" justify="center">
+      <svg-icon class="tools-item" name="revoke" @click="revoke" :class="{
         '!opacity-50':penPointsHistorys.length === 0
       }"></svg-icon>
-      <svg-icon name="redo" @click="redo" :class="{
+      <svg-icon class="tools-item" name="redo" @click="redo" :class="{
         '!opacity-50':revokeCache.length === 0
       }"></svg-icon>
     </n-space>
@@ -688,9 +688,9 @@ const load = async (loadData:any)=>{
 
 <style scoped lang="less">
 .feipanLayout {
-  .tools{
+  :deep(.tools){
     .tools-item{
-      transform: rotate(var(--horizontalLayoutRotate));
+      transform: rotate(var(--horizontalLayoutRotate)) !important;
     }
   }
 }
