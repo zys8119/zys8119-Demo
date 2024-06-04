@@ -200,7 +200,8 @@ const deleteRoadblock = ()=>{
     const roadblock_id = moveObject.value.roadblock_id
     roadblocks.value.splice(roadblocks.value.findIndex(e=>e.id === roadblock_id),1)
     roadblocksMapCache.delete(roadblock_id)
-    sceneObjects.value.splice(sceneObjects.value.findIndex(e=>e.id === roadblock_id),1)
+    sceneObjects.value.splice(sceneObjects.value.findIndex(e=>e.roadblock_id === roadblock_id),1)
+    console.log(roadblocks.value, roadblocksMapCache, sceneObjects.value)
   }
 }
 const load = async ({ scene, ObjectBase, canvas:canvasObj}:{
