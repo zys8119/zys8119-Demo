@@ -438,20 +438,7 @@ const CanvasInteraction = defineComponent({
             })
             await hammerInit()
         }
-        const currObject = computed(() => {
-            let object =  null
-            if(isPan.value){
-                return  currObject.value
-            }else {
-                for (let lng = objectCache.value.length - 1, k = lng; k >= 0; k--) {
-                    if (objectCache.value[k].isInside()) {
-                        object = objectCache.value[k]
-                        break
-                    }
-                }
-                return object
-            }
-        })
+        const currObject = ref(null)
         watch(currObject,(a, b)=>{
             if(a){
                 if(a !== b){
@@ -726,6 +713,16 @@ const CanvasInteraction = defineComponent({
         const render = async () => {
             await init();
             await (async function _render() {
+                if(!isPan.value) {
+                    let object =  null
+                    for (let lng = objectCache.value.length - 1, k = lng; k >= 0; k--) {
+                        if (objectCache.value[k].isInside()) {
+                            object = objectCache.value[k]
+                            break
+                        }
+                    }
+                    currObject.value =  object
+                }
                 ctx.save()
                 ctx.clearRect(0, 0, canvas.width, canvas.height)
                 ctx.translate(ctxTranslate.value[0],ctxTranslate.value[1])

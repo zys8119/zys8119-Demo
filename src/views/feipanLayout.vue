@@ -51,7 +51,7 @@
         </n-popover>
         <div class="text-#fff text-20px tools-item" @click="clear"><svg-icon name="clear"></svg-icon></div>
         <div class="text-#fff text-25px tools-item" @click="addRoadblock"><svg-icon name="roadblock"></svg-icon></div>
-        <div class="text-#fff text-25px tools-item" @click="switchHorizontal"><svg-icon name="rotatingScreen"></svg-icon></div>
+        <div class="text-#fff text-25px tools-item" @click="switchHorizontal(!config.horizontal)"><svg-icon name="rotatingScreen"></svg-icon></div>
         <div class="text-#fff text-20px tools-item" @click="download"><svg-icon name="download"></svg-icon></div>
       </n-space>
     </div>
@@ -74,8 +74,9 @@ const canvasBg = ref('#71b52c')
 // 边界设置
 const xGap = 100
 const yGap = 300
-const winW = window.innerWidth*window.devicePixelRatio
-const winH = window.innerHeight*window.devicePixelRatio - 54*window.devicePixelRatio
+const {width:ww, height:wh} = useWindowSize()
+const winW = $computed(()=>ww.value*window.devicePixelRatio)
+const winH = $computed(()=>wh.value*window.devicePixelRatio - 54*window.devicePixelRatio)
 const horizontalLayout = computed(()=> config.value.horizontal)
 // 飞盘占位
 const feipanSize = 80
@@ -84,14 +85,14 @@ const feipanOffset = 100
 const sceneObjects = ref([])
 const canvas = ref()
 const colors = ref([
-    "#f00",
-    "#0f0",
-    "#00f",
-    "#ff0",
-    "#0ff",
-    "#f0f",
-    "#000",
-    "#fff",
+  "#f00",
+  "#0f0",
+  "#00f",
+  "#ff0",
+  "#0ff",
+  "#f0f",
+  "#000",
+  "#fff",
 ])
 const penType = ref([
   {name:"铅笔", value:'pen', icon:'pen'},
@@ -205,7 +206,7 @@ const addRoadblock = ()=>{
     id:Date.now().toString()
   }
   if(horizontalLayout.value){
-      data.x += feipanSize+15
+    data.x += feipanSize+15
   }
   roadblocks.value.push(data)
 }
@@ -218,8 +219,8 @@ const deleteRoadblock = ()=>{
   }
 }
 const loadDataInfo = shallowRef({})
-const switchHorizontal = async()=>{
-  config.value.horizontal = !config.value.horizontal
+const switchHorizontal = async(bool:boolean)=>{
+  config.value.horizontal = bool
   roadblocksMapCache = new Map()
   roadblocks.value = []
   penPoints.value = []
@@ -227,13 +228,17 @@ const switchHorizontal = async()=>{
   penPointsHistorys.value = []
   await load(loadDataInfo.value)
 }
+window.onresize = ()=>{
+  setTimeout(async ()=>{
+    await switchHorizontal(config.value.horizontal)
+  })
+};
 const load = async (loadData:any)=>{
   const { ObjectBase, canvas:canvasObj, sceneRef} = loadData
+  sceneRef.value = []
   loadDataInfo.value = loadData
   sceneObjects.value = sceneRef.value
   canvas.value = canvasObj
-  sceneRef.value = []
-  const scene = sceneRef.value
   class DrawCanvasInit extends ObjectBase implements ObjectBaseType {
     type:'DrawCanvasInit'
     constructor() {
@@ -252,143 +257,143 @@ const load = async (loadData:any)=>{
     }
   }
   class DrawPenPoints extends ObjectBase implements ObjectBaseType {
-      type = "DrawPenPoints"
-      constructor() {
-        super();
+    type = "DrawPenPoints"
+    constructor() {
+      super();
+    }
+    drawArrow(ctx:CanvasRenderingContext2D, fromX:number, fromY:number, toX:number, toY:number,headLength = 30,offset = 10) {
+      const dx = toX - fromX;
+      const dy = toY - fromY;
+      const angle = Math.atan2(dy, dx);
+
+      // 计算箭头顶端的偏移位置
+      const toXOffset = toX - offset * Math.cos(angle);
+      const toYOffset = toY - offset * Math.sin(angle);
+
+      // 绘制箭头的主线
+      ctx.beginPath();
+      ctx.moveTo(fromX, fromY);
+      ctx.lineTo(toXOffset, toYOffset);
+      ctx.stroke();
+
+      // 计算箭头头部的两个点
+      const arrowX1 = toX - headLength * Math.cos(angle - Math.PI / 6);
+      const arrowY1 = toY - headLength * Math.sin(angle - Math.PI / 6);
+      const arrowX2 = toX - headLength * Math.cos(angle + Math.PI / 6);
+      const arrowY2 = toY - headLength * Math.sin(angle + Math.PI / 6);
+
+      // 绘制箭头的两条边
+      ctx.setLineDash([]);
+      ctx.beginPath();
+      ctx.moveTo(toX, toY);
+      ctx.lineTo(arrowX1, arrowY1);
+      ctx.lineTo(arrowX2, arrowY2);
+      ctx.closePath();
+      ctx.fill();
+    }
+    // 橡皮擦功能的具体实现
+    erase(ctx: CanvasRenderingContext2D, mouseX:number,mouseY:number,eraserSize=20) {
+      ctx.clearRect(mouseX - eraserSize / 2, mouseY - eraserSize / 2, eraserSize, eraserSize);
+    }
+    drawPoint(ctx: CanvasRenderingContext2D,canvas: HTMLCanvasElement, penPoints:Array<{x:number, y:number, color:string, type:string}>){
+      if(penPoints.length < 2){
+        return
       }
-      drawArrow(ctx:CanvasRenderingContext2D, fromX:number, fromY:number, toX:number, toY:number,headLength = 30,offset = 10) {
-        const dx = toX - fromX;
-        const dy = toY - fromY;
-        const angle = Math.atan2(dy, dx);
-
-        // 计算箭头顶端的偏移位置
-        const toXOffset = toX - offset * Math.cos(angle);
-        const toYOffset = toY - offset * Math.sin(angle);
-
-        // 绘制箭头的主线
-        ctx.beginPath();
-        ctx.moveTo(fromX, fromY);
-        ctx.lineTo(toXOffset, toYOffset);
-        ctx.stroke();
-
-        // 计算箭头头部的两个点
-        const arrowX1 = toX - headLength * Math.cos(angle - Math.PI / 6);
-        const arrowY1 = toY - headLength * Math.sin(angle - Math.PI / 6);
-        const arrowX2 = toX - headLength * Math.cos(angle + Math.PI / 6);
-        const arrowY2 = toY - headLength * Math.sin(angle + Math.PI / 6);
-
-        // 绘制箭头的两条边
+      ctx.beginPath()
+      ctx.lineWidth = 5
+      ctx.fillStyle = penPoints[0].color
+      ctx.strokeStyle = penPoints[0].color
+      const type = penPoints[0].type
+      if(['dashed-arrow','dashed-line'].includes(type)){
+        // 设置虚线
+        ctx.setLineDash([10, 10]);
+      }else {
         ctx.setLineDash([]);
-        ctx.beginPath();
-        ctx.moveTo(toX, toY);
-        ctx.lineTo(arrowX1, arrowY1);
-        ctx.lineTo(arrowX2, arrowY2);
-        ctx.closePath();
-        ctx.fill();
       }
-      // 橡皮擦功能的具体实现
-      erase(ctx: CanvasRenderingContext2D, mouseX:number,mouseY:number,eraserSize=20) {
-        ctx.clearRect(mouseX - eraserSize / 2, mouseY - eraserSize / 2, eraserSize, eraserSize);
+      switch (type){
+        case 'solid-arrow':
+        case 'dashed-arrow':
+          this.drawArrow(ctx, penPoints[0].x, penPoints[0].y, penPoints[penPoints.length - 1].x, penPoints[penPoints.length - 1].y)
+          break
+        case 'solid-line':
+        case 'dashed-line':
+          ctx.moveTo(penPoints[0].x, penPoints[0].y)
+          ctx.lineTo(penPoints[penPoints.length - 1].x, penPoints[penPoints.length - 1].y)
+          break
+        case 'rect':
+          ctx.rect(penPoints[0].x, penPoints[0].y, penPoints[penPoints.length - 1].x - penPoints[0].x, penPoints[penPoints.length - 1].y - penPoints[0].y)
+          break
+        default:
+          penPoints.forEach((p, i) => {
+            if(type === 'eraser'){
+              this.erase(ctx, p.x, p.y,50)
+              return;
+            }
+            if (i === 0) {
+              ctx.moveTo(p.x, p.y)
+              return
+            }
+            ctx.lineTo(p.x, p.y)
+          })
+          break
       }
-      drawPoint(ctx: CanvasRenderingContext2D,canvas: HTMLCanvasElement, penPoints:Array<{x:number, y:number, color:string, type:string}>){
-        if(penPoints.length < 2){
-          return
-        }
-        ctx.beginPath()
-        ctx.lineWidth = 5
-        ctx.fillStyle = penPoints[0].color
-        ctx.strokeStyle = penPoints[0].color
-        const type = penPoints[0].type
-        if(['dashed-arrow','dashed-line'].includes(type)){
-          // 设置虚线
-          ctx.setLineDash([10, 10]);
-        }else {
-          ctx.setLineDash([]);
-        }
-        switch (type){
-          case 'solid-arrow':
-          case 'dashed-arrow':
-            this.drawArrow(ctx, penPoints[0].x, penPoints[0].y, penPoints[penPoints.length - 1].x, penPoints[penPoints.length - 1].y)
-            break
-          case 'solid-line':
-          case 'dashed-line':
-            ctx.moveTo(penPoints[0].x, penPoints[0].y)
-            ctx.lineTo(penPoints[penPoints.length - 1].x, penPoints[penPoints.length - 1].y)
-            break
-          case 'rect':
-            ctx.rect(penPoints[0].x, penPoints[0].y, penPoints[penPoints.length - 1].x - penPoints[0].x, penPoints[penPoints.length - 1].y - penPoints[0].y)
-            break
-          default:
-            penPoints.forEach((p, i) => {
-              if(type === 'eraser'){
-                this.erase(ctx, p.x, p.y,50)
-                return;
-              }
-              if (i === 0) {
-                ctx.moveTo(p.x, p.y)
-                return
-              }
-              ctx.lineTo(p.x, p.y)
-            })
-            break
-        }
-        ctx.stroke()
-        ctx.closePath()
-      }
-      draw(ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement): Promise<any> | void {
-        drawPenPointsHistorys.value.forEach((penPoints, i) => {
-          this.drawPoint(ctx, canvas, penPoints)
-        })
-        this.drawPoint(ctx, canvas, penPoints.value)
-      }
-      isInside(): boolean {
-        return  false
-      }
+      ctx.stroke()
+      ctx.closePath()
+    }
+    draw(ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement): Promise<any> | void {
+      drawPenPointsHistorys.value.forEach((penPoints, i) => {
+        this.drawPoint(ctx, canvas, penPoints)
+      })
+      this.drawPoint(ctx, canvas, penPoints.value)
+    }
+    isInside(): boolean {
+      return  false
+    }
   }
   class Line extends ObjectBase implements ObjectBaseType {
-      type = "line"
-      constructor(public x:number, public  y:number, public lineWidth:number, public horizontal:boolean = false) {
-        super();
+    type = "line"
+    constructor(public x:number, public  y:number, public lineWidth:number, public horizontal:boolean = false) {
+      super();
+    }
+    draw(ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement): Promise<any> | void {
+      ctx.beginPath()
+      ctx.moveTo(this.x, this.y)
+      if(this.horizontal){
+        ctx.lineTo(this.x + this.lineWidth, this.y)
+      }else {
+        ctx.lineTo(this.x, this.lineWidth)
       }
-      draw(ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement): Promise<any> | void {
-        ctx.beginPath()
-        ctx.moveTo(this.x, this.y)
-        if(this.horizontal){
-            ctx.lineTo(this.x + this.lineWidth, this.y)
-        }else {
-            ctx.lineTo(this.x, this.lineWidth)
-        }
-        ctx.lineWidth = 3
-        ctx.strokeStyle = "#fff"
-        ctx.stroke()
-        ctx.closePath()
-      }
-      isInside(): boolean {
-        return  false
-      }
+      ctx.lineWidth = 3
+      ctx.strokeStyle = "#fff"
+      ctx.stroke()
+      ctx.closePath()
+    }
+    isInside(): boolean {
+      return  false
+    }
   }
   class RectText extends ObjectBase implements ObjectBaseType {
-      type = 'RectText'
-      constructor(public x:number, public  y:number, public rectW: number, public rectH: number, public text: string, public horizontal:boolean = false) {
-        super();
+    type = 'RectText'
+    constructor(public x:number, public  y:number, public rectW: number, public rectH: number, public text: string, public horizontal:boolean = false) {
+      super();
+    }
+    draw(ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement): Promise<any> | void {
+      ctx.save()
+      ctx.beginPath()
+      const x = this.rectW / 2 + this.x
+      const y = this.rectH / 2 + this.y
+      ctx.translate(x, y)
+      if(this.horizontal){
+        ctx.rotate(horizontalLayout.value ? Math.PI/2 :-Math.PI/2)
       }
-      draw(ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement): Promise<any> | void {
-        ctx.save()
-        ctx.beginPath()
-        const x = this.rectW / 2 + this.x
-        const y = this.rectH / 2 + this.y
-        ctx.translate(x, y)
-        if(this.horizontal){
-          ctx.rotate(horizontalLayout.value ? Math.PI/2 :-Math.PI/2)
-        }
-        ctx.fillStyle = "#fff"
-        ctx.textAlign = 'center'
-        ctx.font = `40px Arial`
-        ctx.textBaseline = "middle"
-        ctx.fillText(this.text?.toUpperCase?.(), 0,0)
-        ctx.closePath()
-        ctx.restore()
-      }
+      ctx.fillStyle = "#fff"
+      ctx.textAlign = 'center'
+      ctx.font = `40px Arial`
+      ctx.textBaseline = "middle"
+      ctx.fillText(this.text?.toUpperCase?.(), 0,0)
+      ctx.closePath()
+      ctx.restore()
+    }
   }
   class Disc extends ObjectBase implements ObjectBaseType {
     type = 'disc'
@@ -440,7 +445,7 @@ const load = async (loadData:any)=>{
         this.assetsMap.set(url, img)
         img.src = url
         img.onload = () => {
-            resolve(img)
+          resolve(img)
         }
         img.onerror = ()=>{
           resolve(img)
@@ -515,7 +520,7 @@ const load = async (loadData:any)=>{
           })
           object.type = 'roadblock'
           object.roadblock_id = e.id
-          scene.push(object)
+          sceneRef.value.push(object)
           roadblocksMapCache.set(e.id, object)
         }
       })
@@ -550,8 +555,8 @@ const load = async (loadData:any)=>{
     }
   }
   // canvas 背景初始化
-  scene.push(new DrawCanvasInit())
-  scene.push(new Disc(winW/4,(winH -winW/2) /2,{
+  sceneRef.value.push(new DrawCanvasInit())
+  sceneRef.value.push(new Disc(winW/4,(winH -winW/2) /2,{
     color: "#548a2a",
     logo: logo,
     size:winW/2,
@@ -560,19 +565,19 @@ const load = async (loadData:any)=>{
     globalAlpha:0.1
   }))
   // 绘制笔记
-  scene.push(new DrawPenPoints())
+  sceneRef.value.push(new DrawPenPoints())
   if(horizontalLayout.value){
     // 布局文字节点
-    scene.push(new Line(0,0, winW, true))
-    scene.push(new Line(0,0, winH))
-    scene.push(new Line(winW/2,0, winH))
-    scene.push(new Line(0,winH, winW, true))
-    scene.push(new Line(winW,0, winH))
-    scene.push(new RectText(winW - xGap,0,xGap,winH, "home Side", true))
+    sceneRef.value.push(new Line(0,0, winW, true))
+    sceneRef.value.push(new Line(0,0, winH))
+    sceneRef.value.push(new Line(winW/2,0, winH))
+    sceneRef.value.push(new Line(0,winH, winW, true))
+    sceneRef.value.push(new Line(winW,0, winH))
+    sceneRef.value.push(new RectText(winW - xGap,0,xGap,winH, "home Side", true))
     // 红方
     feipanMax.forEach((_,i,array)=> {
       const y = xGap + (winH - xGap * 2) / (array.length + 1) * (i+1) - feipanSize/2
-      scene.push(new Disc(winW/4*3, y, {
+      sceneRef.value.push(new Disc(winW/4*3, y, {
         color: "#c8112a",
         text: i + 1,
         size: feipanSize
@@ -581,14 +586,14 @@ const load = async (loadData:any)=>{
     // 蓝方
     feipanMax.forEach((_,i,array)=> {
       const y = xGap + (winH - xGap * 2) / (array.length + 1) * (i+1) - feipanSize/2
-      scene.push(new Disc(winW/4,y,{
+      sceneRef.value.push(new Disc(winW/4,y,{
         color: "#2866aa",
         text: i+1,
         size:feipanSize
       }))
     })
     // 黄色主飞盘,logo
-    scene.push(new Disc((winW - feipanSize)/2,(winH - feipanSize)/2,{
+    sceneRef.value.push(new Disc((winW - feipanSize)/2,(winH - feipanSize)/2,{
       color: "#fbff33",
       logo: logo,
       size:feipanSize,
@@ -596,7 +601,7 @@ const load = async (loadData:any)=>{
       logoSize:0.7
     }))
     // 路障回收删除
-    scene.push(new RoadblockDelete(winW - 150,-150,{
+    sceneRef.value.push(new RoadblockDelete(winW - 150,-150,{
       color: "#f00",
       logo: roadblockDelete,
       size:300,
@@ -606,28 +611,28 @@ const load = async (loadData:any)=>{
       logoOffsetY:55
     }))
     // 路障
-    scene.push(new Roadblock(roadblocks.value))
+    sceneRef.value.push(new Roadblock(roadblocks.value))
     return
   }
   // 布局线
-  scene.push(new Line(xGap,0, winH))
-  scene.push(new Line(winW - xGap,0, winH))
-  scene.push(new Line(xGap,yGap, winW-xGap*2, true))
-  scene.push(new Line(xGap,winH - yGap, winW-xGap*2, true))
-  scene.push(new Line(0,0, winH))
-  scene.push(new Line(winW,0, winH))
-  scene.push(new Line(0,0, winW, true))
-  scene.push(new Line(0,winH, winW, true))
+  sceneRef.value.push(new Line(xGap,0, winH))
+  sceneRef.value.push(new Line(winW - xGap,0, winH))
+  sceneRef.value.push(new Line(xGap,yGap, winW-xGap*2, true))
+  sceneRef.value.push(new Line(xGap,winH - yGap, winW-xGap*2, true))
+  sceneRef.value.push(new Line(0,0, winH))
+  sceneRef.value.push(new Line(winW,0, winH))
+  sceneRef.value.push(new Line(0,0, winW, true))
+  sceneRef.value.push(new Line(0,winH, winW, true))
   // 布局文字节点
-  scene.push(new RectText(0,0,xGap,winH, "away side", true))
-  scene.push(new RectText(winW - xGap,0,xGap,winH, "home Side", true))
-  scene.push(new RectText(xGap,0,winW - xGap*2,yGap, "end zone"))
-  scene.push(new RectText(xGap,winH - yGap,winW - xGap*2,yGap, "end zone"))
+  sceneRef.value.push(new RectText(0,0,xGap,winH, "away side", true))
+  sceneRef.value.push(new RectText(winW - xGap,0,xGap,winH, "home Side", true))
+  sceneRef.value.push(new RectText(xGap,0,winW - xGap*2,yGap, "end zone"))
+  sceneRef.value.push(new RectText(xGap,winH - yGap,winW - xGap*2,yGap, "end zone"))
   // 红方
   feipanMax.forEach((_,i,array)=> {
     const x = xGap + (winW - xGap * 2) / (array.length + 1) * (i+1) - feipanSize/2
     if(i === 3) {
-      scene.push(new Disc(x,yGap-feipanSize/2 + feipanSize + feipanOffset,{
+      sceneRef.value.push(new Disc(x,yGap-feipanSize/2 + feipanSize + feipanOffset,{
         color: "#0000",
         logo: closeLogo,
         size:feipanSize,
@@ -636,7 +641,7 @@ const load = async (loadData:any)=>{
       }))
     }
     setTimeout(()=> {
-      scene.push(new Disc(x, yGap - feipanSize / 2, {
+      sceneRef.value.push(new Disc(x, yGap - feipanSize / 2, {
         color: "#c8112a",
         text: i + 1,
         size: feipanSize
@@ -648,14 +653,14 @@ const load = async (loadData:any)=>{
     const x = xGap + (winW - xGap * 2) / (array.length + 1) * (i+1) - feipanSize/2
     if(i === 3){
       // 黄色主飞盘,logo
-      scene.push(new Disc(x,winH - yGap -feipanSize/2 - feipanSize - 30,{
+      sceneRef.value.push(new Disc(x,winH - yGap -feipanSize/2 - feipanSize - 30,{
         color: "#fbff33",
         logo: logo,
         size:feipanSize,
         lineWidth:0,
         logoSize:0.7
       }))
-      scene.push(new Disc(x,winH - yGap -feipanSize/2 - feipanSize - 30 - feipanSize - feipanOffset,{
+      sceneRef.value.push(new Disc(x,winH - yGap -feipanSize/2 - feipanSize - 30 - feipanSize - feipanOffset,{
         color: "#0000",
         logo: closeLogo,
         size:feipanSize,
@@ -664,7 +669,7 @@ const load = async (loadData:any)=>{
       }))
     }
     setTimeout(()=>{
-      scene.push(new Disc(x,winH - yGap -feipanSize/2,{
+      sceneRef.value.push(new Disc(x,winH - yGap -feipanSize/2,{
         color: "#2866aa",
         text: i+1,
         size:feipanSize
@@ -672,7 +677,7 @@ const load = async (loadData:any)=>{
     })
   })
   // 路障回收删除
-  scene.push(new RoadblockDelete(winW - 150,-150,{
+  sceneRef.value.push(new RoadblockDelete(winW - 150,-150,{
     color: "#f00",
     logo: roadblockDelete,
     size:300,
@@ -682,7 +687,7 @@ const load = async (loadData:any)=>{
     logoOffsetY:55
   }))
   // 路障
-  scene.push(new Roadblock(roadblocks.value))
+  sceneRef.value.push(new Roadblock(roadblocks.value))
 }
 </script>
 
