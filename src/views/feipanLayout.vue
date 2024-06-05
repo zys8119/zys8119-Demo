@@ -416,6 +416,10 @@ const load = async (loadData:any)=>{
       this.size = this.config?.size || 30
       this.logoOffset = [this.config?.logoOffsetX || 0,this.config?.logoOffsetY || 0]
     }
+    isShowHelp(): boolean {
+      return  false
+    }
+
     get w(){
       return this.size
     }
