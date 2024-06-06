@@ -19,7 +19,6 @@ module.exports.parse = async (raw, { axios, yaml, notify, console }, { name, url
         "douyincdn.com",
         "snssdk.com",
         "byteimg.com",
-        "qq.com",
         "youku.com",
         "iqiyi.com",
         "bilibili.com",
