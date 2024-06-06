@@ -29,7 +29,7 @@ module.exports.parse = async (raw, { axios, yaml, notify, console }, { name, url
         "juejin.com",
         "zhihu.com",
         "bilibili.com",
-    ].map(i => `DOMAIN-SUFFIX,${i},${obj['proxy-groups'][0].name}`)
+    ].map(i => `DOMAIN-KEYWORD,${i},${obj['proxy-groups'][0].name}`)
     return yaml.stringify({
         ...obj,
         rules: [...obj.rules, ...rules],
