@@ -33,6 +33,6 @@ module.exports.parse = async (raw, { axios, yaml, notify, console }, { name, url
     ].map(i => `DOMAIN-KEYWORD,${i},${obj['proxy-groups'][0].name}`)
     return yaml.stringify({
         ...obj,
-        rules: [...obj.rules, ...rules],
+        rules: rules.concat(obj.rules),
     })
 }
