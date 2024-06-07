@@ -80,7 +80,7 @@ const config = ref({
   color:"#000",
   penType:"pen",
   horizontal:false,
-  layout:'vertical',
+  layout:'init',
 })
 const canvasBg = ref('#71b52c')
 // 边界设置
@@ -393,6 +393,9 @@ const load = async (loadData:any)=>{
           break
         case 'rect':
           ctx.rect(penPoints[0].x, penPoints[0].y, penPoints[penPoints.length - 1].x - penPoints[0].x, penPoints[penPoints.length - 1].y - penPoints[0].y)
+          ctx.globalAlpha = 0.3
+          ctx.fill()
+          ctx.globalAlpha = 1
           break
         default:
           penPoints.forEach((p, i) => {
