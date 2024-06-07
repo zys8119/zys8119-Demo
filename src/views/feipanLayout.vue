@@ -21,17 +21,17 @@
       <n-space class="flex-1 p-x-15px" justify="space-between" align="center">
         <n-popover trigger="click" :show="showColor">
           <template #trigger>
-            <div class="w-30px h-30px b-rd-100% b-#fff b-solid b-2px bg-$penColor tools-item" @click="showColor = !showColor,showPen = false"></div>
+            <div class="w-30px h-30px b-rd-100% b-#fff b-solid b-2px bg-$penColor tools-item" @click="showColor = !showColor,showPen = false,showClothing=false"></div>
           </template>
           <div class="flex flex-col gap-5px">
-            <div v-for="(item, i) in colors" :key="i" class="w-30px h-30px b-rd-100% bg-$color flex-center abs-r" :style="{'--color':item}" @click="config.color = item, showColor = false">
+            <div v-for="(item, i) in colors" :key="i" class="w-30px h-30px b-rd-100% bg-$color flex-center abs-r" :style="{'--color':item}" @click="config.color = item, showColor = false,showClothing=false">
               <div class="w-20px h-20px  b-rd-100%  b-solid b-2px b-#fff abs-center" v-if="config.color === item"></div>
             </div>
           </div>
         </n-popover>
         <n-popover trigger="click" :show="showPen">
           <template #trigger>
-            <div class="flex-center tools-item" @click="showPen = !showPen, showColor = false">
+            <div class="flex-center tools-item" @click="showPen = !showPen, showColor = false,showClothing=false">
               <div v-for="(item, i) in penType" :key="i"  class="text-#fff flex-center text-30px bold"  v-show="config.penType === item.value">
                 <svg-icon :name="item.icon"></svg-icon>
                 <svg-icon name="shangla" class="text-10px"></svg-icon>
@@ -43,13 +43,21 @@
               '!text-#f00':config.penType === item.value,
               'flex-row-reverse':horizontalLayout,
               'text-30px':horizontalLayout,
-            }" v-for="(item, i) in penType" :key="i" @click="config.penType = item.value, showPen = false">
+            }" v-for="(item, i) in penType" :key="i" @click="config.penType = item.value, showPen = false,showClothing=false">
               <svg-icon :name="item.icon" :style="{transform:horizontalLayout ? 'rotate(90deg)' : null}"></svg-icon>
               <div v-if="!horizontalLayout">{{item.name}}</div>
             </div>
           </div>
         </n-popover>
         <div class="text-#fff text-20px tools-item" @click="clear"><svg-icon name="clear"></svg-icon></div>
+        <n-popover trigger="click" :show="showClothing" v-if="!horizontalLayout">
+          <template #trigger>
+            <div class="text-#fff text-20px tools-item" @click="showClothing=!showClothing,showColor = false,showPen = false"><svg-icon name="clothing"></svg-icon></div>
+          </template>
+          <div class="flex flex-col gap-5px">
+            <div :class="i === 0 ? null : `b-t-solid b-1px b-#d8d8d8`" v-for="(item, i) in layouts" :key="i" @click="clothing(item)">{{item.name}}</div>
+          </div>
+        </n-popover>
         <div class="text-#fff text-25px tools-item" @click="addRoadblock"><svg-icon name="roadblock"></svg-icon></div>
         <div class="text-#fff text-25px tools-item" @click="switchHorizontal(!config.horizontal)"><svg-icon name="rotatingScreen"></svg-icon></div>
         <div class="text-#fff text-20px tools-item" @click="download"><svg-icon name="download"></svg-icon></div>
@@ -65,10 +73,14 @@ import logo from "@/src/assets/logo.png";
 import closeLogo from "@/src/assets/close.png";
 import roadblockFill from "@/src/assets/roadblock.png";
 import roadblockDelete from "@/src/assets/delete.png";
+import {findLastIndex} from "lodash";
+import {useMessage} from "naive-ui";
+const message = useMessage()
 const config = ref({
-  color:"#f00",
+  color:"#000",
   penType:"pen",
-  horizontal:false
+  horizontal:false,
+  layout:'vertical',
 })
 const canvasBg = ref('#71b52c')
 // 边界设置
@@ -94,6 +106,29 @@ const colors = ref([
   "#000",
   "#fff",
 ])
+const getX = (key:number, lng:number, proportion:number = 1)=> xGap + ((winW - xGap*2) - feipanSize*lng)*proportion/(lng - 1)*key + feipanSize * key + ((winW - xGap*2) - feipanSize*lng)*(1 -proportion)/2
+const getY = (key:number, lng:number, proportion:number = 1)=> yGap + ((winH - yGap*2) - feipanSize*lng)*proportion/(lng - 1)*key + feipanSize * key + ((winH - yGap*2) - feipanSize*lng)*(1 -proportion)/2
+const layouts = computed(()=>[
+  {name:"初始", value:'init', layout: {red:[], blue: [], root:[]}},
+  {name:"横排", value:'horizontal',layout:{
+      red:[].concat((arr=>arr.map((e,i)=>[getX(i, arr.length, 0.4),winH - yGap - feipanSize*0.5 - feipanSize*1.3]))(new Array(3).fill(0)))
+          .concat((arr=>arr.map((e,i)=>[getX(i, arr.length, 0.7),winH/2 + feipanSize*2 + feipanSize*1.3]))(new Array(4).fill(0))),
+      blue:[].concat((arr=>arr.map((e,i)=>[getX(i, arr.length, 0.4),winH - yGap - feipanSize*0.5]))(new Array(3).fill(0)))
+          .concat((arr=>arr.map((e,i)=>[getX(i, arr.length, 0.7),winH/2 + feipanSize*2]))(new Array(4).fill(0))),
+      root:[(winW - feipanSize)/2 + feipanSize, winH-yGap + feipanSize*0.3]
+    }},
+  {name:"竖排", value:'vertical', layout: {
+      red:[].concat((arr=>arr.map((e,i)=>[(winW - feipanSize)/2 - feipanSize,winH - yGap - feipanSize*0.5 + feipanSize]))(new Array(1).fill(0)))
+          .concat((arr=>arr.map((e,i)=>[getX(i,arr.length+1, 0.5),winH - yGap]))(new Array(1).fill(0)))
+          .concat((arr=>arr.map((e,i)=>[winW/2 + feipanSize/2,getY(i ,arr.length, 0.5) - feipanSize]))(new Array(5).fill(0))),
+      blue:[].concat((arr=>arr.map((e,i)=>[(winW - feipanSize)/2,winH - yGap - feipanSize*0.5]))(new Array(1).fill(0)))
+          .concat((arr=>arr.map((e,i)=>[getX(i,arr.length+1, 0.5) - feipanSize,winH - yGap + feipanSize]))(new Array(1).fill(0)))
+          .concat((arr=>arr.map((e,i)=>[winW/2 - feipanSize/2,getY(i ,arr.length, 0.5)]))(new Array(5).fill(0))),
+      root:[(winW - feipanSize)/2 + feipanSize, winH-yGap + feipanSize*0.3]
+    }},
+])
+const currLayoutInfo = computed(()=> layouts.value.find(item => item.value === (horizontalLayout.value ? 'init' : config.value.layout)))
+const currLayout = computed(()=> currLayoutInfo.value?.layout)
 const penType = ref([
   {name:"铅笔", value:'pen', icon:'pen'},
   {name:"实线", value:'solid-line', icon:'solidLine'},
@@ -111,8 +146,10 @@ useCssVars(()=>{
   }
 })
 const showColor = ref(false)
+const showClothing = ref(false)
 const showPen = ref(false)
 const clearShowPopover = ()=>{
+  showClothing.value = false
   showColor.value = false
   showPen.value = false
 }
@@ -124,7 +161,7 @@ const touchstart =(ev:TouchEvent) => {
 }
 const penPointsHistorys = ref([])
 const drawPenPointsHistorys = computed(()=>{
-  const clearIndex = penPointsHistorys.value.findLastIndex(e=>e?.[0]?.type === 'clear')
+  const clearIndex = findLastIndex(penPointsHistorys.value, (e)=>e?.[0]?.type === 'clear')
   return clearIndex > -1 ? penPointsHistorys.value.slice(clearIndex  + 1) : penPointsHistorys.value
 })
 const isMove = ref(false)
@@ -186,11 +223,37 @@ const redo = ()=>{
   penPointsHistorys.value.push(revokeCache.value.pop())
 }
 const download = ()=>{
-  const a = document.createElement('a')
-  a.href = canvas.value.toDataURL()
-  a.download = '飞盘战术图.png'
-  a.click()
-  a.remove()
+  if(/miniprogram/.test(navigator.userAgent)){
+    console.log(wx);
+    console.log(wx.miniProgram);
+    // wx.miniProgram.postMessage({
+    //   data:{
+    //     imageData:canvas.value.toDataURL(),
+    //     type:'downloadImage'
+    //   }
+    // })
+    // wx.miniProgram.navigateTo({
+    //   url:"pages/nav/webview/webview"
+    // });
+    wx.downloadImage({
+      url: canvas.value.toDataURL(), // 图片的 URL
+      success(res) {
+        console.log('图片下载成功，文件路径为：', res.tempFilePath);
+        // 可以在这里使用下载的图片文件路径，比如设置到一个 <image> 标签的 src 属性上
+        message.success("图片下载成功，文件路径为："+res.tempFilePath)
+      },
+      fail(err) {
+        console.error('图片下载失败：', err);
+        message.error("图片下载失败:"+err.message)
+      }
+    });
+  }else {
+    const a = document.createElement('a')
+    a.href = canvas.value.toDataURL()
+    a.download = '飞盘战术图.png'
+    a.click()
+    a.remove()
+  }
 }
 // 路障集合
 const roadblocks = ref<Array<{
@@ -218,14 +281,22 @@ const deleteRoadblock = ()=>{
     sceneObjects.value.splice(sceneObjects.value.findIndex(e=>e.roadblock_id === roadblock_id),1)
   }
 }
+const clothing = (item:any)=>{
+  config.value.layout = item.value
+  clearShowPopover()
+  item?.click?.()
+  switchHorizontal(config.value.horizontal, false)
+}
 const loadDataInfo = shallowRef({})
-const switchHorizontal = async(bool:boolean)=>{
+const switchHorizontal = async(bool:boolean, clearCache:boolean = true) => {
   config.value.horizontal = bool
-  roadblocksMapCache = new Map()
-  roadblocks.value = []
-  penPoints.value = []
-  revokeCache.value = []
-  penPointsHistorys.value = []
+  if(clearCache){
+    roadblocksMapCache = new Map()
+    roadblocks.value = []
+    penPoints.value = []
+    revokeCache.value = []
+    penPointsHistorys.value = []
+  }
   await load(loadDataInfo.value)
 }
 window.onresize = ()=>{
@@ -634,9 +705,13 @@ const load = async (loadData:any)=>{
   sceneRef.value.push(new RectText(xGap,winH - yGap,winW - xGap*2,yGap, "end zone"))
   // 红方
   feipanMax.forEach((_,i,array)=> {
-    const x = xGap + (winW - xGap * 2) / (array.length + 1) * (i+1) - feipanSize/2
+    const [lx,ly] = currLayout.value.red[i] || []
+    const ox = xGap + (winW - xGap * 2) / (array.length + 1) * (i+1) - feipanSize/2
+    const oy = yGap - feipanSize / 2
+    const x = typeof lx === 'number' ? lx : ox
+    const y = typeof ly === 'number' ? ly : oy
     if(i === 3) {
-      sceneRef.value.push(new Disc(x,yGap-feipanSize/2 + feipanSize + feipanOffset,{
+      sceneRef.value.push(new Disc(ox,oy + feipanSize + feipanOffset,{
         color: "#0000",
         logo: closeLogo,
         size:feipanSize,
@@ -645,7 +720,7 @@ const load = async (loadData:any)=>{
       }))
     }
     setTimeout(()=> {
-      sceneRef.value.push(new Disc(x, yGap - feipanSize / 2, {
+      sceneRef.value.push(new Disc(x, y, {
         color: "#c8112a",
         text: i + 1,
         size: feipanSize
@@ -654,17 +729,22 @@ const load = async (loadData:any)=>{
   })
   // 蓝方
   feipanMax.forEach((_,i,array)=> {
-    const x = xGap + (winW - xGap * 2) / (array.length + 1) * (i+1) - feipanSize/2
+    const [lx,ly] = currLayout.value.blue[i] || []
+    const [rx,ry] = currLayout.value.root || []
+    const ox = xGap + (winW - xGap * 2) / (array.length + 1) * (i+1) - feipanSize/2
+    const oy =  winH - yGap -feipanSize/2
+    const x = typeof lx === 'number' ? lx : ox
+    const y = typeof ly === 'number' ? ly : oy
     if(i === 3){
       // 黄色主飞盘,logo
-      sceneRef.value.push(new Disc(x,winH - yGap -feipanSize/2 - feipanSize - 30,{
+      sceneRef.value.push(new Disc(typeof rx === 'number' ? rx : x, typeof ry === 'number' ? ry : y- feipanSize - 30,{
         color: "#fbff33",
         logo: logo,
         size:feipanSize,
         lineWidth:0,
         logoSize:0.7
       }))
-      sceneRef.value.push(new Disc(x,winH - yGap -feipanSize/2 - feipanSize - 30 - feipanSize - feipanOffset,{
+      sceneRef.value.push(new Disc(ox,oy - feipanSize - 30 - feipanSize - feipanOffset,{
         color: "#0000",
         logo: closeLogo,
         size:feipanSize,
@@ -673,7 +753,7 @@ const load = async (loadData:any)=>{
       }))
     }
     setTimeout(()=>{
-      sceneRef.value.push(new Disc(x,winH - yGap -feipanSize/2,{
+      sceneRef.value.push(new Disc(x,y,{
         color: "#2866aa",
         text: i+1,
         size:feipanSize
