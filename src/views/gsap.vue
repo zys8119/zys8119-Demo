@@ -1,77 +1,42 @@
 <template>
-  <div class="gsap container" >
-    <div ref="els" v-for="i in arr" :style="{backgroundColor:`hsl(34.29deg 77.78% ${i*10}%)`}" class="item" @click="click">{{i}}</div>
+  <div class="container">
+    <div ref="box" class="box2 w-100px h-100px bg-#f00"></div>
+    <div class="w-full h-$full"></div>
   </div>
 </template>
 
-<script setup lang="ts" title="gsap 动画" content="js 动画">
-import gsap from "gsap"
-import {debounce} from "lodash"
-const arr = ref([1,2,3,4,5,6])
-const els = $ref([]) as HTMLDivElement[]
+<script setup lang="ts">
+import { gsap } from "gsap";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
+gsap.registerPlugin(ScrollTrigger);
+const box = ref()
+const {height:boxHeight} = useElementBounding(box)
+const {height} = useWindowSize()
+useCssVars(()=>({full:`${height.value-boxHeight.value}px`}))
+onMounted(()=>{
 
-const click = debounce(async ()=>{
-  const step = 30
-  await Promise.all(els.map((el,k)=>{
-    const {left, top} = el.getBoundingClientRect()
-    if(k === arr.value.length-1){
-      return gsap.to(el,{
-        left:left+step,
-        top:top+step,
-        opacity:0,
-        scale:1.5
+  gsap.to('.box2', {
+      scrollTrigger: {
+        trigger: '.container',
+        start:self=>{
+          return `${window.innerHeight*0.5} 50%`
+        },
+        end:self=>{
+          return `${window.innerHeight*0.5} 40%`
+        },
+        pin:true,
+        scrub: true, // important!
+        markers: true, // This is optional, it shows the start and end markers on the screen,
+      },
+        x: "50vw", // Move the box to the middle of the viewport
+        rotation:360
       })
-    }else {
-      return gsap.to(el,{
-        left:left+step,
-        top:top+step,
-        zIndex:k+2
-      })
-    }
-  }))
-  const {left, top} = els[0].getBoundingClientRect()
-  await gsap.to(els.at(-1),{
-    left:left-step,
-    top:top-step,
-    opacity:1,
-    zIndex:1,
-    duration:0,
-    scale:1
-  })
-  arr.value = [arr.value.pop(), ...arr.value]
-  await Promise.all(els.map((el,k)=>{
-    return gsap.to(el,{
-      duration:0,
-      left:step*(k+1),
-      top:step*(k+1),
-      zIndex:k
-    })
-  }))
-}, 250)
+
+})
 </script>
 
-<style scoped lang="scss">
-@use "sass:math";
-.gsap {
- .item{
-   width: 150px;
-   height: 150px;
-   background: #f00;
-   position: absolute;
-   left: 0;
-   top: 0;
-   font-size: 50px;
-   justify-content: center;
-   align-items: center;
-   display: flex;
-   user-select: none;
-   @for $i from 1 through 6 {
-     &:nth-child(#{$i}){
-       left: $i*30px;
-       top: $i*30px;
-       z-index: $i;
-     }
-   }
- }
+<style scoped lang="less">
+.gasp {
+
 }
 </style>
