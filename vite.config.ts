@@ -9,6 +9,8 @@ import vueJsx from '@vitejs/plugin-vue-jsx'
 import AutoRoute from 'vitejs-plugin-vue-route-auto-import'
 import AutoApi from 'vitejs-plugin-api-auto-import'
 import AutoConfig from 'vitejs-plugin-config-auto-import/vite'
+import VueSql from 'vitejs-plugin-vue-sql'
+
 // vite.config.ts
 import ReactivityTransform from '@vue-macros/reactivity-transform/vite'
 import UnoCss from 'unocss/vite'
@@ -19,6 +21,9 @@ export default defineConfig({
         outDir:'docs',
     },
     plugins:[
+        VueSql({
+            file: './src/sql/sql.ts',
+        }),
         UnoCss(),
         Vue(),
         vueJsx(),
@@ -40,19 +45,16 @@ export default defineConfig({
                 "vue-router",
                 "@vueuse/core"
             ],
-            dts:'auto-import.d.ts'
-            // resolvers:[
-            //     [
-            //         (name)=>{
-            //             if(name === '$apis'){
-            //                 return {
-            //                     name,
-            //                     from:'@/api'
-            //                 }
-            //             }
-            //         }
-            //     ]
-            // ],
+            dts:'auto-import.d.ts',
+            resolvers:[
+                // [
+                //     (name)=>{
+                //         if(/vueSql/.test(name)) {
+                //             console.log(name, 888)
+                //         }
+                //     }
+                // ]
+            ],
         }),
         AutoApi({
             dir:"src/api"
@@ -104,10 +106,10 @@ export default defineConfig({
                 target:"http://c2b7a201a62f9c86.zhijiasoft.com",
                 rewrite:path => path.replace(/^\/bpm/,''),
             }
-        }
+        },
     },
+
     optimizeDeps:{
-        include:[],
         exclude:['pdfjs-dist','@zys/wujue-vue/wujie-vue.vue'],
     },
 })
