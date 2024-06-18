@@ -82,7 +82,7 @@ onMounted(async ()=>{
         break
       case "UNDERLINE":
         // 下划线
-        e.data.data.forEach((ee,k,arr)=>{
+        [getRect(e.data.data)].forEach((ee,k,arr)=>{
           const data = {
             start: { x:ee.left, y: ee.bottom },
             end: { x:arr[k+1]?.left || ee.right, y: ee.bottom },
