@@ -95,7 +95,7 @@ onMounted(async ()=>{
         break
       case "HIGHLIGHTPEN":
         // 矩形
-        e.data.data.forEach((ee) => {
+        [getRect(e.data.data)].forEach((ee) => {
           page.drawRectangle({
             x: ee.left,
             y: ee.bottom,
