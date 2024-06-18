@@ -1,14 +1,23 @@
 <template>
-  <div class="pdf-dist">
-    <iframe v-if="pdfDataUri" class="w-full h-full abs-content b-0" :src="pdfDataUri" style="width: 100%; height: 100%;"></iframe>
+  <div class="pdf-dist bg-#000 flex-center flex-col gap-15px">
+<!--    <iframe v-if="pdfDataUri" class="w-full h-full abs-content b-0" :src="pdfDataUri" style="width: 100%; height: 100%;"></iframe>-->
+    <div v-for="i in canvasPages">
+      <canvas ref="canvasRef"></canvas>
+    </div>
   </div>
 </template>
 
 <script setup lang="ts" title="pdf 批注绘制">
+import * as pdfjsLib from 'pdfjs-dist'
+import pdfjsWorker from 'pdfjs-dist/build/pdf.worker.min.mjs?url';
+
+pdfjsLib.GlobalWorkerOptions.workerSrc = pdfjsWorker;
+
 import { PDFDocument, rgb } from 'pdf-lib'
 const route = useRoute()
 const pdfDataUri = ref()
-
+const canvasPages = ref(0)
+const canvasRef = ref([])
 onMounted(async ()=>{
   if(typeof route.query.file !== 'string'){return}
   const pdfDoc = await PDFDocument.load(await fetch(route.query.file as string).then(res => res.arrayBuffer()))
@@ -124,7 +133,27 @@ onMounted(async ()=>{
     }
   }))
   pdfDataUri.value = URL.createObjectURL(new Blob([await pdfDoc.save()],{type:"application/pdf"}));
-
+  const pdfDoc2 = await pdfjsLib.getDocument(pdfDataUri.value).promise
+  canvasPages.value = pdfDoc2.numPages
+  await nextTick()
+  await Promise.all(new Array(pdfDoc2.numPages).fill(0).map(async (_,k)=>{
+      const page = await pdfDoc2.getPage(k + 1)
+      const canvas = canvasRef.value[k] as HTMLCanvasElement;
+      // 获取设备像素比
+      const devicePixelRatio = window.devicePixelRatio || 1;
+      const viewport = page.getViewport({ scale: 1 });
+      canvas.height = viewport.height * devicePixelRatio;
+      canvas.width = viewport.width * devicePixelRatio;
+      // 调整CSS尺寸
+      const maxWidth = canvas.width > window.innerWidth ? window.innerWidth : canvas.width
+      canvas.style.width = `${maxWidth}px`;
+      canvas.style.height = `${maxWidth/canvas.width*canvas.height}px`;
+      const ctx = canvas.getContext('2d');
+      page.render({
+        canvasContext: ctx,
+        viewport: viewport.clone({scale:devicePixelRatio}),
+      })
+  }));
 })
 </script>
 
