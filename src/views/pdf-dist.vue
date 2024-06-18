@@ -62,9 +62,9 @@ onMounted(async ()=>{
     try {
       const {color:penColor} = JSON.parse(e.data.pen)
       const {r,g,b,a} = toHex8(penColor) as any
-      color.red = r
-      color.green = g
-      color.blue = b
+      color.red = r/255
+      color.green = g/255
+      color.blue = b/255
       alpha = a/255
     }catch (e) {
       // err
@@ -138,7 +138,6 @@ onMounted(async ()=>{
         break
       case "BRUSHPEN":
         // 线
-        console.log(color, alpha,e.data.pen)
         e.data.data.forEach((ee,k,arr)=>{
           if(!arr[k+1]){return}
           const data = {
