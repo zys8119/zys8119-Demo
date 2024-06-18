@@ -19,13 +19,31 @@ onMounted(async ()=>{
         data:JSON.parse(e.data)
       }))
   console.log(data)
+  const getRect = (boundingBoxes:any)=>{
+    // 初始化最大矩形的边界
+    let maxRect = {
+      top: Number.NEGATIVE_INFINITY,
+      bottom: Number.POSITIVE_INFINITY,
+      left: Number.POSITIVE_INFINITY,
+      right: Number.NEGATIVE_INFINITY
+    };
+
+// 计算最大矩形的边界
+    boundingBoxes.forEach(box => {
+      if (box.top > maxRect.top) maxRect.top = box.top;
+      if (box.bottom < maxRect.bottom) maxRect.bottom = box.bottom;
+      if (box.left < maxRect.left) maxRect.left = box.left;
+      if (box.right > maxRect.right) maxRect.right = box.right;
+    });
+  }
   await Promise.all(data.map(async e=>{
     const page = pdfDoc.getPage(e.page)
     const {width, height} = page.getSize()
     switch (e.penType){
       case "UNDERWAVELINE":
         // 波浪线
-        await Promise.all(e.data.data.map(async ee=>{
+
+        await Promise.all([getRect(e.data.data)].map(async ee=>{
           const canvas = document.createElement('canvas')
           canvas.width = width
           canvas.height = height
@@ -33,8 +51,8 @@ onMounted(async ()=>{
           const startX = ee.left
           const startY = height - ee.bottom
           const lineWidth = ee.right - ee.left
-          const amplitude = 10;
-          const frequency = 0.2;
+          const amplitude = 2;
+          const frequency = 0.8;
           const offsetX = 0;
           const offsetY = startY;
           ctx.beginPath();
@@ -45,7 +63,7 @@ onMounted(async ()=>{
           }
 
           ctx.strokeStyle = 'blue'; // Set the wave color
-          ctx.lineWidth = 2; // Set the line width
+          ctx.lineWidth = 1; // Set the line width
           ctx.stroke(); // Draw the wave
           const blob = await new Promise(resolve => {
             canvas.toBlob(blob=>{
