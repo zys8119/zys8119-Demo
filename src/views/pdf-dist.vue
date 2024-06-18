@@ -18,7 +18,6 @@ onMounted(async ()=>{
         ...e,
         data:JSON.parse(e.data)
       }))
-  console.log(data)
   const getRect = (boundingBoxes:any)=>{
     // 初始化最大矩形的边界
     let maxRect = {
@@ -35,6 +34,7 @@ onMounted(async ()=>{
       if (box.left < maxRect.left) maxRect.left = box.left;
       if (box.right > maxRect.right) maxRect.right = box.right;
     });
+    return maxRect
   }
   await Promise.all(data.map(async e=>{
     const page = pdfDoc.getPage(e.page)
@@ -42,7 +42,6 @@ onMounted(async ()=>{
     switch (e.penType){
       case "UNDERWAVELINE":
         // 波浪线
-
         await Promise.all([getRect(e.data.data)].map(async ee=>{
           const canvas = document.createElement('canvas')
           canvas.width = width
