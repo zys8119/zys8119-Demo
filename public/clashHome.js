@@ -3,6 +3,8 @@ module.exports.parse = async (raw, { axios, yaml, notify, console }, { name, url
     const rules = [
         "githubusercontent.com",
         "chatgpt.com",
+        "meta.ai",
+        "ip.me",
     ].map(i => `DOMAIN-KEYWORD,${i},${obj['proxy-groups'][0].name}`)
     return yaml.stringify({
         ...obj,

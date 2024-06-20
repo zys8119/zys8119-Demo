@@ -1,0 +1,802 @@
+updateTime: 1718891049668
+dns:
+  enable: true
+  ipv6: false
+  default-nameserver:
+    - 223.5.5.5
+    - 119.29.29.29
+  enhanced-mode: fake-ip
+  nameserver:
+    - https://dns.alidns.com/dns-query
+    - https://doh.pub/dns-query
+  fallback:
+    - https://doh.dns.sb/dns-query
+    - https://dns.cloudflare.com/dns-query
+    - https://dns.twnic.tw/dns-query
+    - tls://8.8.4.4:853
+  fallback-filter:
+    geoip: true
+    ipcidr:
+      - 240.0.0.0/4
+      - 0.0.0.0/32
+      - 127.0.0.1/32
+cfw-latency-url: http://www.google.com/generate_204
+proxy-providers:
+  hka:
+    type: http
+    url: https://onelastclash.123499.xyz?providers=hka
+    interval: 3600
+    path: ./2670.yaml
+    health-check:
+      enable: true
+      interval: 600
+      url: http://www.google.com/generate_204
+  hks:
+    type: http
+    url: https://onelastclash.123499.xyz?providers=hks
+    interval: 3600
+    path: ./5141.yaml
+    health-check:
+      enable: true
+      interval: 600
+      url: http://www.google.com/generate_204
+  jpa:
+    type: http
+    url: https://onelastclash.123499.xyz?providers=jpa
+    interval: 3600
+    path: ./2815.yaml
+    health-check:
+      enable: true
+      interval: 600
+      url: http://www.google.com/generate_204
+  jps:
+    type: http
+    url: https://onelastclash.123499.xyz?providers=jps
+    interval: 3600
+    path: ./5374.yaml
+    health-check:
+      enable: true
+      interval: 600
+      url: http://www.google.com/generate_204
+  usa:
+    type: http
+    url: https://onelastclash.123499.xyz?providers=usa
+    interval: 3600
+    path: ./3531.yaml
+    health-check:
+      enable: true
+      interval: 600
+      url: http://www.google.com/generate_204
+  uss:
+    type: http
+    url: https://onelastclash.123499.xyz?providers=uss
+    interval: 3600
+    path: ./8416.yaml
+    health-check:
+      enable: true
+      interval: 600
+      url: http://www.google.com/generate_204
+rule-providers:
+  OpenAi:
+    behavior: classical
+    type: http
+    url: https://raw.123499.xyz/ACL4SSR/ACL4SSR/master/Clash/Providers/Ruleset/OpenAi.yaml
+    interval: 86400
+    path: ./ACL4SSR/OpenAi.yaml
+  Spotify:
+    behavior: classical
+    type: http
+    url: https://raw.123499.xyz/ACL4SSR/ACL4SSR/master/Clash/Providers/Ruleset/Spotify.yaml
+    interval: 86400
+    path: ./ACL4SSR/Spotify.yaml
+  ChinaDomain:
+    behavior: classical
+    type: http
+    url: https://raw.123499.xyz/ACL4SSR/ACL4SSR/master/Clash/Providers/ChinaDomain.yaml
+    interval: 86400
+    path: ./ACL4SSR/ChinaDomain.yaml
+  ChinaCompanyIp:
+    behavior: ipcidr
+    type: http
+    url: https://raw.123499.xyz/ACL4SSR/ACL4SSR/master/Clash/Providers/ChinaCompanyIp.yaml
+    interval: 86400
+    path: ./ACL4SSR/ChinaCompanyIp.yaml
+  ChinaIp:
+    behavior: ipcidr
+    type: http
+    url: https://raw.123499.xyz/ACL4SSR/ACL4SSR/master/Clash/Providers/ChinaIp.yaml
+    interval: 86400
+    path: ./ACL4SSR/ChinaIp.yaml
+  LocalAreaNetwork:
+    behavior: classical
+    type: http
+    url: https://raw.123499.xyz/ACL4SSR/ACL4SSR/master/Clash/Providers/LocalAreaNetwork.yaml
+    interval: 86400
+    path: ./ACL4SSR/LocalAreaNetwork.yaml
+  ChinaMedia:
+    behavior: classical
+    type: http
+    url: https://raw.123499.xyz/ACL4SSR/ACL4SSR/master/Clash/Providers/ChinaMedia.yaml
+    interval: 86400
+    path: ./ACL4SSR/ChinaMedia.yaml
+  BanAD:
+    behavior: classical
+    type: http
+    url: https://raw.123499.xyz/ACL4SSR/ACL4SSR/master/Clash/Providers/BanAD.yaml
+    interval: 86400
+    path: ./ACL4SSR/BanAD.yaml
+  ProxyMedia:
+    behavior: classical
+    type: http
+    url: https://raw.123499.xyz/ACL4SSR/ACL4SSR/master/Clash/Providers/ProxyMedia.yaml
+    interval: 86400
+    path: ./ACL4SSR/ProxyMedia.yaml
+  NetflixIP:
+    behavior: classical
+    type: http
+    url: https://raw.123499.xyz/ACL4SSR/ACL4SSR/master/Clash/Providers/Ruleset/NetflixIP.yaml
+    interval: 86400
+    path: ./ACL4SSR/NetflixIP.yaml
+  ProxyLite:
+    behavior: classical
+    type: http
+    url: https://raw.123499.xyz/ACL4SSR/ACL4SSR/master/Clash/Providers/ProxyLite.yaml
+    interval: 86400
+    path: ./ACL4SSR/ProxyLite.yaml
+  ProxyGFWlist:
+    behavior: classical
+    type: http
+    url: https://raw.123499.xyz/ACL4SSR/ACL4SSR/master/Clash/Providers/ProxyGFWlist.yaml
+    interval: 86400
+    path: ./ACL4SSR/ProxyGFWlist.yaml
+  GoogleFCM:
+    behavior: classical
+    type: http
+    url: https://raw.123499.xyz/ACL4SSR/ACL4SSR/master/Clash/Providers/Ruleset/GoogleFCM.yaml
+    interval: 86400
+    path: ./ACL4SSR/GoogleFCM.yaml
+  Microsoft:
+    behavior: classical
+    type: http
+    url: https://raw.123499.xyz/ACL4SSR/ACL4SSR/master/Clash/Providers/Ruleset/Microsoft.yaml
+    interval: 86400
+    path: ./ACL4SSR/Microsoft.yaml
+  Apple:
+    behavior: classical
+    type: http
+    url: https://raw.123499.xyz/ACL4SSR/ACL4SSR/master/Clash/Providers/Ruleset/Apple.yaml
+    interval: 86400
+    path: ./ACL4SSR/Apple.yaml
+  Telegram:
+    behavior: classical
+    type: http
+    url: https://raw.123499.xyz/ACL4SSR/ACL4SSR/master/Clash/Providers/Ruleset/Telegram.yaml
+    interval: 86400
+    path: ./ACL4SSR/Telegram.yaml
+  BanProgramAD:
+    behavior: classical
+    type: http
+    url: https://raw.123499.xyz/ACL4SSR/ACL4SSR/master/Clash/Providers/BanProgramAD.yaml
+    interval: 86400
+    path: ./ACL4SSR/BanProgramAD.yaml
+port: 7890
+socks-port: 7891
+allow-lan: true
+mode: Rule
+log-level: info
+external-controller: :9090
+proxy-groups:
+  - name: 🎥 流媒体(Netflix/Disney/HBO)
+    type: fallback
+    url: http://www.google.com/generate_204
+    interval: 60
+    tolerance: 10
+    proxies:
+      - 🇭🇰 流媒体
+      - 🇯🇵 流媒体
+      - 🇺🇸 流媒体
+  - name: 🎉 主要节点
+    type: fallback
+    url: http://www.google.com/generate_204
+    interval: 60
+    tolerance: 10
+    proxies:
+      - 🇭🇰 日常专线
+      - 🇯🇵 日常专线
+      - 🇺🇸 日常专线
+  - name: 📢 X-INS
+    type: select
+    proxies:
+      - 🇯🇵 3日本
+      - 🇺🇸 2美国
+      - 🇭🇰 日常专线
+      - 🇯🇵 日常专线
+      - 🇺🇸 日常专线
+      - 🇭🇰 流媒体
+      - 🇯🇵 流媒体
+      - 🇺🇸 流媒体
+  - name: ♻️ 常规节点
+    type: fallback
+    url: http://www.google.com/generate_204
+    interval: 60
+    tolerance: 10
+    proxies:
+      - 🎉 主要节点
+      - 🎥 流媒体(Netflix/Disney/HBO)
+      - 🎯 全球直连
+  - name: 🎯 全球直连
+    type: select
+    proxies:
+      - DIRECT
+      - REJECT
+  - name: 🌏 国内媒体
+    type: select
+    proxies:
+      - 🎯 全球直连
+      - ♻️ 常规节点
+      - REJECT
+  - name: Ⓜ️ 微软服务
+    type: select
+    proxies:
+      - 🎯 全球直连
+      - ♻️ 常规节点
+      - REJECT
+  - name: 🍎 苹果服务
+    type: select
+    proxies:
+      - 🎯 全球直连
+      - ♻️ 常规节点
+      - REJECT
+  - name: 👀 Chatgpt
+    type: select
+    proxies:
+      - 🇨🇳 1台湾
+      - 🇯🇵 3日本
+      - 🇺🇸 2美国
+      - ♻️ 常规节点
+  - name: 🚀 节点选择
+    type: fallback
+    url: http://www.google.com/generate_204
+    interval: 60
+    tolerance: 10
+    proxies:
+      - ♻️ 常规节点
+      - 🎯 全球直连
+  - name: 📲 电报消息
+    type: fallback
+    url: http://www.google.com/generate_204
+    interval: 60
+    tolerance: 10
+    proxies:
+      - ♻️ 常规节点
+      - 🎯 全球直连
+  - name: 📢 谷歌FCM
+    type: fallback
+    url: http://www.google.com/generate_204
+    interval: 60
+    tolerance: 10
+    proxies:
+      - ♻️ 常规节点
+      - 🎯 全球直连
+  - name: 🐟 漏网之鱼
+    type: select
+    proxies:
+      - 🎯 全球直连
+      - ♻️ 常规节点
+  - name: 🌍 国外媒体
+    type: select
+    proxies:
+      - 🎥 流媒体(Netflix/Disney/HBO)
+      - 🎯 全球直连
+  - name: 🍃 应用净化
+    type: select
+    proxies:
+      - ♻️ 常规节点
+      - REJECT
+      - 🎯 全球直连
+  - name: 🛑 广告拦截
+    type: select
+    proxies:
+      - REJECT
+      - 🎯 全球直连
+  - name: 🇭🇰 日常专线
+    type: load-balance
+    strategy: consistent-hashing
+    use:
+      - hks
+  - name: 🇯🇵 日常专线
+    type: load-balance
+    strategy: consistent-hashing
+    use:
+      - jps
+  - name: 🇺🇸 日常专线
+    type: load-balance
+    strategy: consistent-hashing
+    use:
+      - uss
+  - name: 🇭🇰 流媒体
+    type: load-balance
+    strategy: consistent-hashing
+    use:
+      - hka
+  - name: 🇯🇵 流媒体
+    type: load-balance
+    strategy: consistent-hashing
+    use:
+      - jpa
+  - name: 🇺🇸 流媒体
+    type: load-balance
+    strategy: consistent-hashing
+    use:
+      - usa
+proxies:
+  - name: 🇨🇳 1台湾
+    server: iepl.shushenm.com
+    number: chatgpt
+    port: 33870
+    type: ss
+    password: antmissjk
+    skip-cert-verify: true
+    cipher: aes-128-gcm
+    udp: true
+    remark: 台湾A[VAE]
+  - name: 🇯🇵 3日本
+    server: mmt-hzyd.zhangwei.li
+    number: chatgpt
+    port: 28360
+    type: ss
+    password: antmissjk
+    skip-cert-verify: true
+    cipher: aes-128-gcm
+    udp: true
+    remark: "6"
+  - name: 🇺🇸 2美国
+    server: shdx.kd69.vip
+    number: chatgpt
+    port: 48092
+    type: ss
+    password: antmissjk
+    skip-cert-verify: true
+    cipher: aes-128-gcm
+    udp: true
+    remark: "3"
+  - name: 🇭🇰 香港
+    server: 209.146.125.51
+    number: relay
+    port: 60001
+    type: ss
+    password: antmissjk
+    skip-cert-verify: true
+    cipher: aes-128-gcm
+    udp: true
+    remark: "1"
+  - name: 🇯🇵 日本
+    server: jp.123499.xyz
+    number: relay
+    port: 60001
+    type: ss
+    password: antmissjk
+    skip-cert-verify: true
+    cipher: aes-128-gcm
+    udp: true
+    remark: "2"
+  - name: 🇺🇸 美国[小众时间]
+    server: shdx.kd69.vip
+    number: relay
+    port: 48092
+    type: ss
+    password: antmissjk
+    skip-cert-verify: true
+    cipher: aes-128-gcm
+    udp: true
+    remark: "4"
+  - name: 🇭🇰 香港[流媒体]
+    server: 23.26.217.142
+    number: relay
+    port: 60001
+    type: ss
+    password: antmissjk
+    skip-cert-verify: true
+    cipher: aes-128-gcm
+    udp: true
+    remark: "5"
+rules:
+  - DOMAIN-KEYWORD,githubusercontent.com,🎥 流媒体(Netflix/Disney/HBO)
+  - DOMAIN-KEYWORD,chatgpt.com,🎥 流媒体(Netflix/Disney/HBO)
+  - DOMAIN-KEYWORD,meta.ai,🎥 流媒体(Netflix/Disney/HBO)
+  - DOMAIN-KEYWORD,ip.me,🎥 流媒体(Netflix/Disney/HBO)
+  - DOMAIN-KEYWORD,twitter,📢 X-INS
+  - DOMAIN-SUFFIX,vine.co,📢 X-INS
+  - DOMAIN-SUFFIX,twitter.jp,📢 X-INS
+  - DOMAIN-SUFFIX,twitter.com,📢 X-INS
+  - DOMAIN-SUFFIX,twitpic.com,📢 X-INS
+  - DOMAIN-SUFFIX,twimg.org,📢 X-INS
+  - DOMAIN-SUFFIX,twimg.com,📢 X-INS
+  - DOMAIN-SUFFIX,twimg.co,📢 X-INS
+  - DOMAIN-SUFFIX,t.co,📢 X-INS
+  - DOMAIN-SUFFIX,pscp.tv,📢 X-INS
+  - DOMAIN-SUFFIX,periscope.tv,📢 X-INS
+  - DOMAIN-KEYWORD,instagram,📢 X-INS
+  - DOMAIN-SUFFIX,instagram.com,📢 X-INS
+  - DOMAIN-SUFFIX,instagr.am,📢 X-INS
+  - DOMAIN-SUFFIX,cdninstagram.com,📢 X-INS
+  - DOMAIN-SUFFIX,challenges.cloudflare.com,👀 Chatgpt
+  - DOMAIN-SUFFIX,sfx.ms,👀 Chatgpt
+  - DOMAIN-SUFFIX,recaptcha.net,👀 Chatgpt
+  - DOMAIN-SUFFIX,hcaptcha.com,👀 Chatgpt
+  - DOMAIN-KEYWORD,chinadigitaltimes,👀 Chatgpt
+  - DOMAIN-KEYWORD,bootstrapcdn,♻️ 常规节点
+  - DOMAIN-KEYWORD,shadcn,♻️ 常规节点
+  - DOMAIN-KEYWORD,userapi,🌍 国外媒体
+  - DOMAIN-KEYWORD,qcloud,🎯 全球直连
+  - DOMAIN-SUFFIX,chat.123499.xyz,🎯 全球直连
+  - DOMAIN-KEYWORD,spotify,🌍 国外媒体
+  - DOMAIN-KEYWORD,oaistatic,👀 Chatgpt
+  - DOMAIN-KEYWORD,youtube,🌍 国外媒体
+  - DOMAIN-KEYWORD,notion,♻️ 常规节点
+  - DOMAIN-KEYWORD,tiktok,🌍 国外媒体
+  - DOMAIN-SUFFIX,guzzoni.apple.com,🌍 国外媒体
+  - DOMAIN-SUFFIX,xp.apple.com,🌍 国外媒体
+  - DOMAIN-SUFFIX,audio.itunes.apple.com,🌍 国外媒体
+  - DOMAIN-SUFFIX,amazonaws.com,🌍 国外媒体
+  - DOMAIN-SUFFIX,streamingaudio.itunes.apple.com,🌍 国外媒体
+  - DOMAIN-SUFFIX,audio-ssl.itunes.apple.com,🌍 国外媒体
+  - DOMAIN-SUFFIX,hls-amt.itunes.apple.com,🌍 国外媒体
+  - DOMAIN-SUFFIX,mvod.itunes.apple.com,🌍 国外媒体
+  - DOMAIN-SUFFIX,video-ssl.itunes.apple.com,🌍 国外媒体
+  - DOMAIN-SUFFIX,aodp-ssl.apple.com,🌍 国外媒体
+  - DOMAIN-SUFFIX,itsliveradio.apple.com,🌍 国外媒体
+  - DOMAIN-SUFFIX,blobstore.apple.com,🌍 国外媒体
+  - DOMAIN-KEYWORD,podcasts,🌍 国外媒体
+  - DOMAIN-KEYWORD,watchdisneyfe.com,🌍 国外媒体
+  - DOMAIN-KEYWORD,thisispolaris.com,🌍 国外媒体
+  - DOMAIN-KEYWORD,thestationbymaker.com,🌍 国外媒体
+  - DOMAIN-KEYWORD,streamingdisney.net,🌍 国外媒体
+  - DOMAIN-KEYWORD,starwarskids.com,🌍 国外媒体
+  - DOMAIN-KEYWORD,starwarsgalacticstarcruiser.com,🌍 国外媒体
+  - DOMAIN-KEYWORD,starwars.com,🌍 国外媒体
+  - DOMAIN-KEYWORD,star-latam.com,🌍 国外媒体
+  - DOMAIN-KEYWORD,star-brasil.com,🌍 国外媒体
+  - DOMAIN-KEYWORD,spaindisney.com,🌍 国外媒体
+  - DOMAIN-KEYWORD,sorcerersarena.com,🌍 国外媒体
+  - DOMAIN-KEYWORD,shops-disney.com,🌍 国外媒体
+  - DOMAIN-KEYWORD,shopdisney.com,🌍 国外媒体
+  - DOMAIN-KEYWORD,playmation.com,🌍 国外媒体
+  - DOMAIN-KEYWORD,nomadlandmovie.ch,🌍 国外媒体
+  - DOMAIN-KEYWORD,moviesanywhere.com,🌍 国外媒体
+  - DOMAIN-KEYWORD,mickey.tv,🌍 国外媒体
+  - DOMAIN-KEYWORD,go.com,🌍 国外媒体
+  - DOMAIN-KEYWORD,go-disneyworldgo.com,🌍 国外媒体
+  - DOMAIN-KEYWORD,dssott.com,🌍 国外媒体
+  - DOMAIN-KEYWORD,disneyworld-go.com,🌍 国外媒体
+  - DOMAIN-KEYWORD,disneytvajobs.com,🌍 国外媒体
+  - DOMAIN-KEYWORD,disneyturkiye.com.tr,🌍 国外媒体
+  - DOMAIN-KEYWORD,disneytickets.co.uk,🌍 国外媒体
+  - DOMAIN-KEYWORD,disneysubscription.com,🌍 国外媒体
+  - DOMAIN-KEYWORD,disneystreaming.com,🌍 国外媒体
+  - DOMAIN-KEYWORD,disneystore.com,🌍 国外媒体
+  - DOMAIN-KEYWORD,disneysrivieraresort.com,🌍 国外媒体
+  - DOMAIN-KEYWORD,disneyredirects.com,🌍 国外媒体
+  - DOMAIN-KEYWORD,disneyplus.com.ssl.sc.omtrdc.net,🌍 国外媒体
+  - DOMAIN-KEYWORD,disneyplus.com,🌍 国外媒体
+  - DOMAIN-KEYWORD,disneyplus.bn5x.net,🌍 国外媒体
+  - DOMAIN-KEYWORD,disneypeoplesurveys.com,🌍 国外媒体
+  - DOMAIN-KEYWORD,disneynow.com,🌍 国外媒体
+  - DOMAIN-KEYWORD,disneynewseries.com,🌍 国外媒体
+  - DOMAIN-KEYWORD,disneymusicpromotion.com,🌍 国外媒体
+  - DOMAIN-KEYWORD,disneymovieinsiders.com,🌍 国外媒体
+  - DOMAIN-KEYWORD,disneymeetingsandevents.com,🌍 国外媒体
+  - DOMAIN-KEYWORD,disneyme.com,🌍 国外媒体
+  - DOMAIN-KEYWORD,disneymagicmomentsme.com,🌍 国外媒体
+  - DOMAIN-KEYWORD,disneymagicmoments.pl,🌍 国外媒体
+  - DOMAIN-KEYWORD,disneymagicmoments.it,🌍 国外媒体
+  - DOMAIN-KEYWORD,disneymagicmoments.gr,🌍 国外媒体
+  - DOMAIN-KEYWORD,disneymagicmoments.gen.tr,🌍 国外媒体
+  - DOMAIN-KEYWORD,disneymagicmoments.fr,🌍 国外媒体
+  - DOMAIN-KEYWORD,disneymagicmoments.es,🌍 国外媒体
+  - DOMAIN-KEYWORD,disneymagicmoments.de,🌍 国外媒体
+  - DOMAIN-KEYWORD,disneymagicmoments.co.za,🌍 国外媒体
+  - DOMAIN-KEYWORD,disneymagicmoments.co.uk,🌍 国外媒体
+  - DOMAIN-KEYWORD,disneymagicmoments.co.il,🌍 国外媒体
+  - DOMAIN-KEYWORD,disneylatino.com,🌍 国外媒体
+  - DOMAIN-KEYWORD,disneyjuniortreataday.com,🌍 国外媒体
+  - DOMAIN-KEYWORD,disneyjunior.com,🌍 国外媒体
+  - DOMAIN-KEYWORD,disneyinternationalhd.com,🌍 国外媒体
+  - DOMAIN-KEYWORD,disneyinternational.com,🌍 国外媒体
+  - DOMAIN-KEYWORD,disneyinflight.com,🌍 国外媒体
+  - DOMAIN-KEYWORD,disneyiejobs.com,🌍 国外媒体
+  - DOMAIN-KEYWORD,disneyenconcert.com,🌍 国外媒体
+  - DOMAIN-KEYWORD,disneycruisebrasil.com,🌍 国外媒体
+  - DOMAIN-KEYWORD,disneychannelroadtrip.com,🌍 国外媒体
+  - DOMAIN-KEYWORD,disneychannelonstage.com,🌍 国外媒体
+  - DOMAIN-KEYWORD,disneycareers.com,🌍 国外媒体
+  - DOMAIN-KEYWORD,disneybaby.com,🌍 国外媒体
+  - DOMAIN-KEYWORD,disneyaulani.com,🌍 国外媒体
+  - DOMAIN-KEYWORD,disneyarena.com,🌍 国外媒体
+  - DOMAIN-KEYWORD,disneyadsales.com,🌍 国外媒体
+  - DOMAIN-KEYWORD,disney.my.sentry.io,🌍 国外媒体
+  - DOMAIN-KEYWORD,disney-studio.net,🌍 国外媒体
+  - DOMAIN-KEYWORD,disney-studio.com,🌍 国外媒体
+  - DOMAIN-KEYWORD,disney-portal.my.onetrust.com,🌍 国外媒体
+  - DOMAIN-KEYWORD,disney-plus.net,🌍 国外媒体
+  - DOMAIN-KEYWORD,disney-discount.com,🌍 国外媒体
+  - DOMAIN-KEYWORD,disney-asia.com,🌍 国外媒体
+  - DOMAIN-KEYWORD,dilcdn.com,🌍 国外媒体
+  - DOMAIN-KEYWORD,beautyandthebeastmusical.co.uk,🌍 国外媒体
+  - DOMAIN-KEYWORD,bamgrid.com,🌍 国外媒体
+  - DOMAIN-KEYWORD,babyzone.com,🌍 国外媒体
+  - DOMAIN-KEYWORD,babble.com,🌍 国外媒体
+  - DOMAIN-KEYWORD,adventuresbydisney.com,🌍 国外媒体
+  - DOMAIN-KEYWORD,20thcenturystudios.jp,🌍 国外媒体
+  - DOMAIN-KEYWORD,20thcenturystudios.com.br,🌍 国外媒体
+  - DOMAIN-KEYWORD,20thcenturystudios.com.au,🌍 国外媒体
+  - DOMAIN-KEYWORD,disney.sg,🌍 国外媒体
+  - DOMAIN-KEYWORD,disney.se,🌍 国外媒体
+  - DOMAIN-KEYWORD,disney.ru,🌍 国外媒体
+  - DOMAIN-KEYWORD,disney.ro,🌍 国外媒体
+  - DOMAIN-KEYWORD,disney.pt,🌍 国外媒体
+  - DOMAIN-KEYWORD,disney.pl,🌍 国外媒体
+  - DOMAIN-KEYWORD,disney.ph,🌍 国外媒体
+  - DOMAIN-KEYWORD,disney.no,🌍 国外媒体
+  - DOMAIN-KEYWORD,disney.nl,🌍 国外媒体
+  - DOMAIN-KEYWORD,disney.my,🌍 国外媒体
+  - DOMAIN-KEYWORD,disney.it,🌍 国外媒体
+  - DOMAIN-KEYWORD,disney.io,🌍 国外媒体
+  - DOMAIN-KEYWORD,disney.in,🌍 国外媒体
+  - DOMAIN-KEYWORD,disney.id,🌍 国外媒体
+  - DOMAIN-KEYWORD,disney.hu,🌍 国外媒体
+  - DOMAIN-KEYWORD,disney.gr,🌍 国外媒体
+  - DOMAIN-KEYWORD,disney.fr,🌍 国外媒体
+  - DOMAIN-KEYWORD,disney.fi,🌍 国外媒体
+  - DOMAIN-KEYWORD,disney.es,🌍 国外媒体
+  - DOMAIN-KEYWORD,disney.dk,🌍 国外媒体
+  - DOMAIN-KEYWORD,disney.de,🌍 国外媒体
+  - DOMAIN-KEYWORD,disney.cz,🌍 国外媒体
+  - DOMAIN-KEYWORD,disney.com.tw,🌍 国外媒体
+  - DOMAIN-KEYWORD,disney.com.hk,🌍 国外媒体
+  - DOMAIN-KEYWORD,disney.com.br,🌍 国外媒体
+  - DOMAIN-KEYWORD,disney.com.au,🌍 国外媒体
+  - DOMAIN-KEYWORD,disney.com,🌍 国外媒体
+  - DOMAIN-KEYWORD,disney.co.za,🌍 国外媒体
+  - DOMAIN-KEYWORD,disney.co.uk,🌍 国外媒体
+  - DOMAIN-KEYWORD,disney.co.th,🌍 国外媒体
+  - DOMAIN-KEYWORD,disney.co.kr,🌍 国外媒体
+  - DOMAIN-KEYWORD,disney.co.jp,🌍 国外媒体
+  - DOMAIN-KEYWORD,disney.co.il,🌍 国外媒体
+  - DOMAIN-KEYWORD,disney.ch,🌍 国外媒体
+  - DOMAIN-KEYWORD,disney.ca,🌍 国外媒体
+  - DOMAIN-KEYWORD,disney.bg,🌍 国外媒体
+  - DOMAIN-KEYWORD,disney.be,🌍 国外媒体
+  - DOMAIN-KEYWORD,disney.asia,🌍 国外媒体
+  - DOMAIN-KEYWORD,akamaized.net,🌍 国外媒体
+  - DOMAIN-KEYWORD,akamaitechnologies.fr,🌍 国外媒体
+  - DOMAIN-KEYWORD,akamaitechnologies.com,🌍 国外媒体
+  - DOMAIN-KEYWORD,akamaitech.net,🌍 国外媒体
+  - DOMAIN-KEYWORD,akamaistream.net,🌍 国外媒体
+  - DOMAIN-KEYWORD,akamaihd.net,🌍 国外媒体
+  - DOMAIN-KEYWORD,akamaiedge.net,🌍 国外媒体
+  - DOMAIN-KEYWORD,akamai.net,🌍 国外媒体
+  - DOMAIN-KEYWORD,akamai.com,🌍 国外媒体
+  - DOMAIN-KEYWORD,akam.net,🌍 国外媒体
+  - DOMAIN-KEYWORD,akadns.net,🌍 国外媒体
+  - DOMAIN-KEYWORD,netflixtechblog.com,🌍 国外媒体
+  - DOMAIN-KEYWORD,netflixinvestor.com,🌍 国外媒体
+  - DOMAIN-KEYWORD,netflixdnstest10.com,🌍 国外媒体
+  - DOMAIN-KEYWORD,netflixdnstest9.com,🌍 国外媒体
+  - DOMAIN-KEYWORD,netflixdnstest8.com,🌍 国外媒体
+  - DOMAIN-KEYWORD,netflixdnstest7.com,🌍 国外媒体
+  - DOMAIN-KEYWORD,netflixdnstest6.com,🌍 国外媒体
+  - DOMAIN-KEYWORD,netflixdnstest5.com,🌍 国外媒体
+  - DOMAIN-KEYWORD,netflixdnstest4.com,🌍 国外媒体
+  - DOMAIN-KEYWORD,netflixdnstest3.com,🌍 国外媒体
+  - DOMAIN-KEYWORD,netflixdnstest2.com,🌍 国外媒体
+  - DOMAIN-KEYWORD,netflixdnstest1.com,🌍 国外媒体
+  - DOMAIN-KEYWORD,nflxsearch.net,🌍 国外媒体
+  - DOMAIN-KEYWORD,nflxext.com,🌍 国外媒体
+  - DOMAIN-KEYWORD,nflxso.net,🌍 国外媒体
+  - DOMAIN-KEYWORD,nflxvideo.net,🌍 国外媒体
+  - DOMAIN-KEYWORD,nflximg.net,🌍 国外媒体
+  - DOMAIN-KEYWORD,nflximg.com,🌍 国外媒体
+  - DOMAIN-KEYWORD,netflix.net,🌍 国外媒体
+  - DOMAIN-KEYWORD,netflix.com,🌍 国外媒体
+  - DOMAIN-KEYWORD,netflix.ca,🌍 国外媒体
+  - DOMAIN-KEYWORD,fast.com,🌍 国外媒体
+  - DOMAIN-KEYWORD,edgecastcdn.net,🌍 国外媒体
+  - DOMAIN-KEYWORD,edgesuite.net,🌍 国外媒体
+  - DOMAIN-KEYWORD,edgekey.net,🌍 国外媒体
+  - DOMAIN-KEYWORD,amazonaws.com,🌍 国外媒体
+  - DOMAIN-KEYWORD,awsstatic.com,🌍 国外媒体
+  - DOMAIN-KEYWORD,amazon.com,🌍 国外媒体
+  - DOMAIN-KEYWORD,keeflys,🌍 国外媒体
+  - DOMAIN-KEYWORD,claude,👀 Chatgpt
+  - DOMAIN-KEYWORD,epochtimes,🌍 国外媒体
+  - DOMAIN-KEYWORD,japanpost,🌍 国外媒体
+  - DOMAIN-KEYWORD,trello,♻️ 常规节点
+  - DOMAIN-KEYWORD,ymontessori,👀 Chatgpt
+  - DOMAIN-KEYWORD,niche,♻️ 常规节点
+  - DOMAIN-KEYWORD,javbus,🌍 国外媒体
+  - DOMAIN-KEYWORD,googlevideo,🌍 国外媒体
+  - DOMAIN-KEYWORD,mypikpak,🌍 国外媒体
+  - IP-CIDR,161.117.87.0/22,🌍 国外媒体
+  - IP-CIDR,161.117.80.0/22,🌍 国外媒体
+  - IP-CIDR,159.138.110.0/22,🌍 国外媒体
+  - IP-CIDR,149.129.255.0/22,🌍 国外媒体
+  - IP-CIDR,149.129.213.0/22,🌍 国外媒体
+  - IP-CIDR,147.139.180.0/22,🌍 国外媒体
+  - IP-CIDR,119.13.105.0/22,🌍 国外媒体
+  - IP-CIDR,47.241.76.0/22,🌍 国外媒体
+  - IP-CIDR,47.241.61.0/22,🌍 国外媒体
+  - IP-CIDR,47.241.59.0/22,🌍 国外媒体
+  - IP-CIDR,47.241.122.0/22,🌍 国外媒体
+  - IP-CIDR,8.219.99.0/22,🌍 国外媒体
+  - IP-CIDR,8.219.76.0/22,🌍 国外媒体
+  - IP-CIDR,8.219.75.0/22,🌍 国外媒体
+  - IP-CIDR,8.219.190.0/22,🌍 国外媒体
+  - IP-CIDR,8.219.134.0/22,🌍 国外媒体
+  - IP-CIDR,8.219.123.0/22,🌍 国外媒体
+  - DOMAIN-KEYWORD,bytescm,🎯 全球直连
+  - DOMAIN-KEYWORD,fansapp,♻️ 常规节点
+  - DOMAIN-KEYWORD,linkedin,♻️ 常规节点
+  - DOMAIN-KEYWORD,mirror.xyz,♻️ 常规节点
+  - DOMAIN,developer.mozilla.org,🎯 全球直连
+  - DOMAIN-KEYWORD,opensea,♻️ 常规节点
+  - DOMAIN,jp.aaa.ax,🌍 国外媒体
+  - DOMAIN-KEYWORD,defidaonews,♻️ 常规节点
+  - DOMAIN-KEYWORD,telegram,♻️ 常规节点
+  - DOMAIN-SUFFIX,braze.com,🌍 国外媒体
+  - DOMAIN-SUFFIX,watchdisneyfe.com,🌍 国外媒体
+  - DOMAIN-SUFFIX,thisispolaris.com,🌍 国外媒体
+  - DOMAIN-SUFFIX,thestationbymaker.com,🌍 国外媒体
+  - DOMAIN-SUFFIX,go.com,🌍 国外媒体
+  - DOMAIN-SUFFIX,go-disneyworldgo.com,🌍 国外媒体
+  - DOMAIN-SUFFIX,com.disney.disneyplus,🌍 国外媒体
+  - DOMAIN-SUFFIX,disneystreaming.com,🌍 国外媒体
+  - DOMAIN-SUFFIX,optimizely.com,🌍 国外媒体
+  - DOMAIN-SUFFIX,adobedtm.com,🌍 国外媒体
+  - DOMAIN-SUFFIX,disneyplus.bn5x.net,🌍 国外媒体
+  - DOMAIN-SUFFIX,disney-portal.my.onetrust.com,🌍 国外媒体
+  - DOMAIN-SUFFIX,d9.flashtalking.com,🌍 国外媒体
+  - DOMAIN-SUFFIX,search-api-disney.bamgrid.com,🌍 国外媒体
+  - DOMAIN-SUFFIX,disneynow.com,🌍 国外媒体
+  - DOMAIN-SUFFIX,go-mpulse.net,🌍 国外媒体
+  - DOMAIN-SUFFIX,execute-api.us-east-1.amazonaws.com,🌍 国外媒体
+  - DOMAIN-SUFFIX,cws.conviva.com,🌍 国外媒体
+  - DOMAIN-SUFFIX,braze.com,🌍 国外媒体
+  - DOMAIN-SUFFIX,dssott.com.akamaized.net,🌍 国外媒体
+  - DOMAIN-SUFFIX,disneyplus.com.ssl.sc.omtrdc.net,🌍 国外媒体
+  - DOMAIN-SUFFIX,registerdisney.go.com,🌍 国外媒体
+  - DOMAIN-SUFFIX,bamgrid.com,🌍 国外媒体
+  - DOMAIN-SUFFIX,global.edge.bamgrid.com,🌍 国外媒体
+  - DOMAIN-SUFFIX,cdn.registerdisney.go.com,🌍 国外媒体
+  - DOMAIN-SUFFIX,dssott.com,🌍 国外媒体
+  - DOMAIN-SUFFIX,disneyplus.com,🌍 国外媒体
+  - DOMAIN-SUFFIX,disney-plus.net,🌍 国外媒体
+  - DOMAIN-SUFFIX,ifconfig.co,🌍 国外媒体
+  - DOMAIN-SUFFIX,turner.com,🌍 国外媒体
+  - DOMAIN-SUFFIX,lovefilm.com,🌍 国外媒体
+  - DOMAIN-SUFFIX,disneyjunior.com,🌍 国外媒体
+  - DOMAIN-SUFFIX,disney.com,🌍 国外媒体
+  - DOMAIN-SUFFIX,maxmind.com,🌍 国外媒体
+  - DOMAIN-SUFFIX,uplynk.com,🌍 国外媒体
+  - DOMAIN-SUFFIX,brightcove.com,🌍 国外媒体
+  - DOMAIN-SUFFIX,southpark.cc.com,🌍 国外媒体
+  - DOMAIN-SUFFIX,warnerbros.com,🌍 国外媒体
+  - DOMAIN-SUFFIX,ip2location.com,🌍 国外媒体
+  - DOMAIN-SUFFIX,nflxext.com,🌍 国外媒体
+  - DOMAIN-SUFFIX,nflxso.net,🌍 国外媒体
+  - DOMAIN-SUFFIX,nflxvideo.net,🌍 国外媒体
+  - DOMAIN-SUFFIX,nflximg.net,🌍 国外媒体
+  - DOMAIN-SUFFIX,netflix.net,🌍 国外媒体
+  - DOMAIN-SUFFIX,netflix.com,🌍 国外媒体
+  - DOMAIN-SUFFIX,cloudfront.net,🌍 国外媒体
+  - DOMAIN-SUFFIX,edgecastcdn.net,🌍 国外媒体
+  - DOMAIN-SUFFIX,llnwd.net,🌍 国外媒体
+  - DOMAIN-SUFFIX,level3.net,🌍 国外媒体
+  - DOMAIN-SUFFIX,srip.net,🌍 国外媒体
+  - DOMAIN-SUFFIX,edgesuite.net,🌍 国外媒体
+  - DOMAIN-SUFFIX,edgekey.net,🌍 国外媒体
+  - DOMAIN-SUFFIX,akamaized.net,🌍 国外媒体
+  - DOMAIN-SUFFIX,akamaitechnologies.fr,🌍 国外媒体
+  - DOMAIN-SUFFIX,akamaitechnologies.com,🌍 国外媒体
+  - DOMAIN-SUFFIX,akamaitech.net,🌍 国外媒体
+  - DOMAIN-SUFFIX,akamaistream.net,🌍 国外媒体
+  - DOMAIN-SUFFIX,akamaihd.net,🌍 国外媒体
+  - DOMAIN-SUFFIX,akamaiedge.net,🌍 国外媒体
+  - DOMAIN-SUFFIX,akamai.net,🌍 国外媒体
+  - DOMAIN-SUFFIX,akamai.com,🌍 国外媒体
+  - DOMAIN-SUFFIX,akam.net,🌍 国外媒体
+  - DOMAIN-SUFFIX,akadns.net,🌍 国外媒体
+  - DOMAIN-SUFFIX,xiumi.us,🎯 全球直连
+  - DOMAIN-SUFFIX,aaa.ax,🌍 国外媒体
+  - DOMAIN-KEYWORD,123499,🎯 全球直连
+  - IP-CIDR,203.104.158.0/24,♻️ 常规节点
+  - IP-CIDR,203.104.157.0/24,♻️ 常规节点
+  - IP-CIDR,203.104.156.0/24,♻️ 常规节点
+  - IP-CIDR,203.104.155.0/24,♻️ 常规节点
+  - IP-CIDR,203.104.154.0/24,♻️ 常规节点
+  - IP-CIDR,203.104.153.0/24,♻️ 常规节点
+  - IP-CIDR,203.104.152.0/24,♻️ 常规节点
+  - IP-CIDR,203.104.151.0/24,♻️ 常规节点
+  - IP-CIDR,203.104.150.0/24,♻️ 常规节点
+  - IP-CIDR,203.104.149.0/24,♻️ 常规节点
+  - IP-CIDR,203.104.148.0/24,♻️ 常规节点
+  - IP-CIDR,203.104.147.0/24,♻️ 常规节点
+  - IP-CIDR,203.104.146.0/24,♻️ 常规节点
+  - IP-CIDR,203.104.145.0/24,♻️ 常规节点
+  - IP-CIDR,203.104.144.0/24,♻️ 常规节点
+  - IP-CIDR,203.104.143.0/24,♻️ 常规节点
+  - IP-CIDR,203.104.142.0/24,♻️ 常规节点
+  - IP-CIDR,203.104.141.0/24,♻️ 常规节点
+  - IP-CIDR,203.104.140.0/24,♻️ 常规节点
+  - IP-CIDR,203.104.139.0/24,♻️ 常规节点
+  - IP-CIDR,203.104.138.0/24,♻️ 常规节点
+  - IP-CIDR,203.104.137.0/24,♻️ 常规节点
+  - IP-CIDR,203.104.136.0/24,♻️ 常规节点
+  - IP-CIDR,203.104.135.0/24,♻️ 常规节点
+  - IP-CIDR,203.104.134.0/24,♻️ 常规节点
+  - IP-CIDR,203.104.133.0/24,♻️ 常规节点
+  - IP-CIDR,203.104.132.0/24,♻️ 常规节点
+  - IP-CIDR,203.104.131.0/24,♻️ 常规节点
+  - IP-CIDR,203.104.130.0/24,♻️ 常规节点
+  - IP-CIDR,203.104.129.0/24,♻️ 常规节点
+  - IP-CIDR,203.104.128.0/24,♻️ 常规节点
+  - IP-CIDR,203.104.128.0/20,♻️ 常规节点
+  - IP-CIDR,147.92.248.0/21,♻️ 常规节点
+  - IP-CIDR,147.92.135.0/24,♻️ 常规节点
+  - IP-CIDR,147.92.134.0/24,♻️ 常规节点
+  - IP-CIDR,147.92.133.0/24,♻️ 常规节点
+  - IP-CIDR,147.92.132.0/24,♻️ 常规节点
+  - IP-CIDR,147.92.131.0/24,♻️ 常规节点
+  - IP-CIDR,147.92.130.0/24,♻️ 常规节点
+  - IP-CIDR,147.92.129.0/24,♻️ 常规节点
+  - IP-CIDR,147.92.128.0/24,♻️ 常规节点
+  - IP-CIDR,147.92.128.0/17,♻️ 常规节点
+  - IP-CIDR,119.235.236.0/24,♻️ 常规节点
+  - IP-CIDR,119.235.236.0/23,♻️ 常规节点
+  - IP-CIDR,119.235.235.0/24,♻️ 常规节点
+  - IP-CIDR,119.235.232.0/24,♻️ 常规节点
+  - IP-CIDR,119.235.224.0/24,♻️ 常规节点
+  - IP-CIDR,103.2.31.0/24,♻️ 常规节点
+  - IP-CIDR,103.2.30.0/24,♻️ 常规节点
+  - IP-CIDR,103.2.30.0/23,♻️ 常规节点
+  - DOMAIN-SUFFIX,naver.jp,♻️ 常规节点
+  - IP-CIDR,103.2.28.0/24,♻️ 常规节点
+  - DOMAIN-SUFFIX,line.me,♻️ 常规节点
+  - DOMAIN-SUFFIX,line.naver.jp,♻️ 常规节点
+  - DOMAIN-SUFFIX,scdn.co,♻️ 常规节点
+  - DOMAIN-KEYWORD,line,♻️ 常规节点
+  - DOMAIN,local.api.hellogithub.com,🎯 全球直连
+  - DOMAIN,hellogithub.com,🎯 全球直连
+  - DOMAIN-KEYWORD,disney,🌍 国外媒体
+  - DOMAIN-KEYWORD,twitter,♻️ 常规节点
+  - DOMAIN-KEYWORD,jsdelivr,♻️ 常规节点
+  - DOMAIN-SUFFIX,speedtest.cn,🎯 全球直连
+  - DOMAIN-KEYWORD,cloudflare,♻️ 常规节点
+  - DOMAIN-KEYWORD,hostloc,♻️ 常规节点
+  - DOMAIN-KEYWORD,yuque,🎯 全球直连
+  - DOMAIN-KEYWORD,nintendo,🎯 全球直连
+  - DOMAIN-KEYWORD,spartanhost,🎯 全球直连
+  - IP-CIDR,148.163.160.149/22,🎯 全球直连
+  - DOMAIN-SUFFIX,bing.com,♻️ 常规节点
+  - DOMAIN-KEYWORD,goldentec,🎯 全球直连
+  - DOMAIN-KEYWORD,paypal,♻️ 常规节点
+  - DOMAIN-KEYWORD,automotivebulbfinder,♻️ 常规节点
+  - RULE-SET,OpenAi,👀 Chatgpt
+  - RULE-SET,Spotify,👀 Chatgpt
+  - RULE-SET,ChinaDomain,🎯 全球直连
+  - RULE-SET,ChinaCompanyIp,🎯 全球直连
+  - RULE-SET,ChinaIp,🎯 全球直连
+  - RULE-SET,LocalAreaNetwork,🎯 全球直连
+  - RULE-SET,ChinaMedia,🌏 国内媒体
+  - RULE-SET,BanAD,🛑 广告拦截
+  - RULE-SET,ProxyMedia,🌍 国外媒体
+  - RULE-SET,NetflixIP,🌍 国外媒体
+  - RULE-SET,ProxyLite,🚀 节点选择
+  - RULE-SET,ProxyGFWlist,🚀 节点选择
+  - RULE-SET,GoogleFCM,📢 谷歌FCM
+  - RULE-SET,Microsoft,Ⓜ️ 微软服务
+  - RULE-SET,Apple,🍎 苹果服务
+  - RULE-SET,Telegram,📲 电报消息
+  - RULE-SET,BanProgramAD,🍃 应用净化
+  - GEOIP,CN,🎯 全球直连
+  - MATCH,🐟 漏网之鱼
