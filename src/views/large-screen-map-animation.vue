@@ -73,7 +73,7 @@ const load = async (three:{
       y: types.number(capsule.rotation.y, { range: [-2, 2] }),
       z: types.number(capsule.rotation.z, { range: [-2, 2] }),
     }),
-    texture: types.image('bayl.jpg', {
+    texture: types.image('yun.jpg', {
       label: 'Texture',
     }),
   },{
