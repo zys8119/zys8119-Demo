@@ -1,104 +1,11 @@
 {
   "sheetsById": {
-    "sheet": {
+    "My Sheet": {
       "staticOverrides": {
         "byObject": {
-          "obj": {
-            "left": {
-              "a": 50,
-              "rotate": 0
-            }
-          }
-        }
-      },
-      "sequence": {
-        "subUnitsPerUnit": 30,
-        "length": 10,
-        "type": "PositionalSequence",
-        "tracksByObject": {
-          "obj": {
-            "trackData": {
-              "wDAAxxlW5T": {
-                "type": "BasicKeyframedTrack",
-                "__debugName": "obj:[\"left\",\"a\"]",
-                "keyframes": [
-                  {
-                    "id": "kHiCgZ_AJR",
-                    "position": 0.033,
-                    "connectedRight": true,
-                    "handles": [
-                      0.5,
-                      1,
-                      0.5,
-                      0
-                    ],
-                    "type": "bezier",
-                    "value": 0
-                  },
-                  {
-                    "id": "PRgEnVam5z",
-                    "position": 1.533,
-                    "connectedRight": true,
-                    "handles": [
-                      0.5,
-                      1,
-                      0.5,
-                      0
-                    ],
-                    "type": "bezier",
-                    "value": 50
-                  }
-                ]
-              },
-              "EQZZgS81qt": {
-                "type": "BasicKeyframedTrack",
-                "__debugName": "obj:[\"left\",\"rotate\"]",
-                "keyframes": [
-                  {
-                    "id": "al_Wlt-NJ_",
-                    "position": 0,
-                    "connectedRight": true,
-                    "handles": [
-                      0.5,
-                      1,
-                      0.5,
-                      0
-                    ],
-                    "type": "bezier",
-                    "value": 0
-                  },
-                  {
-                    "id": "RLs5k_n-rc",
-                    "position": 0.6,
-                    "connectedRight": true,
-                    "handles": [
-                      0.5,
-                      1,
-                      0.5,
-                      0
-                    ],
-                    "type": "bezier",
-                    "value": 90
-                  },
-                  {
-                    "id": "NihNSTAu3o",
-                    "position": 1.533,
-                    "connectedRight": true,
-                    "handles": [
-                      0.5,
-                      1,
-                      0.5,
-                      0
-                    ],
-                    "type": "bezier",
-                    "value": 0
-                  }
-                ]
-              }
-            },
-            "trackIdByPropPath": {
-              "[\"left\",\"a\"]": "wDAAxxlW5T",
-              "[\"left\",\"rotate\"]": "EQZZgS81qt"
+          "Torus Knot": {
+            "rotation": {
+              "x": -0.8857905665974508
             }
           }
         }
@@ -107,6 +14,6 @@
   },
   "definitionVersion": "0.4.0",
   "revisionHistory": [
-    "bW7YMmftFmD_IvB5"
+    "mVfCopugKzJ1xBmE"
   ]
 }
