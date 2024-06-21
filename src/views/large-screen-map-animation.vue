@@ -7,11 +7,14 @@
 
 <script setup lang="ts" title="大屏地图动效">
 import BaseThree from "@/src/components/BaseThree";
-import {DirectionalLightHelper, CameraHelper, Scene, PerspectiveCamera, Light} from "three"
+import {DirectionalLightHelper, CameraHelper, Scene, PerspectiveCamera, Light, BufferGeometry} from "three"
 import * as THREE from "three"
 import studio from "@theatre/studio"
-import {getProject,types} from "@theatre/core"
+import {getProject, ISheetObject, types, UnknownShorthandCompoundProps,PropsValueTest} from "@theatre/core"
 import projectState from "./aaa.theatre-project-state.json"
+import {Material} from "three/src/materials/Material";
+import {Object3D} from "three/src/core/Object3D";
+
 if(import.meta.env.DEV){
   studio.initialize()
 }
@@ -32,6 +35,55 @@ const load = async (three:{
 })=>{
   await project.ready
   const {THREE,scene} = three
+  function createOBj<
+      V extends UnknownShorthandCompoundProps,
+  >(key:string, config:{
+    _geometry?: BufferGeometry
+    _material?: Material
+    _mesh?: Object3D
+    geometry(): BufferGeometry
+    material(): Material
+    mesh(geometry:BufferGeometry, material:Material): Object3D
+    objectConfig:(data:{
+      mesh: Object3D
+      material: Material
+      geometry: BufferGeometry
+    })=>({
+      values:V
+      change(values:V, data:any):void
+    })
+  }):Promise<{
+      mesh: Object3D
+      material: Material
+      geometry: BufferGeometry
+      object: ISheetObject<V>
+  }>
+  async function createOBj (key,config){
+    const geometry = config._geometry || await config.geometry?.();
+    const material = config._material || await config.material?.();
+    const mesh = config._mesh || await config.mesh?.(geometry, material);
+    scene.add(mesh)
+    const exprotData:{
+      mesh: Object3D
+      material: Material
+      geometry: BufferGeometry
+    } = {
+      mesh,
+      material,
+      geometry,
+    }
+    const objectConfig = await config.objectConfig(exprotData)
+    const object = sheet.object(key,objectConfig.values ,{
+      reconfigure:true
+    })
+    object.onValuesChange(values=>{
+      objectConfig.change(values, exprotData)
+    })
+    return {
+      ...exprotData,
+      object
+    }
+  }
   // 关闭灯光帮助
   three.lightHelper.visible = false
   // 关闭相机帮助
@@ -60,30 +112,45 @@ const load = async (three:{
   })
 
   // 地球
-  const geometry = new THREE.CapsuleGeometry( 2, 0, 50, 50 );
-  const material = new THREE.MeshLambertMaterial( {
-    color: 0x15204f,
-    clipShadows: true,
-  } );
-  const capsule = new THREE.Mesh( geometry, material ); scene.add( capsule );
-  scene.add(capsule)
-  sheet.object('地球', {
-    rotation: types.compound({
-      x: types.number(capsule.rotation.x, { range: [-2, 2] }),
-      y: types.number(capsule.rotation.y, { range: [-2, 2] }),
-      z: types.number(capsule.rotation.z, { range: [-2, 2] }),
-    }),
-    texture: types.image('yun.jpg', {
-      label: 'Texture',
-    }),
-  },{
-    reconfigure:true
-  }).onValuesChange((values) => {
-    const { x, y, z } = values.rotation
-    capsule.rotation.set(x * Math.PI, y * Math.PI, z * Math.PI)
-    material.setValues({
-      map: new THREE.TextureLoader().load(project.getAssetUrl(values.texture)),
-    })
+  const {object} = await createOBj("地球",{
+    geometry(){
+      return new THREE.CapsuleGeometry( 2, 0, 50, 50 )
+    },
+    material(){
+      return new THREE.MeshLambertMaterial( {
+        color: 0x15204f,
+        clipShadows: true,
+        transparent:true,
+      } )
+    },
+    mesh(geometry, material){
+      return new THREE.Mesh( geometry, material )
+    },
+    objectConfig({mesh}){
+      return {
+        values:{
+          rotation: types.compound({
+            x: types.number(mesh.rotation.x, { range: [-2, 2] }),
+            y: types.number(mesh.rotation.y, { range: [-2, 2] }),
+            z: types.number(mesh.rotation.z, { range: [-2, 2] }),
+          }),
+          texture: types.image('yun.jpg', {
+            label: 'Texture',
+          }),
+        },
+        change(values,{material}){
+          values
+          // const { x, y, z } = values.rotation
+          // mesh.rotation.set(x * Math.PI, y * Math.PI, z * Math.PI)
+          // material.setValues({
+          //   map: new THREE.TextureLoader().load(project.getAssetUrl(values.texture)),
+          // })
+        }
+      }
+    }
+  })
+  object.onValuesChange(values => {
+
   })
 }
 const animation = async ({scene}:{scene:Scene})=>{
