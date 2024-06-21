@@ -177,7 +177,6 @@ const load = async (three: {
           material: THREE.MeshLambertMaterial,
           geometry: THREE.BoxGeometry,
         }) {
-          console.log(values.color)
           data.material.setValues({
             color:color(values.color.toString()).rgbNumber()
           })
