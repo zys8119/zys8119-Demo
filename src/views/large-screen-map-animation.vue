@@ -15,6 +15,7 @@ import projectState from "./aaa.theatre-project-state.json"
 import {Material} from "three/src/materials/Material";
 import {Object3D} from "three/src/core/Object3D";
 import color from "color";
+import {geoMercator} from "d3-geo";
 
 if (import.meta.env.DEV) {
   studio.extend({
@@ -64,8 +65,8 @@ const load = async (three: {
   camera: PerspectiveCamera
   light: Light
 }) => {
-  await project.ready
   const {THREE, scene} = three
+  await project.ready
 
   function createOBj<
       V extends UnknownShorthandCompoundProps,
@@ -73,9 +74,9 @@ const load = async (three: {
     _geometry?: BufferGeometry
     _material?: Material
     _mesh?: Object3D
-    geometry?(): BufferGeometry
-    material?(): Material
-    mesh?(geometry: BufferGeometry, material: Material): Object3D
+    geometry?(): Promise<BufferGeometry> | BufferGeometry
+    material?(): Promise<Material> | Material
+    mesh?(geometry: BufferGeometry, material: Material): Promise<Object3D> | Object3D
     beforeCreate?(data: {
       mesh: Object3D
       material: Material
@@ -134,18 +135,32 @@ const load = async (three: {
   three.light.visible = false
   // 全局配置
   sheet.object('全局配置', {
-    zoom: types.number(290, {range: [-Infinity, Infinity]}),
-  }).onValuesChange(({zoom}) => {
-    scene.scale.set(zoom, zoom, zoom)
+    zoom: types.number(290),
+    camera:types.compound({
+      x: types.number(400),
+      y: types.number(400),
+      z: types.number(400),
+      fov: types.number(50),
+    },{label:"相机"}),
+    scene:types.compound({
+      x: types.number(0,{nudgeMultiplier:0.05}),
+      y: types.number(2.6,{nudgeMultiplier:0.05}),
+      z: types.number(0,{nudgeMultiplier:0.05}),
+    },{label:"场景旋转"})
+  }).onValuesChange((data) => {
+    scene.scale.set(data.zoom, data.zoom, data.zoom)
+    three.camera.position.set(data.camera.x,data.camera.y,data.camera.z)
+    three.scene.rotation.set(data.scene.x,data.scene.y,data.scene.z)
+    three.camera.fov = data.camera.fov
   })
   // 灯光
   const light = new THREE.HemisphereLight(0xffffff, 262);
   scene.add(light);
   sheet.object("灯光", {
-    x: types.number(61, {range: [-Infinity, Infinity]}),
-    y: types.number(2315, {range: [-Infinity, Infinity]}),
-    z: types.number(1734, {range: [-Infinity, Infinity]}),
-    intensity: types.number(30, {range: [-Infinity, Infinity]}),
+    x: types.number(61),
+    y: types.number(2315),
+    z: types.number(1734),
+    intensity: types.number(10),
   }).onValuesChange(({x, y, z, intensity}) => {
     light.position.set(x, y, z)
     light.intensity = intensity
@@ -166,9 +181,9 @@ const load = async (three: {
       return {
         values: {
           rotation: types.compound({
-            x: types.number(0, {range: [-Infinity, Infinity]}),
-            y: types.number(0, {range: [-Infinity, Infinity]}),
-            z: types.number(0, {range: [-Infinity, Infinity]}),
+            x: types.number(0),
+            y: types.number(0),
+            z: types.number(0),
           }),
           color:types.rgba(getRgba("#08113c"))
         },
@@ -181,6 +196,50 @@ const load = async (three: {
             color:color(values.color.toString()).rgbNumber()
           })
           data.mesh.rotation.set(values.rotation.x, values.rotation.y, values.rotation.z)
+        },
+      }
+    },
+  })
+  await createOBj("地球板块", {
+    geometry() {
+      return new THREE.CapsuleGeometry(1, 0, 50, 50)
+    },
+    material() {
+      return new THREE.MeshLambertMaterial({
+        transparent: true,
+      })
+    },
+    mesh(geometry, material) {
+      return new THREE.Mesh(geometry, material)
+    },
+    objectConfig() {
+      return {
+        values: {
+          rotation: types.compound({
+            x: types.number(0,{nudgeMultiplier:0.05}),
+            y: types.number(0,{nudgeMultiplier:0.05}),
+            z: types.number(0,{nudgeMultiplier:0.05}),
+          }),
+          opacity: types.number(0.5, { nudgeMultiplier:0.01}),
+          scale: types.number(1.01, { nudgeMultiplier:0.005}),
+          image: types.image('map.png', {label: 'Texture',}),
+          repeat: types.number(1),
+        },
+        change(values, data:{
+            mesh: Object3D
+            material: THREE.MeshLambertMaterial
+            geometry: BufferGeometry
+        }) {
+          data.mesh.rotation.set(values.rotation.x, values.rotation.y, values.rotation.z)
+          data.mesh.scale.set(values.scale, values.scale, values.scale)
+          const texture = new THREE.TextureLoader().load(project.getAssetUrl(values.image))
+          texture.wrapS = THREE.MirroredRepeatWrapping
+          texture.wrapT = THREE.MirroredRepeatWrapping
+          texture.repeat = new THREE.Vector2(values.repeat, values.repeat)
+          data.material.setValues({
+            map:texture,
+            opacity:values.opacity
+          })
         },
       }
     },
@@ -201,12 +260,12 @@ const load = async (three: {
       return {
         values: {
           rotation: types.compound({
-            x: types.number(0, {range: [-Infinity, Infinity]}),
-            y: types.number(0, {range: [-Infinity, Infinity]}),
-            z: types.number(0, {range: [-Infinity, Infinity]}),
+            x: types.number(0),
+            y: types.number(0),
+            z: types.number(0),
           }),
-          opacity: types.number(0.5, {range: [-Infinity, Infinity], nudgeMultiplier:0.01}),
-          scale: types.number(1.01, {range: [-Infinity, Infinity], nudgeMultiplier:0.005}),
+          opacity: types.number(0.5, { nudgeMultiplier:0.01}),
+          scale: types.number(1.02, { nudgeMultiplier:0.005}),
           image: types.image('yun.png', {label: 'Texture',}),
           repeat: types.number(3),
         },
@@ -225,6 +284,109 @@ const load = async (three: {
             map:texture,
             opacity:values.opacity
           })
+        },
+      }
+    },
+  })
+  await createOBj("中国地图", {
+    geometry() {
+      return new THREE.CapsuleGeometry(1, 0, 50, 50)
+    },
+    material() {
+      return new THREE.MeshLambertMaterial({
+        transparent: true,
+      })
+    },
+    async mesh() {
+      const json = await fetch('./images/map/china.json').then(res => res.json())
+      const mapDepth = 0.3
+      const mapGroup: any = new THREE.Group()
+      const projection = geoMercator()
+          // 地图中心位置
+          .center([121.539698, 29.874452])
+          // 地图缩放
+          .scale(1)
+          .translate([0, 0])
+      await Promise.all(json.features.map(async elem=>{
+        const province: any = new THREE.Group()
+        const coordinatesGroup: any = new THREE.Group()
+        const coordinates = elem.geometry.coordinates
+        coordinates.forEach((multiPolygon) => {
+          if (typeof multiPolygon[0][0] === 'number') {
+            multiPolygon = [multiPolygon as any]
+          }
+          multiPolygon.forEach((polygon) => {
+            // 这里的坐标要做2次使用：1次用来构建模型，1次用来构建轮廓线
+            const linGeometry = new THREE.BufferGeometry()
+            const points = []
+            const shape = new THREE.Shape()
+            for (let i = 0; i < polygon.length; i++) {
+              const [x, y] = projection(polygon[i] as any) as number[]
+              if (i === 0) {
+                shape.moveTo(x, -y)
+              }
+              shape.lineTo(x, -y)
+              points.push(new THREE.Vector3(x, -y, mapDepth + 0.002))
+            }
+            linGeometry.setFromPoints(points)
+            // 边界线
+            const line = new THREE.Line(linGeometry)
+            coordinatesGroup.add(line)
+            // 土地
+            const geometry = new THREE.ExtrudeGeometry(shape, {
+              bevelEnabled: false,
+              bevelSegments: 1,
+              depth:mapDepth,
+            })
+            const mesh = new THREE.Mesh(geometry)
+            mesh.name = 'map'
+            coordinatesGroup.add(mesh)
+          })
+          province.add(coordinatesGroup)
+        })
+        mapGroup.add(province)
+      }))
+      mapGroup.traverse((object3d:THREE.Mesh)=>{
+        if(object3d.name === 'map'){
+          object3d.material = new THREE.MeshPhongMaterial({
+            color:new THREE.Color("#969696"),
+            // bumpMap:mapTexture,
+            bumpScale:5,
+            combine:THREE.AddOperation,
+            flatShading:true,
+            // map:mapTexture,
+            // emissiveMap:mapTexture,
+            // alphaMap:mapTexture,
+          })
+          object3d.castShadow = true
+          object3d.receiveShadow = true
+        }
+      })
+      return mapGroup
+    },
+    objectConfig() {
+      return {
+        values: {
+          scale: types.number(1.065, { nudgeMultiplier:0.0005}),
+          rotation: types.compound({
+            x: types.number(1.295, { nudgeMultiplier:0.0005}),
+            y: types.number(4.315, { nudgeMultiplier:0.0005}),
+            z: types.number(1.47, { nudgeMultiplier:0.0005}),
+          }),
+          position: types.compound({
+            x: types.number(-0.9, { nudgeMultiplier:0.0005}),
+            y: types.number(0.415, { nudgeMultiplier:0.0005}),
+            z: types.number(0.19, { nudgeMultiplier:0.0005}),
+          }),
+        },
+        change(values, data:{
+            mesh: Object3D
+            material: THREE.MeshLambertMaterial
+            geometry: BufferGeometry
+        }) {
+          data.mesh.position.set(values.position.x, values.position.y, values.position.z)
+          data.mesh.rotation.set(values.rotation.x, values.rotation.y, values.rotation.z)
+          data.mesh.scale.set(values.scale, values.scale, values.scale)
         },
       }
     },
