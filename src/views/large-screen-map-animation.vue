@@ -95,8 +95,8 @@ const load = async (three: {
       values?: V
       change?(values: any, data: {
         mesh: Object3D
-        material: Material
-        geometry: BufferGeometry
+        material?: Material
+        geometry?: BufferGeometry
       }): void
     }
   }): Promise<{
@@ -134,7 +134,7 @@ const load = async (three: {
   }
 
   // 关闭灯光帮助
-  three.lightHelper.visible = false
+  // three.lightHelper.visible = false
   // 关闭相机帮助
   three.cameraHelper.visible = false
   three.light.visible = false
@@ -158,23 +158,53 @@ const load = async (three: {
     three.scene.rotation.set(data.scene.x,data.scene.y,data.scene.z)
     three.camera.fov = data.camera.fov
   })
-  // 灯光
-  const light = new THREE.HemisphereLight(0xffffff, 262);
-  // const light = new THREE.PointLight(0xffffff,  1, 100 );
-  light.receiveShadow = true
-  light.castShadow = true
-  scene.add(light);
-  const light1 = new THREE.DirectionalLight( 0xffffff, 3 );
-  light1.position.set( 0, 200, 0 );
-  scene.add( light1 );
-  sheet.object("灯光", {
-    x: types.number(61),
-    y: types.number(2315),
-    z: types.number(1734),
-    intensity: types.number(10),
-  }).onValuesChange(({x, y, z, intensity}) => {
-    light.position.set(x, y, z)
-    light.intensity = intensity
+  await createOBj("半球灯光",{
+    mesh() {
+      const light = new THREE.HemisphereLight(0xffffff, 262);
+      light.receiveShadow = true
+      light.castShadow = true
+      return light as any
+    },
+    objectConfig() {
+        return {
+          values:{
+            x: types.number(61),
+            y: types.number(2315),
+            z: types.number(1734),
+            intensity: types.number(10),
+          },
+          change(values, data:{
+            mesh:THREE.HemisphereLight
+          }) {
+            data.mesh.position.set(values.x, values.y, values.z)
+            data.mesh.intensity = values.intensity
+          },
+        }
+    },
+  })
+  await createOBj("平行光",{
+    mesh() {
+      const light = new THREE.DirectionalLight( 0xffffff, 3 );
+      light.receiveShadow = true
+      light.castShadow = true
+      return light as any
+    },
+    objectConfig() {
+        return {
+          values:{
+            x: types.number(-83),
+            y: types.number(4267),
+            z: types.number(-1123),
+            intensity: types.number(3),
+          },
+          change(values, data:{
+            mesh:THREE.HemisphereLight
+          }) {
+            data.mesh.position.set(values.x, values.y, values.z)
+            data.mesh.intensity = values.intensity
+          },
+        }
+    },
   })
 
   // 地球
@@ -371,7 +401,7 @@ const load = async (three: {
             emissive: 0x000000, // 纯色
             metalness: 0.0,  // 完全金属
             roughness: 0.0,  // 完全光滑
-            // lightMap: texture   // 使用环境贴图
+            lightMap: texture   // 使用环境贴图
           });
           object3d.castShadow = true
           object3d.receiveShadow = true
