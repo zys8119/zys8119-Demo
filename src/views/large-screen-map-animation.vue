@@ -10,12 +10,13 @@ import BaseThree from "@/src/components/BaseThree";
 import {DirectionalLightHelper, CameraHelper, Scene, PerspectiveCamera, Light, BufferGeometry} from "three"
 import * as THREE from "three"
 import studio from "@theatre/studio"
-import {getProject, ISheetObject, types, UnknownShorthandCompoundProps} from "@theatre/core"
+import {getProject, ISheet, ISheetObject, types, UnknownShorthandCompoundProps} from "@theatre/core"
 import {Material} from "three/src/materials/Material";
 import {Object3D} from "three/src/core/Object3D";
 import color from "color";
 import {geoMercator} from "d3-geo";
 import theatreProjectState from "./theatre-project-state.json";
+import {Texture} from "three/src/textures/Texture";
 
 if (import.meta.env.DEV) {
   studio.extend({
@@ -51,6 +52,7 @@ const project = getProject('大屏地图动效', {
   }
 })
 const sheet = project.sheet('地图')
+const yunSheet = project.sheet('云层')
 const getRgba = (_color:string)=>({
   r:color(_color).object().r/255,
   g:color(_color).object().g/255,
@@ -64,16 +66,19 @@ const load = async (three: {
   scene: Scene
   camera: PerspectiveCamera
   light: Light
+  downloadImagesTexture(url: string, imageName?: string): Texture
 }) => {
   const {THREE, scene} = three
   await project.ready
   sheet.sequence.play()
+  yunSheet.sequence.play()
   function createOBj<
       V extends UnknownShorthandCompoundProps,
   >(key: string, config: {
     _geometry?: BufferGeometry
     _material?: Material
     _mesh?: Object3D
+    sheet?: ISheet
     geometry?(): Promise<BufferGeometry> | BufferGeometry
     material?(): Promise<Material> | Material
     mesh?(geometry: BufferGeometry, material: Material): Promise<Object3D> | Object3D
@@ -116,7 +121,7 @@ const load = async (three: {
     }
     await config.beforeCreate?.(exprotData)
     const objectConfig = await config.objectConfig?.(exprotData) || {}
-    const object = sheet.object(key, objectConfig.values || {}, {
+    const object = (config.sheet || sheet).object(key, objectConfig.values || {}, {
       reconfigure: true
     })
     object.onValuesChange(values => {
@@ -200,6 +205,51 @@ const load = async (three: {
       }
     },
   })
+  await createOBj("云层", {
+    sheet:yunSheet,
+    geometry() {
+      return new THREE.CapsuleGeometry(1, 0, 50, 50)
+    },
+    material() {
+      return new THREE.MeshLambertMaterial({
+        transparent: true,
+      })
+    },
+    mesh(geometry, material) {
+      return new THREE.Mesh(geometry, material)
+    },
+    objectConfig() {
+      return {
+        values: {
+          rotation: types.compound({
+            x: types.number(0),
+            y: types.number(0),
+            z: types.number(0),
+          }),
+          opacity: types.number(0.5, { nudgeMultiplier:0.01}),
+          scale: types.number(1.02, { nudgeMultiplier:0.005}),
+          image: types.image('yun.png', {label: 'Texture',}),
+          repeat: types.number(3),
+        },
+        change(values, data:{
+          mesh: Object3D
+          material: THREE.MeshLambertMaterial
+          geometry: BufferGeometry
+        }) {
+          data.mesh.rotation.set(values.rotation.x, values.rotation.y, values.rotation.z)
+          data.mesh.scale.set(values.scale, values.scale, values.scale)
+          const texture = three.downloadImagesTexture(project.getAssetUrl(values.image),project.getAssetUrl(values.image)).clone()
+          texture.wrapS = THREE.MirroredRepeatWrapping
+          texture.wrapT = THREE.MirroredRepeatWrapping
+          texture.repeat = new THREE.Vector2(values.repeat, values.repeat)
+          data.material.setValues({
+            map:texture,
+            opacity:values.opacity
+          })
+        },
+      }
+    },
+  })
   await createOBj("地球板块", {
     geometry() {
       return new THREE.CapsuleGeometry(1, 0, 50, 50)
@@ -224,50 +274,6 @@ const load = async (three: {
           scale: types.number(1.01, { nudgeMultiplier:0.005}),
           image: types.image('map.png', {label: 'Texture',}),
           repeat: types.number(1),
-        },
-        change(values, data:{
-            mesh: Object3D
-            material: THREE.MeshLambertMaterial
-            geometry: BufferGeometry
-        }) {
-          data.mesh.rotation.set(values.rotation.x, values.rotation.y, values.rotation.z)
-          data.mesh.scale.set(values.scale, values.scale, values.scale)
-          const texture = new THREE.TextureLoader().load(project.getAssetUrl(values.image))
-          texture.wrapS = THREE.MirroredRepeatWrapping
-          texture.wrapT = THREE.MirroredRepeatWrapping
-          texture.repeat = new THREE.Vector2(values.repeat, values.repeat)
-          data.material.setValues({
-            map:texture,
-            opacity:values.opacity
-          })
-        },
-      }
-    },
-  })
-  await createOBj("云层", {
-    geometry() {
-      return new THREE.CapsuleGeometry(1, 0, 50, 50)
-    },
-    material() {
-      return new THREE.MeshLambertMaterial({
-        transparent: true,
-      })
-    },
-    mesh(geometry, material) {
-      return new THREE.Mesh(geometry, material)
-    },
-    objectConfig() {
-      return {
-        values: {
-          rotation: types.compound({
-            x: types.number(0),
-            y: types.number(0),
-            z: types.number(0),
-          }),
-          opacity: types.number(0.5, { nudgeMultiplier:0.01}),
-          scale: types.number(1.02, { nudgeMultiplier:0.005}),
-          image: types.image('yun.png', {label: 'Texture',}),
-          repeat: types.number(3),
         },
         change(values, data:{
             mesh: Object3D

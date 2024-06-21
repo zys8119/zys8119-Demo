@@ -279,10 +279,74 @@
           }
         }
       }
+    },
+    "云层": {
+      "staticOverrides": {
+        "byObject": {}
+      },
+      "sequence": {
+        "subUnitsPerUnit": 30,
+        "length": 554.7,
+        "type": "PositionalSequence",
+        "tracksByObject": {
+          "云层": {
+            "trackData": {
+              "bkx45kPuVw": {
+                "type": "BasicKeyframedTrack",
+                "__debugName": "云层:[\"rotation\",\"x\"]",
+                "keyframes": []
+              },
+              "4JPF0CLuFH": {
+                "type": "BasicKeyframedTrack",
+                "__debugName": "云层:[\"rotation\",\"y\"]",
+                "keyframes": [
+                  {
+                    "id": "S2TfTXXwwV",
+                    "position": 0,
+                    "connectedRight": true,
+                    "handles": [
+                      0.5,
+                      1,
+                      0.5,
+                      0.5
+                    ],
+                    "type": "bezier",
+                    "value": 0
+                  },
+                  {
+                    "id": "niuuwKUMcI",
+                    "position": 552.233,
+                    "connectedRight": true,
+                    "handles": [
+                      0.5,
+                      0.5,
+                      0.5,
+                      0
+                    ],
+                    "type": "bezier",
+                    "value": 6.283185307179586
+                  }
+                ]
+              },
+              "ARtV4s0eZq": {
+                "type": "BasicKeyframedTrack",
+                "__debugName": "云层:[\"rotation\",\"z\"]",
+                "keyframes": []
+              }
+            },
+            "trackIdByPropPath": {
+              "[\"rotation\",\"x\"]": "bkx45kPuVw",
+              "[\"rotation\",\"y\"]": "4JPF0CLuFH",
+              "[\"rotation\",\"z\"]": "ARtV4s0eZq"
+            }
+          }
+        }
+      }
     }
   },
   "definitionVersion": "0.4.0",
   "revisionHistory": [
+    "8Wipqdrc8iLAUfCO",
     "X5rZQG9Hp-TRI5z3",
     "mVfCopugKzJ1xBmE"
   ]
