@@ -11,11 +11,11 @@ import {DirectionalLightHelper, CameraHelper, Scene, PerspectiveCamera, Light, B
 import * as THREE from "three"
 import studio from "@theatre/studio"
 import {getProject, ISheetObject, types, UnknownShorthandCompoundProps} from "@theatre/core"
-import projectState from "./aaa.theatre-project-state.json"
 import {Material} from "three/src/materials/Material";
 import {Object3D} from "three/src/core/Object3D";
 import color from "color";
 import {geoMercator} from "d3-geo";
+import theatreProjectState from "./theatre-project-state.json";
 
 if (import.meta.env.DEV) {
   studio.extend({
@@ -45,7 +45,7 @@ if (import.meta.env.DEV) {
   studio.initialize()
 }
 const project = getProject('大屏地图动效', {
-  state: projectState,
+  state: theatreProjectState,
   assets: {
     baseUrl: "./images/map"
   }
@@ -67,7 +67,7 @@ const load = async (three: {
 }) => {
   const {THREE, scene} = three
   await project.ready
-
+  sheet.sequence.play()
   function createOBj<
       V extends UnknownShorthandCompoundProps,
   >(key: string, config: {
@@ -135,17 +135,17 @@ const load = async (three: {
   three.light.visible = false
   // 全局配置
   sheet.object('全局配置', {
-    zoom: types.number(290),
+    zoom: types.number(554.9,{nudgeMultiplier:0.05}),
     camera:types.compound({
-      x: types.number(400),
-      y: types.number(400),
-      z: types.number(400),
-      fov: types.number(50),
+      fov: types.number(50,{nudgeMultiplier:0.05}),
+      x: types.number(508.95,{nudgeMultiplier:0.05}),
+      y: types.number(325.9,{nudgeMultiplier:0.05}),
+      z: types.number(238.45,{nudgeMultiplier:0.05}),
     },{label:"相机"}),
     scene:types.compound({
-      x: types.number(0,{nudgeMultiplier:0.05}),
-      y: types.number(2.6,{nudgeMultiplier:0.05}),
-      z: types.number(0,{nudgeMultiplier:0.05}),
+      x: types.number(-0.185,{nudgeMultiplier:0.005}),
+      y: types.number(2.495,{nudgeMultiplier:0.005}),
+      z: types.number(0,{nudgeMultiplier:0.005}),
     },{label:"场景旋转"})
   }).onValuesChange((data) => {
     scene.scale.set(data.zoom, data.zoom, data.zoom)
@@ -299,7 +299,7 @@ const load = async (three: {
     },
     async mesh() {
       const json = await fetch('./images/map/china.json').then(res => res.json())
-      const mapDepth = 0.3
+      const mapDepth = 0.4
       const mapGroup: any = new THREE.Group()
       const projection = geoMercator()
           // 地图中心位置
@@ -367,16 +367,16 @@ const load = async (three: {
     objectConfig() {
       return {
         values: {
-          scale: types.number(1.065, { nudgeMultiplier:0.0005}),
+          scale: types.number(1.009, { nudgeMultiplier:0.0005}),
           rotation: types.compound({
-            x: types.number(1.295, { nudgeMultiplier:0.0005}),
-            y: types.number(4.315, { nudgeMultiplier:0.0005}),
-            z: types.number(1.47, { nudgeMultiplier:0.0005}),
+            x: types.number(1.289, { nudgeMultiplier:0.0005}),
+            y: types.number(4.09, { nudgeMultiplier:0.0005}),
+            z: types.number(1.508, { nudgeMultiplier:0.0005}),
           }),
           position: types.compound({
-            x: types.number(-0.9, { nudgeMultiplier:0.0005}),
-            y: types.number(0.415, { nudgeMultiplier:0.0005}),
-            z: types.number(0.19, { nudgeMultiplier:0.0005}),
+            x: types.number(-0.661, { nudgeMultiplier:0.0005}),
+            y: types.number(0.247, { nudgeMultiplier:0.0005}),
+            z: types.number(0.229, { nudgeMultiplier:0.0005}),
           }),
         },
         change(values, data:{
