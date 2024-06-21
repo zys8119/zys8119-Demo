@@ -71,7 +71,7 @@ const load = async (three: {
   const {THREE, scene} = three
   await project.ready
   sheet.sequence.play()
-  yunSheet.sequence.play()
+  yunSheet.sequence.play({iterationCount:Infinity})
   function createOBj<
       V extends UnknownShorthandCompoundProps,
   >(key: string, config: {
