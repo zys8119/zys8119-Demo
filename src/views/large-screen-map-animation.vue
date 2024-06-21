@@ -355,7 +355,7 @@ const load = async (three: {
       mapGroup.traverse((object3d:THREE.Mesh)=>{
         if(object3d.name === 'map'){
           object3d.material = new THREE.MeshPhongMaterial({
-            color:new THREE.Color("#969696"),
+            color:new THREE.Color("#5e62da"),
             // bumpMap:mapTexture,
             bumpScale:5,
             combine:THREE.AddOperation,
