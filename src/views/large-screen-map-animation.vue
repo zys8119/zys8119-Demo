@@ -136,7 +136,7 @@ const load = async (three: {
   // 关闭灯光帮助
   // three.lightHelper.visible = false
   // 关闭相机帮助
-  three.cameraHelper.visible = false
+  // three.cameraHelper.visible = false
   three.light.visible = false
   // 全局配置
   sheet.object('全局配置', {
@@ -184,9 +184,7 @@ const load = async (three: {
   })
   await createOBj("平行光",{
     mesh() {
-      const light = new THREE.DirectionalLight( 0xffffff, 3 );
-      light.receiveShadow = true
-      light.castShadow = true
+      const light = new THREE.DirectionalLight( 0xffffff, 3);
       return light as any
     },
     objectConfig() {
@@ -401,7 +399,7 @@ const load = async (three: {
             emissive: 0x000000, // 纯色
             metalness: 0.0,  // 完全金属
             roughness: 0.0,  // 完全光滑
-            lightMap: texture   // 使用环境贴图
+            map: texture   // 使用环境贴图
           });
           object3d.castShadow = true
           object3d.receiveShadow = true
