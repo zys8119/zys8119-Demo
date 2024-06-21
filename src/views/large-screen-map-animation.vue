@@ -160,7 +160,13 @@ const load = async (three: {
   })
   // 灯光
   const light = new THREE.HemisphereLight(0xffffff, 262);
+  // const light = new THREE.PointLight(0xffffff,  1, 100 );
+  light.receiveShadow = true
+  light.castShadow = true
   scene.add(light);
+  const light1 = new THREE.DirectionalLight( 0xffffff, 3 );
+  light1.position.set( 0, 200, 0 );
+  scene.add( light1 );
   sheet.object("灯光", {
     x: types.number(61),
     y: types.number(2315),
@@ -354,16 +360,19 @@ const load = async (three: {
       }))
       mapGroup.traverse((object3d:THREE.Mesh)=>{
         if(object3d.name === 'map'){
-          object3d.material = new THREE.MeshPhongMaterial({
-            color:new THREE.Color("#5e62da"),
-            // bumpMap:mapTexture,
-            bumpScale:5,
-            combine:THREE.AddOperation,
-            flatShading:true,
-            // map:mapTexture,
-            // emissiveMap:mapTexture,
-            // alphaMap:mapTexture,
-          })
+          // object3d.material = new THREE.MeshMatcapMaterial({
+          //   color:new THREE.Color("#5e62da"),
+          //   matcap:three.downloadImagesTexture('./images/map/matcap-porcelain-white.jpg','matcap-porcelain-white.jpg').clone(),
+          //   alphaMap:three.downloadImagesTexture('./images/map/alphaMap.jpg','alphaMap.jpg').clone(),
+          // })
+          const texture = three.downloadImagesTexture('./images/map/matcap-porcelain-white.jpg','alphaMap.jpg').clone()
+          object3d.material = new THREE.MeshStandardMaterial({
+            color: 0x5e62da, // 纯色
+            emissive: 0x000000, // 纯色
+            metalness: 0.0,  // 完全金属
+            roughness: 0.0,  // 完全光滑
+            // lightMap: texture   // 使用环境贴图
+          });
           object3d.castShadow = true
           object3d.receiveShadow = true
         }
