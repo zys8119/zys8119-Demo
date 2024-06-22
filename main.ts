@@ -23,11 +23,6 @@ app.config.errorHandler = (err)=>{
 import vueConsolePlug from "vue-console-plug"
 import vueConsolePlugConfigs from "./logConfig"
 
-import "questions-render/style.css"
-import editor from "questions-render/editor"
-editor()
-import AA from "questions-render"
-app.use(AA)
 
 app.use(vueConsolePlug, vueConsolePlugConfigs)
 import AutoConfig from "vitejs-plugin-config-auto-import"
