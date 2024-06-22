@@ -1,0 +1,289 @@
+{
+  "sheetsById": {
+    "My Sheet": {
+      "staticOverrides": {
+        "byObject": {
+          "Torus Knot": {
+            "rotation": {
+              "x": -0.8857905665974508
+            }
+          }
+        }
+      }
+    },
+    "地图": {
+      "staticOverrides": {
+        "byObject": {}
+      },
+      "sequence": {
+        "subUnitsPerUnit": 30,
+        "length": 10,
+        "type": "PositionalSequence",
+        "tracksByObject": {
+          "全局配置": {
+            "trackData": {
+              "3EmUAm3R-0": {
+                "type": "BasicKeyframedTrack",
+                "__debugName": "全局配置:[\"zoom\"]",
+                "keyframes": [
+                  {
+                    "id": "_EuyrCwvwv",
+                    "position": 0,
+                    "connectedRight": true,
+                    "handles": [
+                      0.5,
+                      1,
+                      0.587,
+                      0.826
+                    ],
+                    "type": "bezier",
+                    "value": 554.9
+                  },
+                  {
+                    "id": "GXcLm7DX69",
+                    "position": 3.967,
+                    "connectedRight": true,
+                    "handles": [
+                      0,
+                      1.021,
+                      0.5,
+                      0
+                    ],
+                    "type": "bezier",
+                    "value": 295.750000000001
+                  }
+                ]
+              },
+              "foWueOXk0N": {
+                "type": "BasicKeyframedTrack",
+                "__debugName": "全局配置:[\"scene\",\"x\"]",
+                "keyframes": [
+                  {
+                    "id": "x8PSwMdFdk",
+                    "position": 0,
+                    "connectedRight": true,
+                    "handles": [
+                      0.5,
+                      1,
+                      0.5,
+                      0
+                    ],
+                    "type": "bezier",
+                    "value": -0.185
+                  },
+                  {
+                    "id": "OtKuRUwAgp",
+                    "position": 3.967,
+                    "connectedRight": true,
+                    "handles": [
+                      0.5,
+                      1,
+                      0.5,
+                      0
+                    ],
+                    "type": "bezier",
+                    "value": -0.4950000000000002
+                  }
+                ]
+              },
+              "Zct94fQ6D_": {
+                "type": "BasicKeyframedTrack",
+                "__debugName": "全局配置:[\"scene\",\"y\"]",
+                "keyframes": [
+                  {
+                    "id": "77IHOJfmlN",
+                    "position": 0,
+                    "connectedRight": true,
+                    "handles": [
+                      0.5,
+                      1,
+                      0.5,
+                      0
+                    ],
+                    "type": "bezier",
+                    "value": 2.495
+                  },
+                  {
+                    "id": "-N2W9vKmMB",
+                    "position": 3.967,
+                    "connectedRight": true,
+                    "handles": [
+                      0.5,
+                      1,
+                      0.5,
+                      0
+                    ],
+                    "type": "bezier",
+                    "value": 2.075000000000004
+                  }
+                ]
+              },
+              "AK0j01Y5k1": {
+                "type": "BasicKeyframedTrack",
+                "__debugName": "全局配置:[\"scene\",\"z\"]",
+                "keyframes": [
+                  {
+                    "id": "Df1Kv_0-UY",
+                    "position": 0,
+                    "connectedRight": true,
+                    "handles": [
+                      0.5,
+                      1,
+                      0.5,
+                      0
+                    ],
+                    "type": "bezier",
+                    "value": 0
+                  },
+                  {
+                    "id": "jTeEiZ9HBe",
+                    "position": 3.967,
+                    "connectedRight": true,
+                    "handles": [
+                      0.5,
+                      1,
+                      0.5,
+                      0
+                    ],
+                    "type": "bezier",
+                    "value": -0.3300000000000001
+                  }
+                ]
+              },
+              "3DNYH7O5b8": {
+                "type": "BasicKeyframedTrack",
+                "__debugName": "全局配置:[\"camera\",\"x\"]",
+                "keyframes": [
+                  {
+                    "id": "Pa1p6vOJkQ",
+                    "position": 0,
+                    "connectedRight": true,
+                    "handles": [
+                      0.5,
+                      1,
+                      0.5,
+                      0
+                    ],
+                    "type": "bezier",
+                    "value": 508.95
+                  },
+                  {
+                    "id": "NQF7pvIMMy",
+                    "position": 3.967,
+                    "connectedRight": true,
+                    "handles": [
+                      0.5,
+                      1,
+                      0.5,
+                      0
+                    ],
+                    "type": "bezier",
+                    "value": 183.8499999999989
+                  }
+                ]
+              },
+              "UQ5ROWzbdH": {
+                "type": "BasicKeyframedTrack",
+                "__debugName": "全局配置:[\"camera\",\"y\"]",
+                "keyframes": [
+                  {
+                    "id": "rj-LTkXmQN",
+                    "position": 0,
+                    "connectedRight": true,
+                    "handles": [
+                      0.5,
+                      1,
+                      0.5,
+                      0
+                    ],
+                    "type": "bezier",
+                    "value": 325.9
+                  },
+                  {
+                    "id": "9KGZgSCXqH",
+                    "position": 3.967,
+                    "connectedRight": true,
+                    "handles": [
+                      0.5,
+                      1,
+                      0.5,
+                      0
+                    ],
+                    "type": "bezier",
+                    "value": 367.8999999999994
+                  }
+                ]
+              },
+              "TG43B0oOLt": {
+                "type": "BasicKeyframedTrack",
+                "__debugName": "全局配置:[\"camera\",\"z\"]",
+                "keyframes": [
+                  {
+                    "id": "GoR5Sghmwe",
+                    "position": 0,
+                    "connectedRight": true,
+                    "handles": [
+                      0.5,
+                      1,
+                      0.5,
+                      0
+                    ],
+                    "type": "bezier",
+                    "value": 238.45
+                  },
+                  {
+                    "id": "-e3MTsFSfE",
+                    "position": 3.967,
+                    "connectedRight": true,
+                    "handles": [
+                      0.5,
+                      1,
+                      0.5,
+                      0
+                    ],
+                    "type": "bezier",
+                    "value": 167.64999999999984
+                  }
+                ]
+              },
+              "4-5zfb6LCK": {
+                "type": "BasicKeyframedTrack",
+                "__debugName": "全局配置:[\"camera\",\"fov\"]",
+                "keyframes": [
+                  {
+                    "id": "oskq373aC8",
+                    "position": 3.967,
+                    "connectedRight": true,
+                    "handles": [
+                      0.5,
+                      1,
+                      0.5,
+                      0
+                    ],
+                    "type": "bezier",
+                    "value": 50
+                  }
+                ]
+              }
+            },
+            "trackIdByPropPath": {
+              "[\"zoom\"]": "3EmUAm3R-0",
+              "[\"scene\",\"x\"]": "foWueOXk0N",
+              "[\"scene\",\"y\"]": "Zct94fQ6D_",
+              "[\"scene\",\"z\"]": "AK0j01Y5k1",
+              "[\"camera\",\"x\"]": "3DNYH7O5b8",
+              "[\"camera\",\"y\"]": "UQ5ROWzbdH",
+              "[\"camera\",\"z\"]": "TG43B0oOLt",
+              "[\"camera\",\"fov\"]": "4-5zfb6LCK"
+            }
+          }
+        }
+      }
+    }
+  },
+  "definitionVersion": "0.4.0",
+  "revisionHistory": [
+    "X5rZQG9Hp-TRI5z3",
+    "mVfCopugKzJ1xBmE"
+  ]
+}

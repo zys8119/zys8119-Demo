@@ -7,86 +7,435 @@
 
 <script setup lang="ts" title="大屏地图动效">
 import BaseThree from "@/src/components/BaseThree";
-import {DirectionalLightHelper, CameraHelper, Scene, PerspectiveCamera, Light} from "three"
+import {DirectionalLightHelper, CameraHelper, Scene, PerspectiveCamera, Light, BufferGeometry} from "three"
 import * as THREE from "three"
 import studio from "@theatre/studio"
-import {getProject,types} from "@theatre/core"
-import projectState from "./aaa.theatre-project-state.json"
-if(import.meta.env.DEV){
+import {getProject, ISheet, ISheetObject, types, UnknownShorthandCompoundProps} from "@theatre/core"
+import {Material} from "three/src/materials/Material";
+import {Object3D} from "three/src/core/Object3D";
+import color from "color";
+import {geoMercator} from "d3-geo";
+import theatreProjectState from "./theatre-project-state.json";
+import {Texture} from "three/src/textures/Texture";
+
+if (import.meta.env.DEV) {
+  studio.extend({
+    id: 'hello-world-extension',
+    toolbars: {
+      global(set, studio) {
+        set([
+          {
+            type: 'Icon',
+            title: '清除本地缓存',
+            svgSource: 'clear',
+            onClick: () => localStorage.clear(),
+          },
+        ])
+      },
+    },
+    panes: [
+      {
+        class: 'example',
+        mount({paneId, node}) {
+          node.innerText = 'Hello World'
+          return () => console.log('pane closed!')
+        },
+      },
+    ],
+  })
   studio.initialize()
 }
-const project = getProject('大屏地图动效',{
-  state:projectState,
-  assets:{
-    baseUrl:"./images/map"
+const project = getProject('大屏地图动效', {
+  state: theatreProjectState,
+  assets: {
+    baseUrl: "./images/map"
   }
 })
 const sheet = project.sheet('地图')
-const load = async (three:{
-  lightHelper:DirectionalLightHelper
-  cameraHelper:CameraHelper
-  THREE:typeof THREE
-  scene:Scene
-  camera:PerspectiveCamera
-  light:Light
-})=>{
+const yunSheet = project.sheet('云层')
+const getRgba = (_color:string)=>({
+  r:color(_color).object().r/255,
+  g:color(_color).object().g/255,
+  b:color(_color).object().b/255,
+  a:color(_color).alpha()/255
+})
+const load = async (three: {
+  lightHelper: DirectionalLightHelper
+  cameraHelper: CameraHelper
+  THREE: typeof THREE
+  scene: Scene
+  camera: PerspectiveCamera
+  light: Light
+  downloadImagesTexture(url: string, imageName?: string): Texture
+}) => {
+  const {THREE, scene} = three
   await project.ready
-  const {THREE,scene} = three
+  sheet.sequence.play()
+  yunSheet.sequence.play({iterationCount:Infinity})
+  function createOBj<
+      V extends UnknownShorthandCompoundProps,
+  >(key: string, config: {
+    _geometry?: BufferGeometry
+    _material?: Material
+    _mesh?: Object3D
+    sheet?: ISheet
+    geometry?(): Promise<BufferGeometry> | BufferGeometry
+    material?(): Promise<Material> | Material
+    mesh?(geometry: BufferGeometry, material: Material): Promise<Object3D> | Object3D
+    beforeCreate?(data: {
+      mesh: Object3D
+      material: Material
+      geometry: BufferGeometry
+    }): void
+    objectConfig?(data: {
+      mesh: Object3D
+      material: Material
+      geometry: BufferGeometry
+    }): {
+      values?: V
+      change?(values: any, data: {
+        mesh: Object3D
+        material?: Material
+        geometry?: BufferGeometry
+      }): void
+    }
+  }): Promise<{
+    mesh: Object3D
+    material: Material
+    geometry: BufferGeometry
+    object: ISheetObject<V>
+  }>
+  async function createOBj(key, config) {
+    const geometry = config._geometry || config._mesh?.geometry || await config.geometry?.();
+    const material = config._material || config._mesh?.material || await config.material?.();
+    const mesh = config._mesh || await config.mesh?.(geometry, material);
+    scene.add(mesh)
+    const exprotData: {
+      mesh: Object3D
+      material: Material
+      geometry: BufferGeometry
+    } = {
+      mesh,
+      material,
+      geometry,
+    }
+    await config.beforeCreate?.(exprotData)
+    const objectConfig = await config.objectConfig?.(exprotData) || {}
+    const object = (config.sheet || sheet).object(key, objectConfig.values || {}, {
+      reconfigure: true
+    })
+    object.onValuesChange(values => {
+      objectConfig.change?.(values, exprotData)
+    })
+    return {
+      ...exprotData,
+      object
+    }
+  }
+
   // 关闭灯光帮助
-  three.lightHelper.visible = false
+  // three.lightHelper.visible = false
   // 关闭相机帮助
-  three.cameraHelper.visible = false
-  scene.scale.set(147,147,147)
+  // three.cameraHelper.visible = false
   three.light.visible = false
   // 全局配置
-  sheet.object('全局配置',{
-    zoom: types.number(147, {range: [-Infinity, Infinity]}),
-  }).onValuesChange(({zoom})=>{
-    scene.scale.set(zoom,zoom,zoom)
+  sheet.object('全局配置', {
+    zoom: types.number(554.9,{nudgeMultiplier:0.05}),
+    camera:types.compound({
+      fov: types.number(50,{nudgeMultiplier:0.05}),
+      x: types.number(508.95,{nudgeMultiplier:0.05}),
+      y: types.number(325.9,{nudgeMultiplier:0.05}),
+      z: types.number(238.45,{nudgeMultiplier:0.05}),
+    },{label:"相机"}),
+    scene:types.compound({
+      x: types.number(-0.185,{nudgeMultiplier:0.005}),
+      y: types.number(2.495,{nudgeMultiplier:0.005}),
+      z: types.number(0,{nudgeMultiplier:0.005}),
+    },{label:"场景旋转"})
+  }).onValuesChange((data) => {
+    scene.scale.set(data.zoom, data.zoom, data.zoom)
+    three.camera.position.set(data.camera.x,data.camera.y,data.camera.z)
+    three.scene.rotation.set(data.scene.x,data.scene.y,data.scene.z)
+    three.camera.fov = data.camera.fov
   })
-  // 灯光
-  const light = new THREE.HemisphereLight( 0xffffff, 262 );
-  light.position.set( -423, 1186, -20 );
-  light.castShadow = true; // default false
-  scene.add( light );
-  sheet.object("灯光", {
-    x: types.number(0, {range: [-Infinity, Infinity]}),
-    y: types.number(0, {range: [-Infinity, Infinity]}),
-    z: types.number(0, {range: [-Infinity, Infinity]}),
-    intensity: types.number(0, {range: [-Infinity, Infinity]}),
-  }).onValuesChange(({x, y, z,intensity})=>{
-    light.position.set(x, y, z)
-    light.intensity = intensity
+  await createOBj("半球灯光",{
+    mesh() {
+      const light = new THREE.HemisphereLight(0xffffff, 262);
+      light.receiveShadow = true
+      light.castShadow = true
+      return light as any
+    },
+    objectConfig() {
+        return {
+          values:{
+            x: types.number(61),
+            y: types.number(2315),
+            z: types.number(1734),
+            intensity: types.number(10),
+          },
+          change(values, data:{
+            mesh:THREE.HemisphereLight
+          }) {
+            data.mesh.position.set(values.x, values.y, values.z)
+            data.mesh.intensity = values.intensity
+          },
+        }
+    },
+  })
+  await createOBj("平行光",{
+    mesh() {
+      const light = new THREE.DirectionalLight( 0xffffff, 3);
+      return light as any
+    },
+    objectConfig() {
+        return {
+          values:{
+            x: types.number(-83),
+            y: types.number(4267),
+            z: types.number(-1123),
+            intensity: types.number(3),
+          },
+          change(values, data:{
+            mesh:THREE.HemisphereLight
+          }) {
+            data.mesh.position.set(values.x, values.y, values.z)
+            data.mesh.intensity = values.intensity
+          },
+        }
+    },
   })
 
   // 地球
-  const geometry = new THREE.CapsuleGeometry( 2, 0, 50, 50 );
-  const material = new THREE.MeshLambertMaterial( {
-    color: 0x15204f,
-    clipShadows: true,
-  } );
-  const capsule = new THREE.Mesh( geometry, material ); scene.add( capsule );
-  scene.add(capsule)
-  sheet.object('地球', {
-    rotation: types.compound({
-      x: types.number(capsule.rotation.x, { range: [-2, 2] }),
-      y: types.number(capsule.rotation.y, { range: [-2, 2] }),
-      z: types.number(capsule.rotation.z, { range: [-2, 2] }),
-    }),
-    texture: types.image('yun.jpg', {
-      label: 'Texture',
-    }),
-  },{
-    reconfigure:true
-  }).onValuesChange((values) => {
-    const { x, y, z } = values.rotation
-    capsule.rotation.set(x * Math.PI, y * Math.PI, z * Math.PI)
-    material.setValues({
-      map: new THREE.TextureLoader().load(project.getAssetUrl(values.texture)),
-    })
+  await createOBj("地球", {
+    geometry() {
+      return new THREE.CapsuleGeometry(1, 0, 50, 50)
+    },
+    material() {
+      return new THREE.MeshLambertMaterial({})
+    },
+    mesh(geometry, material) {
+      return new THREE.Mesh(geometry, material)
+    },
+    objectConfig() {
+      return {
+        values: {
+          rotation: types.compound({
+            x: types.number(0),
+            y: types.number(0),
+            z: types.number(0),
+          }),
+          color:types.rgba(getRgba("#08113c"))
+        },
+        change(values, data:{
+          mesh: Object3D,
+          material: THREE.MeshLambertMaterial,
+          geometry: THREE.BoxGeometry,
+        }) {
+          data.material.setValues({
+            color:color(values.color.toString()).rgbNumber()
+          })
+          data.mesh.rotation.set(values.rotation.x, values.rotation.y, values.rotation.z)
+        },
+      }
+    },
+  })
+  await createOBj("云层", {
+    sheet:yunSheet,
+    geometry() {
+      return new THREE.CapsuleGeometry(1, 0, 50, 50)
+    },
+    material() {
+      return new THREE.MeshLambertMaterial({
+        transparent: true,
+      })
+    },
+    mesh(geometry, material) {
+      return new THREE.Mesh(geometry, material)
+    },
+    objectConfig() {
+      return {
+        values: {
+          rotation: types.compound({
+            x: types.number(0),
+            y: types.number(0),
+            z: types.number(0),
+          }),
+          opacity: types.number(0.5, { nudgeMultiplier:0.01}),
+          scale: types.number(1.02, { nudgeMultiplier:0.005}),
+          image: types.image('yun.png', {label: 'Texture',}),
+          repeat: types.number(3),
+        },
+        change(values, data:{
+          mesh: Object3D
+          material: THREE.MeshLambertMaterial
+          geometry: BufferGeometry
+        }) {
+          data.mesh.rotation.set(values.rotation.x, values.rotation.y, values.rotation.z)
+          data.mesh.scale.set(values.scale, values.scale, values.scale)
+          const texture = three.downloadImagesTexture(project.getAssetUrl(values.image),project.getAssetUrl(values.image)).clone()
+          texture.wrapS = THREE.MirroredRepeatWrapping
+          texture.wrapT = THREE.MirroredRepeatWrapping
+          texture.repeat = new THREE.Vector2(values.repeat, values.repeat)
+          data.material.setValues({
+            map:texture,
+            opacity:values.opacity
+          })
+        },
+      }
+    },
+  })
+  await createOBj("地球板块", {
+    geometry() {
+      return new THREE.CapsuleGeometry(1, 0, 50, 50)
+    },
+    material() {
+      return new THREE.MeshLambertMaterial({
+        transparent: true,
+      })
+    },
+    mesh(geometry, material) {
+      return new THREE.Mesh(geometry, material)
+    },
+    objectConfig() {
+      return {
+        values: {
+          rotation: types.compound({
+            x: types.number(0,{nudgeMultiplier:0.05}),
+            y: types.number(0,{nudgeMultiplier:0.05}),
+            z: types.number(0,{nudgeMultiplier:0.05}),
+          }),
+          opacity: types.number(0.5, { nudgeMultiplier:0.01}),
+          scale: types.number(1.01, { nudgeMultiplier:0.005}),
+          image: types.image('map.png', {label: 'Texture',}),
+          repeat: types.number(1),
+        },
+        change(values, data:{
+            mesh: Object3D
+            material: THREE.MeshLambertMaterial
+            geometry: BufferGeometry
+        }) {
+          data.mesh.rotation.set(values.rotation.x, values.rotation.y, values.rotation.z)
+          data.mesh.scale.set(values.scale, values.scale, values.scale)
+          const texture = new THREE.TextureLoader().load(project.getAssetUrl(values.image))
+          texture.wrapS = THREE.MirroredRepeatWrapping
+          texture.wrapT = THREE.MirroredRepeatWrapping
+          texture.repeat = new THREE.Vector2(values.repeat, values.repeat)
+          data.material.setValues({
+            map:texture,
+            opacity:values.opacity
+          })
+        },
+      }
+    },
+  })
+  await createOBj("中国地图", {
+    geometry() {
+      return new THREE.CapsuleGeometry(1, 0, 50, 50)
+    },
+    material() {
+      return new THREE.MeshLambertMaterial({
+        transparent: true,
+      })
+    },
+    async mesh() {
+      const json = await fetch('./images/map/china.json').then(res => res.json())
+      const mapDepth = 0.4
+      const mapGroup: any = new THREE.Group()
+      const projection = geoMercator()
+          // 地图中心位置
+          .center([121.539698, 29.874452])
+          // 地图缩放
+          .scale(1)
+          .translate([0, 0])
+      await Promise.all(json.features.map(async elem=>{
+        const province: any = new THREE.Group()
+        const coordinatesGroup: any = new THREE.Group()
+        const coordinates = elem.geometry.coordinates
+        coordinates.forEach((multiPolygon) => {
+          if (typeof multiPolygon[0][0] === 'number') {
+            multiPolygon = [multiPolygon as any]
+          }
+          multiPolygon.forEach((polygon) => {
+            // 这里的坐标要做2次使用：1次用来构建模型，1次用来构建轮廓线
+            const linGeometry = new THREE.BufferGeometry()
+            const points = []
+            const shape = new THREE.Shape()
+            for (let i = 0; i < polygon.length; i++) {
+              const [x, y] = projection(polygon[i] as any) as number[]
+              if (i === 0) {
+                shape.moveTo(x, -y)
+              }
+              shape.lineTo(x, -y)
+              points.push(new THREE.Vector3(x, -y, mapDepth + 0.002))
+            }
+            linGeometry.setFromPoints(points)
+            // 边界线
+            const line = new THREE.Line(linGeometry)
+            coordinatesGroup.add(line)
+            // 土地
+            const geometry = new THREE.ExtrudeGeometry(shape, {
+              bevelEnabled: false,
+              bevelSegments: 1,
+              depth:mapDepth,
+            })
+            const mesh = new THREE.Mesh(geometry)
+            mesh.name = 'map'
+            coordinatesGroup.add(mesh)
+          })
+          province.add(coordinatesGroup)
+        })
+        mapGroup.add(province)
+      }))
+      mapGroup.traverse((object3d:THREE.Mesh)=>{
+        if(object3d.name === 'map'){
+          // object3d.material = new THREE.MeshMatcapMaterial({
+          //   color:new THREE.Color("#5e62da"),
+          //   matcap:three.downloadImagesTexture('./images/map/matcap-porcelain-white.jpg','matcap-porcelain-white.jpg').clone(),
+          //   alphaMap:three.downloadImagesTexture('./images/map/alphaMap.jpg','alphaMap.jpg').clone(),
+          // })
+          const texture = three.downloadImagesTexture('./images/map/matcap-porcelain-white.jpg','alphaMap.jpg').clone()
+          object3d.material = new THREE.MeshStandardMaterial({
+            color: 0x5e62da, // 纯色
+            emissive: 0x000000, // 纯色
+            metalness: 0.0,  // 完全金属
+            roughness: 0.0,  // 完全光滑
+            map: texture   // 使用环境贴图
+          });
+          object3d.castShadow = true
+          object3d.receiveShadow = true
+        }
+      })
+      return mapGroup
+    },
+    objectConfig() {
+      return {
+        values: {
+          scale: types.number(1.009, { nudgeMultiplier:0.0005}),
+          rotation: types.compound({
+            x: types.number(1.289, { nudgeMultiplier:0.0005}),
+            y: types.number(4.09, { nudgeMultiplier:0.0005}),
+            z: types.number(1.508, { nudgeMultiplier:0.0005}),
+          }),
+          position: types.compound({
+            x: types.number(-0.661, { nudgeMultiplier:0.0005}),
+            y: types.number(0.247, { nudgeMultiplier:0.0005}),
+            z: types.number(0.229, { nudgeMultiplier:0.0005}),
+          }),
+        },
+        change(values, data:{
+            mesh: Object3D
+            material: THREE.MeshLambertMaterial
+            geometry: BufferGeometry
+        }) {
+          data.mesh.position.set(values.position.x, values.position.y, values.position.z)
+          data.mesh.rotation.set(values.rotation.x, values.rotation.y, values.rotation.z)
+          data.mesh.scale.set(values.scale, values.scale, values.scale)
+        },
+      }
+    },
   })
 }
-const animation = async ({scene}:{scene:Scene})=>{
+const animation = async ({scene}: { scene: Scene }) => {
 }
 </script>
 
