@@ -66,7 +66,57 @@ const load = async (three: {
       "浙江省",
       "北京市"
   ].reduce((a,b)=>{
-     a[b] = JSON.parse(JSON.stringify(obj).replace('浙江省', b))
+     a[b] = {
+       "trackData": {
+         "GS6wSiUxXx${b}": {
+           "type": "BasicKeyframedTrack",
+           "__debugName": "北京市:[\"rotation\",\"x\"]",
+           "keyframes": []
+         },
+         ["9XQa_whF4S"+b]: {
+           "type": "BasicKeyframedTrack",
+           "__debugName": "北京市:[\"rotation\",\"y\"]",
+           "keyframes": [
+             {
+               "id": "uKHxri1W6G",
+               "position": 0,
+               "connectedRight": true,
+               "handles": [
+                 0.5,
+                 1,
+                 0.5,
+                 0.5
+               ],
+               "type": "bezier",
+               "value": 0
+             },
+             {
+               "id": "XqSQhcSLb3",
+               "position": 6.1,
+               "connectedRight": true,
+               "handles": [
+                 0.5,
+                 0.5,
+                 0.5,
+                 0
+               ],
+               "type": "bezier",
+               "value": 6.2831
+             }
+           ]
+         },
+         "hlldCXexxh": {
+           "type": "BasicKeyframedTrack",
+           "__debugName": "北京市:[\"rotation\",\"z\"]",
+           "keyframes": []
+         }
+       },
+       "trackIdByPropPath": {
+         "[\"rotation\",\"x\"]": "GS6wSiUxXx",
+         "[\"rotation\",\"y\"]": ["9XQa_whF4S"+b],
+         "[\"rotation\",\"z\"]": "hlldCXexxh"
+       }
+     }
       return a
   },{})
   console.log(theatreProjectState)
