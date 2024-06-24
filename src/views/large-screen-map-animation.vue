@@ -17,6 +17,7 @@ import color from "color";
 import {geoMercator} from "d3-geo";
 import theatreProjectState from "../../public/images/map/theatre-project-state.json";
 import {Texture} from "three/src/textures/Texture";
+import {texture} from "three/examples/jsm/nodes/shadernode/ShaderNodeBaseElements";
 
 if (import.meta.env.DEV) {
   studio.extend({
@@ -508,28 +509,22 @@ const load = async (three: {
             sheet:provinceSheet,
             scene:province,
             geometry() {
-                return new THREE.ConeGeometry( 0.1, 0.16, 4 )
-            },
-            material() {
-              const m = new THREE.MeshBasicMaterial( {
-                // color: 0xcdad75,
-                // side: THREE.DoubleSide,
-                transparent:true,
-                map:lineTexture.clone(),
-              } )
-              // m.map.wrapS = THREE.ClampToEdgeWrapping
-              // m.map.wrapT = THREE.ClampToEdgeWrapping
-              m.map.repeat.set(1,1)
-                return m
+                return new THREE.ConeGeometry( 0.1, 0.16, 3 )
             },
             mesh(geometry, material) {
               const cone = new THREE.Mesh( geometry, [
-                material,
-                material,
-                material,
-                material,
-                material,
-                // material,
+                new THREE.MeshBasicMaterial( {
+                  transparent:true,
+                  map:(texture=>{
+                    texture.matrixAutoUpdate = false
+                    texture.matrix = new THREE.Matrix3().set(3,-0.5,0,0,1,0, 0, 0, 1)
+                    return texture
+                  })(lineTexture.clone()),
+                } ),
+                new THREE.MeshBasicMaterial( {
+                  transparent:true,
+                  map:lineTexture.clone(),
+                } ),
               ] );
               cone.receiveShadow = true
               cone.castShadow = true
