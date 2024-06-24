@@ -53,6 +53,7 @@ const project = getProject('大屏地图动效', {
 })
 const sheet = project.sheet('地图')
 const yunSheet = project.sheet('云层')
+const provinceSheet = project.sheet('省份')
 const getRgba = (_color:string)=>({
   r:color(_color).object().r/255,
   g:color(_color).object().g/255,
@@ -78,6 +79,7 @@ const load = async (three: {
     _geometry?: BufferGeometry
     _material?: Material
     _mesh?: Object3D
+    scene?: Object3D
     sheet?: ISheet
     geometry?(): Promise<BufferGeometry> | BufferGeometry
     material?(): Promise<Material> | Material
@@ -109,7 +111,7 @@ const load = async (three: {
     const geometry = config._geometry || config._mesh?.geometry || await config.geometry?.();
     const material = config._material || config._mesh?.material || await config.material?.();
     const mesh = config._mesh || await config.mesh?.(geometry, material);
-    scene.add(mesh)
+    (config.scene || scene).add(mesh)
     const exprotData: {
       mesh: Object3D
       material: Material
@@ -154,7 +156,7 @@ const load = async (three: {
     };
 
   } )();
-  scene.environment = envMaps.texture
+  scene.environment = envMaps.reflection
   // 关闭灯光帮助
   // three.lightHelper.visible = false
   // 关闭相机帮助
@@ -162,17 +164,17 @@ const load = async (three: {
   three.light.visible = false
   // 全局配置
   sheet.object('全局配置', {
-    zoom: types.number(554.9,{nudgeMultiplier:0.05}),
+    zoom: types.number(290.45,{nudgeMultiplier:0.05}),
     camera:types.compound({
       fov: types.number(50,{nudgeMultiplier:0.05}),
-      x: types.number(508.95,{nudgeMultiplier:0.05}),
-      y: types.number(325.9,{nudgeMultiplier:0.05}),
-      z: types.number(238.45,{nudgeMultiplier:0.05}),
+      x: types.number(114.55,{nudgeMultiplier:0.05}),
+      y: types.number(366.95,{nudgeMultiplier:0.05}),
+      z: types.number(92.55,{nudgeMultiplier:0.05}),
     },{label:"相机"}),
     scene:types.compound({
-      x: types.number(-0.185,{nudgeMultiplier:0.005}),
-      y: types.number(2.495,{nudgeMultiplier:0.005}),
-      z: types.number(0,{nudgeMultiplier:0.005}),
+      x: types.number(-0.645,{nudgeMultiplier:0.005}),
+      y: types.number(1.76,{nudgeMultiplier:0.005}),
+      z: types.number(-0.405,{nudgeMultiplier:0.005}),
     },{label:"场景旋转"})
   }).onValuesChange((data) => {
     scene.scale.set(data.zoom, data.zoom, data.zoom)
@@ -438,7 +440,47 @@ const load = async (three: {
             coordinatesGroup.add(mesh)
           })
           province.add(coordinatesGroup)
+
         })
+        if(elem.properties?.center){
+          await createOBj(elem.properties?.name,{
+            sheet:provinceSheet,
+            scene:province,
+            geometry() {
+                return new THREE.ConeGeometry( 0.1, 0.5, 4 )
+            },
+            material() {
+                return new THREE.MeshLambertMaterial( {color: 0xcdad75} )
+            },
+            mesh(geometry, material) {
+              const cone = new THREE.Mesh( geometry, material );
+              cone.receiveShadow = true
+              cone.castShadow = true
+              cone.rotation.x = -Math.PI/2
+              const [px,py] = projection(elem.properties?.center)
+              cone.position.set(px,-py, mapDepth+0.002)
+              const PScale = 0.02
+              return cone
+            },
+            objectConfig(data) {
+                return {
+                  values: {
+                      position: types.compound({
+                        x: types.number(data.mesh.position.x, {nudgeMultiplier: 0.05}),
+                        y: types.number(data.mesh.position.y, {nudgeMultiplier: 0.05}),
+                        z: types.number(data.mesh.position.z, {nudgeMultiplier: 0.05})
+                      }),
+                      scale: types.number(0.02, {nudgeMultiplier: 0.05}),
+                  },
+                  change(values, data) {
+                    data.mesh.position.set(values.position.x, values.position.y,values.position.z)
+                    data.mesh.scale.set(values.scale,values.scale, values.scale)
+                  },
+                }
+            },
+          })
+        }
+
         mapGroup.add(province)
       }))
       mapGroup.traverse((object3d:THREE.Mesh)=>{

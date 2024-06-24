@@ -50,7 +50,7 @@
                       0
                     ],
                     "type": "bezier",
-                    "value": 295.750000000001
+                    "value": 290.45
                   }
                 ]
               },
@@ -82,7 +82,7 @@
                       0
                     ],
                     "type": "bezier",
-                    "value": -0.4950000000000002
+                    "value": -0.645
                   }
                 ]
               },
@@ -114,7 +114,7 @@
                       0
                     ],
                     "type": "bezier",
-                    "value": 2.075000000000004
+                    "value": 1.76
                   }
                 ]
               },
@@ -146,7 +146,7 @@
                       0
                     ],
                     "type": "bezier",
-                    "value": -0.3300000000000001
+                    "value": -0.405
                   }
                 ]
               },
@@ -178,7 +178,7 @@
                       0
                     ],
                     "type": "bezier",
-                    "value": 183.8499999999989
+                    "value": 114.54999999999991
                   }
                 ]
               },
@@ -210,7 +210,7 @@
                       0
                     ],
                     "type": "bezier",
-                    "value": 367.8999999999994
+                    "value": 366.9500000000007
                   }
                 ]
               },
@@ -242,7 +242,7 @@
                       0
                     ],
                     "type": "bezier",
-                    "value": 167.64999999999984
+                    "value": 92.55000000000005
                   }
                 ]
               },
@@ -602,6 +602,8 @@
   },
   "definitionVersion": "0.4.0",
   "revisionHistory": [
+    "yz43mQE5-z7Y7SHn",
+    "lnn5bIG5dLe7xYoI",
     "mtNbprghq_tyebfL",
     "8Wipqdrc8iLAUfCO",
     "X5rZQG9Hp-TRI5z3",
