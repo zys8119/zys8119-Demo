@@ -198,6 +198,10 @@ const load = async (three: {
       "./images/map/line.png",
       'line'
   )
+  const lineTexture2 = await three.downloadImagesTexture(
+      "./images/map/line2.png",
+      'line2'
+  )
   const envMaps = ( function () {
     const cubeTextureLoader = new THREE.CubeTextureLoader();
     const path = './images/map/';
@@ -520,6 +524,15 @@ const load = async (three: {
                     texture.wrapS = THREE.RepeatWrapping
                     return texture
                   })(lineTexture.clone()),
+                }),
+                null,
+                new THREE.MeshBasicMaterial( {
+                  transparent:true,
+                  side: THREE.DoubleSide,
+                  map:(texture=>{
+                    texture.wrapS = THREE.RepeatWrapping
+                    return texture
+                  })(lineTexture2.clone()),
                 }),
               ] );
               cone.receiveShadow = true
