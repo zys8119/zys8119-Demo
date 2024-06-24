@@ -512,14 +512,18 @@ const load = async (three: {
                 return new THREE.ConeGeometry( 0.1, 0.16, 3 )
             },
             mesh(geometry, material) {
+              const material2 = new THREE.MeshBasicMaterial( {
+                transparent:true,
+                side: THREE.DoubleSide,
+                map:(texture=>{
+                  return texture
+                })(lineTexture.clone()),
+              })
               const cone = new THREE.Mesh( geometry, [
-                new THREE.MeshBasicMaterial( {
-                  transparent:true,
-                  side: THREE.DoubleSide,
-                  map:(texture=>{
-                    return texture
-                  })(lineTexture.clone()),
-                }),
+                material2,
+                material2,
+                material2,
+                material2,
               ] );
               cone.receiveShadow = true
               cone.castShadow = true
