@@ -509,21 +509,18 @@ const load = async (three: {
             sheet:provinceSheet,
             scene:province,
             geometry() {
-                return new THREE.ConeGeometry( 0.1, 0.16, 3 )
+                return new THREE.ConeGeometry( 0.1, 0.16, 4 )
             },
             mesh(geometry, material) {
-              const material2 = new THREE.MeshBasicMaterial( {
-                transparent:true,
-                side: THREE.DoubleSide,
-                map:(texture=>{
-                  return texture
-                })(lineTexture),
-              })
               const cone = new THREE.Mesh( geometry, [
-                material2,
-                material2,
-                material2,
-                material2,
+                new THREE.MeshBasicMaterial( {
+                  transparent:true,
+                  side: THREE.DoubleSide,
+                  map:(texture=>{
+                    texture.wrapS = THREE.RepeatWrapping
+                    return texture
+                  })(lineTexture.clone()),
+                }),
               ] );
               cone.receiveShadow = true
               cone.castShadow = true
@@ -546,11 +543,11 @@ const load = async (three: {
                         z: types.number(data.mesh.rotation.z, {nudgeMultiplier: 0.001})
                       }),
                       scale: types.number(0.06, {nudgeMultiplier: 0.001}),
-                      n11: types.number(3, {nudgeMultiplier: 0.001}),
-                      n12: types.number(0, {nudgeMultiplier: 0.001}),
+                      n11: types.number(4, {nudgeMultiplier: 0.001}),
+                      n12: types.number(-0.5, {nudgeMultiplier: 0.001}),
                       n13: types.number(0, {nudgeMultiplier: 0.001}),
                       n21: types.number(0, {nudgeMultiplier: 0.001}),
-                      n22: types.number(0, {nudgeMultiplier: 0.001}),
+                      n22: types.number(1, {nudgeMultiplier: 0.001}),
                       n23: types.number(0, {nudgeMultiplier: 0.001}),
                       n31: types.number(0, {nudgeMultiplier: 0.001}),
                       n32: types.number(0, {nudgeMultiplier: 0.001}),
