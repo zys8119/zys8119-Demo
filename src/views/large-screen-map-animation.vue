@@ -517,7 +517,7 @@ const load = async (three: {
                 side: THREE.DoubleSide,
                 map:(texture=>{
                   return texture
-                })(lineTexture.clone()),
+                })(lineTexture),
               })
               const cone = new THREE.Mesh( geometry, [
                 material2,
