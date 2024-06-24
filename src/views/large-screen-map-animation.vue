@@ -61,24 +61,23 @@ const load = async (three: {
   light: Light
   downloadImagesTexture(url: string, imageName?: string): Texture
 }) => {
-  const obj = theatreProjectState.sheetsById['省份'].sequence.tracksByObject['浙江省']
-  theatreProjectState.sheetsById['省份'].sequence.tracksByObject = [
+  (theatreProjectState as any).sheetsById['省份'].sequence.tracksByObject = [
       "浙江省",
       "北京市"
   ].reduce((a,b)=>{
      a[b] = {
        "trackData": {
-         "GS6wSiUxXx${b}": {
+         [`GS6wSiUxXx${b}`]: {
            "type": "BasicKeyframedTrack",
            "__debugName": `${b}:["rotation","x"]`,
            "keyframes": []
          },
-         ["9XQa_whF4S"+b]: {
+         [`9XQa_whF4S${b}`]: {
            "type": "BasicKeyframedTrack",
            "__debugName": `"${b}:[\"rotation\",\"y\"]"`,
            "keyframes": [
              {
-               "id": "uKHxri1W6G",
+               "id": `uKHxri1W6G${b}`,
                "position": 0,
                "connectedRight": true,
                "handles": [
@@ -91,7 +90,7 @@ const load = async (three: {
                "value": 0
              },
              {
-               "id": "XqSQhcSLb3",
+               "id": `XqSQhcSLb3${b}`,
                "position": 6.1,
                "connectedRight": true,
                "handles": [
@@ -105,21 +104,20 @@ const load = async (three: {
              }
            ]
          },
-         "hlldCXexxh": {
+         [`hlldCXexxh${b}`]: {
            "type": "BasicKeyframedTrack",
            "__debugName": `"${b}:[\"rotation\",\"z\"]"`,
            "keyframes": []
          }
        },
        "trackIdByPropPath": {
-         "[\"rotation\",\"x\"]": "GS6wSiUxXx",
-         "[\"rotation\",\"y\"]": ["9XQa_whF4S"+b],
-         "[\"rotation\",\"z\"]": "hlldCXexxh"
+         "[\"rotation\",\"x\"]": `GS6wSiUxXx${b}`,
+         "[\"rotation\",\"y\"]": `9XQa_whF4S${b}`,
+         "[\"rotation\",\"z\"]": `hlldCXexxh${b}`
        }
      }
       return a
   },{})
-  console.log(theatreProjectState)
   const project = getProject('大屏地图动效', {
     state: theatreProjectState,
     assets: {
@@ -195,6 +193,10 @@ const load = async (three: {
       object
     }
   }
+  const lineTexture = await three.downloadImagesTexture(
+      "./images/map/line.png",
+      'line'
+  )
   const envMaps = ( function () {
     const cubeTextureLoader = new THREE.CubeTextureLoader();
     const path = './images/map/';
@@ -509,10 +511,26 @@ const load = async (three: {
                 return new THREE.ConeGeometry( 0.1, 0.16, 4 )
             },
             material() {
-                return new THREE.MeshLambertMaterial( {color: 0xcdad75} )
+              const m = new THREE.MeshBasicMaterial( {
+                // color: 0xcdad75,
+                // side: THREE.DoubleSide,
+                transparent:true,
+                map:lineTexture.clone(),
+              } )
+              // m.map.wrapS = THREE.ClampToEdgeWrapping
+              // m.map.wrapT = THREE.ClampToEdgeWrapping
+              m.map.repeat.set(1,1)
+                return m
             },
             mesh(geometry, material) {
-              const cone = new THREE.Mesh( geometry, material );
+              const cone = new THREE.Mesh( geometry, [
+                material,
+                material,
+                material,
+                material,
+                material,
+                // material,
+              ] );
               cone.receiveShadow = true
               cone.castShadow = true
               cone.rotation.x = -Math.PI/2
