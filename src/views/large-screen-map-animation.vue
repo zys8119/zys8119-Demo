@@ -515,16 +515,11 @@ const load = async (three: {
               const cone = new THREE.Mesh( geometry, [
                 new THREE.MeshBasicMaterial( {
                   transparent:true,
+                  side: THREE.DoubleSide,
                   map:(texture=>{
-                    texture.matrixAutoUpdate = false
-                    texture.matrix = new THREE.Matrix3().set(3,-0.5,0,0,1,0, 0, 0, 1)
                     return texture
                   })(lineTexture.clone()),
-                } ),
-                new THREE.MeshBasicMaterial( {
-                  transparent:true,
-                  map:lineTexture.clone(),
-                } ),
+                }),
               ] );
               cone.receiveShadow = true
               cone.castShadow = true
@@ -547,11 +542,32 @@ const load = async (three: {
                         z: types.number(data.mesh.rotation.z, {nudgeMultiplier: 0.001})
                       }),
                       scale: types.number(0.06, {nudgeMultiplier: 0.001}),
+                      n11: types.number(3, {nudgeMultiplier: 0.001}),
+                      n12: types.number(0, {nudgeMultiplier: 0.001}),
+                      n13: types.number(0, {nudgeMultiplier: 0.001}),
+                      n21: types.number(0, {nudgeMultiplier: 0.001}),
+                      n22: types.number(0, {nudgeMultiplier: 0.001}),
+                      n23: types.number(0, {nudgeMultiplier: 0.001}),
+                      n31: types.number(0, {nudgeMultiplier: 0.001}),
+                      n32: types.number(0, {nudgeMultiplier: 0.001}),
+                      n33: types.number(0, {nudgeMultiplier: 0.001}),
                   },
                   change(values, data) {
                     data.mesh.position.set(values.position.x, values.position.y,values.position.z)
                     data.mesh.rotation.set(values.rotation.x, values.rotation.y,values.rotation.z)
                     data.mesh.scale.set(values.scale,values.scale, values.scale)
+                    data.mesh.material[0].map.matrixAutoUpdate = false
+                    data.mesh.material[0].map.matrix = new THREE.Matrix3().set(
+                        values.n11,
+                        values.n12,
+                        values.n13,
+                        values.n21,
+                        values.n22,
+                        values.n23,
+                        values.n31,
+                        values.n32,
+                        values.n33,
+                    )
                   },
                 }
             },
