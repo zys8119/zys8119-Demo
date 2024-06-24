@@ -70,12 +70,12 @@ const load = async (three: {
        "trackData": {
          "GS6wSiUxXx${b}": {
            "type": "BasicKeyframedTrack",
-           "__debugName": "北京市:[\"rotation\",\"x\"]",
+           "__debugName": `${b}:["rotation","x"]`,
            "keyframes": []
          },
          ["9XQa_whF4S"+b]: {
            "type": "BasicKeyframedTrack",
-           "__debugName": "北京市:[\"rotation\",\"y\"]",
+           "__debugName": `"${b}:[\"rotation\",\"y\"]"`,
            "keyframes": [
              {
                "id": "uKHxri1W6G",
@@ -107,7 +107,7 @@ const load = async (three: {
          },
          "hlldCXexxh": {
            "type": "BasicKeyframedTrack",
-           "__debugName": "北京市:[\"rotation\",\"z\"]",
+           "__debugName": `"${b}:[\"rotation\",\"z\"]"`,
            "keyframes": []
          }
        },
