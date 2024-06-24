@@ -246,8 +246,6 @@ const load = async (three: {
   await createOBj("半球灯光",{
     mesh() {
       const light = new THREE.HemisphereLight(0xffffff, 262);
-      light.receiveShadow = true
-      light.castShadow = true
       return light as any
     },
     objectConfig() {
