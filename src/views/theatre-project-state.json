@@ -276,6 +276,262 @@
               "[\"camera\",\"z\"]": "TG43B0oOLt",
               "[\"camera\",\"fov\"]": "4-5zfb6LCK"
             }
+          },
+          "平行光1": {
+            "trackData": {
+              "ZhNHiZWK0T": {
+                "type": "BasicKeyframedTrack",
+                "__debugName": "平行光1:[\"x\"]",
+                "keyframes": [
+                  {
+                    "id": "UuKDy-Gq43",
+                    "position": 0,
+                    "connectedRight": true,
+                    "handles": [
+                      0.5,
+                      1,
+                      0.5,
+                      0
+                    ],
+                    "type": "bezier",
+                    "value": 0.2
+                  },
+                  {
+                    "id": "hAbkt7gGsf",
+                    "position": 3.967,
+                    "connectedRight": true,
+                    "handles": [
+                      0.5,
+                      1,
+                      0.5,
+                      0
+                    ],
+                    "type": "bezier",
+                    "value": -1.75
+                  }
+                ]
+              },
+              "bnpy_e1JNd": {
+                "type": "BasicKeyframedTrack",
+                "__debugName": "平行光1:[\"y\"]",
+                "keyframes": [
+                  {
+                    "id": "R69H7ojVUX",
+                    "position": 0,
+                    "connectedRight": true,
+                    "handles": [
+                      0.5,
+                      1,
+                      0.5,
+                      0
+                    ],
+                    "type": "bezier",
+                    "value": 1.05
+                  },
+                  {
+                    "id": "nfMHcUZ0uN",
+                    "position": 3.967,
+                    "connectedRight": true,
+                    "handles": [
+                      0.5,
+                      1,
+                      0.5,
+                      0
+                    ],
+                    "type": "bezier",
+                    "value": 0.6
+                  }
+                ]
+              },
+              "YSo4xWgdBB": {
+                "type": "BasicKeyframedTrack",
+                "__debugName": "平行光1:[\"z\"]",
+                "keyframes": [
+                  {
+                    "id": "CF8qIO3stA",
+                    "position": 0,
+                    "connectedRight": true,
+                    "handles": [
+                      0.5,
+                      1,
+                      0.5,
+                      0
+                    ],
+                    "type": "bezier",
+                    "value": 0.2
+                  },
+                  {
+                    "id": "UW-TOalBHf",
+                    "position": 3.967,
+                    "connectedRight": true,
+                    "handles": [
+                      0.5,
+                      1,
+                      0.5,
+                      0
+                    ],
+                    "type": "bezier",
+                    "value": 0.8
+                  }
+                ]
+              },
+              "ve1nWtaIy5": {
+                "type": "BasicKeyframedTrack",
+                "__debugName": "平行光1:[\"width\"]",
+                "keyframes": [
+                  {
+                    "id": "xil2PAMwI4",
+                    "position": 0,
+                    "connectedRight": true,
+                    "handles": [
+                      0.5,
+                      1,
+                      0.5,
+                      0
+                    ],
+                    "type": "bezier",
+                    "value": 697.67
+                  },
+                  {
+                    "id": "a3GrLa_reW",
+                    "position": 3.967,
+                    "connectedRight": true,
+                    "handles": [
+                      0.5,
+                      1,
+                      0.5,
+                      0
+                    ],
+                    "type": "bezier",
+                    "value": 931.27
+                  }
+                ]
+              },
+              "6PL-GmNwak": {
+                "type": "BasicKeyframedTrack",
+                "__debugName": "平行光1:[\"height\"]",
+                "keyframes": [
+                  {
+                    "id": "ePITjI6AfG",
+                    "position": 0,
+                    "connectedRight": true,
+                    "handles": [
+                      0.5,
+                      1,
+                      0.5,
+                      0
+                    ],
+                    "type": "bezier",
+                    "value": 80.55
+                  },
+                  {
+                    "id": "ItaEzcCPB8",
+                    "position": 3.967,
+                    "connectedRight": true,
+                    "handles": [
+                      0.5,
+                      1,
+                      0.5,
+                      0
+                    ],
+                    "type": "bezier",
+                    "value": 133.35
+                  }
+                ]
+              },
+              "FlOurKN1OX": {
+                "type": "BasicKeyframedTrack",
+                "__debugName": "平行光1:[\"intensity\"]",
+                "keyframes": [
+                  {
+                    "id": "GtCbj2uBww",
+                    "position": 0,
+                    "connectedRight": true,
+                    "handles": [
+                      0.5,
+                      1,
+                      0.5,
+                      0
+                    ],
+                    "type": "bezier",
+                    "value": 14.65
+                  },
+                  {
+                    "id": "_p9K9j-fZU",
+                    "position": 3.967,
+                    "connectedRight": true,
+                    "handles": [
+                      0.5,
+                      1,
+                      0.5,
+                      0
+                    ],
+                    "type": "bezier",
+                    "value": -24.45
+                  }
+                ]
+              }
+            },
+            "trackIdByPropPath": {
+              "[\"x\"]": "ZhNHiZWK0T",
+              "[\"y\"]": "bnpy_e1JNd",
+              "[\"z\"]": "YSo4xWgdBB",
+              "[\"width\"]": "ve1nWtaIy5",
+              "[\"height\"]": "6PL-GmNwak",
+              "[\"intensity\"]": "FlOurKN1OX"
+            }
+          },
+          "平行光2": {
+            "trackData": {
+              "MQk4IS9-DL": {
+                "type": "BasicKeyframedTrack",
+                "__debugName": "平行光2:[\"intensity\"]",
+                "keyframes": [
+                  {
+                    "id": "a1N7MsdiiJ",
+                    "position": 0,
+                    "connectedRight": true,
+                    "handles": [
+                      0.5,
+                      1,
+                      0.5,
+                      0
+                    ],
+                    "type": "bezier",
+                    "value": 14.65
+                  },
+                  {
+                    "id": "XrX-d9tKP7",
+                    "position": 2.033,
+                    "connectedRight": true,
+                    "handles": [
+                      0.5,
+                      1,
+                      0.5,
+                      0
+                    ],
+                    "type": "bezier",
+                    "value": 1
+                  },
+                  {
+                    "id": "JlYBpTWZ3W",
+                    "position": 3.967,
+                    "connectedRight": true,
+                    "handles": [
+                      0.5,
+                      1,
+                      0.5,
+                      0
+                    ],
+                    "type": "bezier",
+                    "value": 14.65
+                  }
+                ]
+              }
+            },
+            "trackIdByPropPath": {
+              "[\"intensity\"]": "MQk4IS9-DL"
+            }
           }
         }
       }
@@ -346,6 +602,7 @@
   },
   "definitionVersion": "0.4.0",
   "revisionHistory": [
+    "mtNbprghq_tyebfL",
     "8Wipqdrc8iLAUfCO",
     "X5rZQG9Hp-TRI5z3",
     "mVfCopugKzJ1xBmE"

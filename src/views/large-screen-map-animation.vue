@@ -15,7 +15,7 @@ import {Material} from "three/src/materials/Material";
 import {Object3D} from "three/src/core/Object3D";
 import color from "color";
 import {geoMercator} from "d3-geo";
-import theatreProjectState from "./theatre-project-state.json";
+import theatreProjectState from "../../public/images/map/theatre-project-state.json";
 import {Texture} from "three/src/textures/Texture";
 
 if (import.meta.env.DEV) {
@@ -132,7 +132,29 @@ const load = async (three: {
       object
     }
   }
+  const envMaps = ( function () {
+    const cubeTextureLoader = new THREE.CubeTextureLoader();
+    const path = './images/map/';
+    const format = '.jpg';
+    const urls = [
+      path + 'px' + format, path + 'nx' + format,
+      path + 'py' + format, path + 'ny' + format,
+      path + 'pz' + format, path + 'nz' + format
+    ];
 
+    const reflectionCube = cubeTextureLoader.load( urls );
+
+    const refractionCube = cubeTextureLoader.load( urls );
+    refractionCube.mapping = THREE.CubeRefractionMapping;
+
+    return {
+      none: null,
+      reflection: reflectionCube,
+      // refraction: refractionCube
+    };
+
+  } )();
+  scene.environment = envMaps.texture
   // 关闭灯光帮助
   // three.lightHelper.visible = false
   // 关闭相机帮助
@@ -182,22 +204,54 @@ const load = async (three: {
         }
     },
   })
-  await createOBj("平行光",{
+  await createOBj("平行光1",{
     mesh() {
-      const light = new THREE.DirectionalLight( 0xffffff, 3);
+      const intensity = 1;
+      const light = new THREE.RectAreaLight( 0xffffff, 1,  10, 10 );
       return light as any
     },
     objectConfig() {
         return {
           values:{
-            x: types.number(-83),
-            y: types.number(4267),
-            z: types.number(-1123),
-            intensity: types.number(3),
+            x: types.number(0.2,{nudgeMultiplier:0.05}),
+            y: types.number(1.05,{nudgeMultiplier:0.05}),
+            z: types.number(0.2,{nudgeMultiplier:0.05}),
+            width: types.number(697.67,{nudgeMultiplier:0.05}),
+            height: types.number(80.55,{nudgeMultiplier:0.05}),
+            intensity: types.number(14.65,{nudgeMultiplier:0.05}),
           },
           change(values, data:{
-            mesh:THREE.HemisphereLight
+            mesh:THREE.RectAreaLight
           }) {
+            data.mesh.width = values.width
+            data.mesh.height = values.height
+            data.mesh.position.set(values.x, values.y, values.z)
+            data.mesh.intensity = values.intensity
+          },
+        }
+    },
+  })
+  await createOBj("平行光2",{
+    mesh() {
+      const intensity = 1;
+      const light = new THREE.RectAreaLight( 0xffffff, 1,  10, 10 );
+      return light as any
+    },
+    objectConfig() {
+        return {
+          values:{
+            x: types.number(0.2,{nudgeMultiplier:0.05}),
+            y: types.number(1.05,{nudgeMultiplier:0.05}),
+            z: types.number(0.2,{nudgeMultiplier:0.05}),
+            width: types.number(697.67,{nudgeMultiplier:0.05}),
+            height: types.number(80.55,{nudgeMultiplier:0.05}),
+            intensity: types.number(14.65,{nudgeMultiplier:0.05}),
+          },
+          change(values, data:{
+            mesh:THREE.RectAreaLight
+          }) {
+            data.mesh.width = values.width
+            data.mesh.height = values.height
             data.mesh.position.set(values.x, values.y, values.z)
             data.mesh.intensity = values.intensity
           },
@@ -263,6 +317,7 @@ const load = async (three: {
           opacity: types.number(0.5, { nudgeMultiplier:0.01}),
           scale: types.number(1.02, { nudgeMultiplier:0.005}),
           image: types.image('yun.png', {label: 'Texture',}),
+          image2: types.image('yun2.png', {label: 'Texture',}),
           repeat: types.number(3),
         },
         change(values, data:{
@@ -278,7 +333,7 @@ const load = async (three: {
           texture.repeat = new THREE.Vector2(values.repeat, values.repeat)
           data.material.setValues({
             map:texture,
-            opacity:values.opacity
+            opacity:values.opacity,
           })
         },
       }
@@ -388,18 +443,11 @@ const load = async (three: {
       }))
       mapGroup.traverse((object3d:THREE.Mesh)=>{
         if(object3d.name === 'map'){
-          // object3d.material = new THREE.MeshMatcapMaterial({
-          //   color:new THREE.Color("#5e62da"),
-          //   matcap:three.downloadImagesTexture('./images/map/matcap-porcelain-white.jpg','matcap-porcelain-white.jpg').clone(),
-          //   alphaMap:three.downloadImagesTexture('./images/map/alphaMap.jpg','alphaMap.jpg').clone(),
-          // })
-          const texture = three.downloadImagesTexture('./images/map/matcap-porcelain-white.jpg','alphaMap.jpg').clone()
           object3d.material = new THREE.MeshStandardMaterial({
             color: 0x5e62da, // 纯色
-            emissive: 0x000000, // 纯色
             metalness: 0.0,  // 完全金属
             roughness: 0.0,  // 完全光滑
-            map: texture   // 使用环境贴图
+            envMap:envMaps.reflection
           });
           object3d.castShadow = true
           object3d.receiveShadow = true
