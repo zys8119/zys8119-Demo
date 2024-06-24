@@ -598,10 +598,74 @@
           }
         }
       }
+    },
+    "省份": {
+      "staticOverrides": {
+        "byObject": {}
+      },
+      "sequence": {
+        "subUnitsPerUnit": 30,
+        "length": 10,
+        "type": "PositionalSequence",
+        "tracksByObject": {
+          "浙江省": {
+            "trackData": {
+              "GS6wSiUxXx": {
+                "type": "BasicKeyframedTrack",
+                "__debugName": "浙江省:[\"rotation\",\"x\"]",
+                "keyframes": []
+              },
+              "9XQa_whF4S": {
+                "type": "BasicKeyframedTrack",
+                "__debugName": "浙江省:[\"rotation\",\"y\"]",
+                "keyframes": [
+                  {
+                    "id": "uKHxri1W6G",
+                    "position": 0,
+                    "connectedRight": true,
+                    "handles": [
+                      0.5,
+                      1,
+                      0.5,
+                      0.5
+                    ],
+                    "type": "bezier",
+                    "value": 0
+                  },
+                  {
+                    "id": "XqSQhcSLb3",
+                    "position": 6.1,
+                    "connectedRight": true,
+                    "handles": [
+                      0.5,
+                      0.5,
+                      0.5,
+                      0
+                    ],
+                    "type": "bezier",
+                    "value": 6.2831
+                  }
+                ]
+              },
+              "hlldCXexxh": {
+                "type": "BasicKeyframedTrack",
+                "__debugName": "浙江省:[\"rotation\",\"z\"]",
+                "keyframes": []
+              }
+            },
+            "trackIdByPropPath": {
+              "[\"rotation\",\"x\"]": "GS6wSiUxXx",
+              "[\"rotation\",\"y\"]": "9XQa_whF4S",
+              "[\"rotation\",\"z\"]": "hlldCXexxh"
+            }
+          }
+        }
+      }
     }
   },
   "definitionVersion": "0.4.0",
   "revisionHistory": [
+    "iaARiF_xHpEj1Pl2",
     "yz43mQE5-z7Y7SHn",
     "lnn5bIG5dLe7xYoI",
     "mtNbprghq_tyebfL",

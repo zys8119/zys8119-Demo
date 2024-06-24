@@ -45,15 +45,7 @@ if (import.meta.env.DEV) {
   })
   studio.initialize()
 }
-const project = getProject('大屏地图动效', {
-  state: theatreProjectState,
-  assets: {
-    baseUrl: "./images/map"
-  }
-})
-const sheet = project.sheet('地图')
-const yunSheet = project.sheet('云层')
-const provinceSheet = project.sheet('省份')
+
 const getRgba = (_color:string)=>({
   r:color(_color).object().r/255,
   g:color(_color).object().g/255,
@@ -69,10 +61,29 @@ const load = async (three: {
   light: Light
   downloadImagesTexture(url: string, imageName?: string): Texture
 }) => {
+  const obj = theatreProjectState.sheetsById['省份'].sequence.tracksByObject['浙江省']
+  theatreProjectState.sheetsById['省份'].sequence.tracksByObject = [
+      "浙江省",
+      "北京市"
+  ].reduce((a,b)=>{
+     a[b] = JSON.parse(JSON.stringify(obj).replace('浙江省', b))
+      return a
+  },{})
+  console.log(theatreProjectState)
+  const project = getProject('大屏地图动效', {
+    state: theatreProjectState,
+    assets: {
+      baseUrl: "./images/map"
+    }
+  })
+  const sheet = project.sheet('地图')
+  const yunSheet = project.sheet('云层')
+  const provinceSheet = project.sheet('省份')
   const {THREE, scene} = three
   await project.ready
   sheet.sequence.play()
   yunSheet.sequence.play({iterationCount:Infinity})
+  provinceSheet.sequence.play({iterationCount:Infinity, range:[0,6]})
   function createOBj<
       V extends UnknownShorthandCompoundProps,
   >(key: string, config: {
@@ -447,7 +458,7 @@ const load = async (three: {
             sheet:provinceSheet,
             scene:province,
             geometry() {
-                return new THREE.ConeGeometry( 0.1, 0.5, 4 )
+                return new THREE.ConeGeometry( 0.1, 0.16, 4 )
             },
             material() {
                 return new THREE.MeshLambertMaterial( {color: 0xcdad75} )
@@ -458,22 +469,27 @@ const load = async (three: {
               cone.castShadow = true
               cone.rotation.x = -Math.PI/2
               const [px,py] = projection(elem.properties?.center)
-              cone.position.set(px,-py, mapDepth+0.002)
-              const PScale = 0.02
+              cone.position.set(px,-py, 0.405)
               return cone
             },
             objectConfig(data) {
                 return {
                   values: {
                       position: types.compound({
-                        x: types.number(data.mesh.position.x, {nudgeMultiplier: 0.05}),
-                        y: types.number(data.mesh.position.y, {nudgeMultiplier: 0.05}),
-                        z: types.number(data.mesh.position.z, {nudgeMultiplier: 0.05})
+                        x: types.number(data.mesh.position.x, {nudgeMultiplier: 0.001}),
+                        y: types.number(data.mesh.position.y, {nudgeMultiplier: 0.001}),
+                        z: types.number(data.mesh.position.z, {nudgeMultiplier: 0.001})
                       }),
-                      scale: types.number(0.02, {nudgeMultiplier: 0.05}),
+                      rotation: types.compound({
+                        x: types.number(data.mesh.rotation.x, {nudgeMultiplier: 0.001}),
+                        y: types.number(data.mesh.rotation.y, {nudgeMultiplier: 0.001}),
+                        z: types.number(data.mesh.rotation.z, {nudgeMultiplier: 0.001})
+                      }),
+                      scale: types.number(0.06, {nudgeMultiplier: 0.001}),
                   },
                   change(values, data) {
                     data.mesh.position.set(values.position.x, values.position.y,values.position.z)
+                    data.mesh.rotation.set(values.rotation.x, values.rotation.y,values.rotation.z)
                     data.mesh.scale.set(values.scale,values.scale, values.scale)
                   },
                 }
