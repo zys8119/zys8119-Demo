@@ -237,7 +237,10 @@ const load = async (three: {
     const geometry = config._geometry || config._mesh?.geometry || await config.geometry?.();
     const material = config._material || config._mesh?.material || await config.material?.();
     const mesh = config._mesh || await config.mesh?.(geometry, material);
-    (config.scene || scene).add(mesh)
+    const _scene:any = config.scene || scene
+    if(_scene){
+      _scene.add(mesh)
+    }
     const exprotData: {
       mesh: Object3D
       material: Material
@@ -272,6 +275,10 @@ const load = async (three: {
     earth:await three.downloadImagesTexture(
         "./images/map/earth.jpg",
         'earth'
+    ),
+    china:await three.downloadImagesTexture(
+        "./images/map/china.jpg",
+        'china'
     )
   }
   const envMaps = ( function () {
@@ -713,13 +720,51 @@ const load = async (three: {
           },
         })
       }))
+      const chinaTexture = (texture=>{
+        texture.matrixAutoUpdate = false
+        texture.needsUpdate = true
+        return texture
+      })(textures.china.clone())
+      await createOBj("中国地图贴图",{
+          objectConfig(data) {
+              return {
+                values:{
+                  n11: types.number(0.768, {nudgeMultiplier: 0.001}),
+                  n12: types.number(0.143, {nudgeMultiplier: 0.001}),
+                  n13: types.number(0.599, {nudgeMultiplier: 0.001}),
+                  n21: types.number(0, {nudgeMultiplier: 0.001}),
+                  n22: types.number(0.94, {nudgeMultiplier: 0.001}),
+                  n23: types.number(0.457, {nudgeMultiplier: 0.001}),
+                  n31: types.number(0, {nudgeMultiplier: 0.001}),
+                  n32: types.number(0, {nudgeMultiplier: 0.001}),
+                  n33: types.number(0, {nudgeMultiplier: 0.001}),
+                },
+                change(values, data) {
+                  chinaTexture.matrix = new THREE.Matrix3().set(
+                      values.n11,
+                      values.n12,
+                      values.n13,
+                      values.n21,
+                      values.n22,
+                      values.n23,
+                      values.n31,
+                      values.n32,
+                      values.n33,
+                  )
+                },
+              }
+          },
+      })
       mapGroup.traverse((object3d:THREE.Mesh)=>{
         if(object3d.name === 'map'){
           object3d.material = new THREE.MeshStandardMaterial({
             color: 0x5e62da, // 纯色
             metalness: 0.0,  // 完全金属
             roughness: 0.0,  // 完全光滑
-            envMap:envMaps.reflection
+            envMap:envMaps.reflection,
+            map:chinaTexture,
+            bumpMap:chinaTexture,
+            bumpScale:0.1
           });
           object3d.castShadow = true
           object3d.receiveShadow = true
