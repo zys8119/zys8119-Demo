@@ -53,18 +53,26 @@ const load = async (three: {
   downloadImagesTexture(url: string, imageName?: string): Texture
 }) => {
   localStorage.clear()
+  await nextTick()
+  /**
+   * 飞线
+   */
   const lines = [
       [[116.405285, 39.904989],[120.153576, 30.287459]],
       [[87.617733, 43.792818],[120.153576, 30.287459]],
+      [[116.405285, 39.904989],[87.617733, 43.792818]],
   ]
-  const provinceNameMaps = [
-    "浙江省",
-    "北京市",
-    "新疆维吾尔自治区"
+  /**
+   * 标记点
+   */
+  const markingPoints = [
+    {name:"浙江省",pos:[120.153576, 30.287459]},
+    {name:"北京市",pos:[116.405285, 39.904989]},
+    {name:"新疆维吾尔自治区",pos:[87.617733, 43.792818]},
   ]
   const sheetsByIdMap = {
     "省份": {
-      data:provinceNameMaps,
+      data:markingPoints.map(e=>e.name),
       getValue(b:string){
         return {
           "trackData": {
@@ -577,87 +585,87 @@ const load = async (three: {
           province.add(coordinatesGroup)
 
         })
-        if(elem.properties?.center && provinceNameMaps.includes(elem.properties?.name)){
-          await createOBj(elem.properties?.name,{
-            sheet:provinceSheet,
-            scene:province,
-            geometry() {
-                return new THREE.ConeGeometry( 0.1, 0.16, 4 )
-            },
-            mesh(geometry, material) {
-              const cone = new THREE.Mesh( geometry, [
-                new THREE.MeshBasicMaterial( {
-                  transparent:true,
-                  side: THREE.DoubleSide,
-                  map:(texture=>{
-                    texture.wrapS = THREE.RepeatWrapping
-                    return texture
-                  })(lineTexture.clone()),
-                }),
-                null,
-                new THREE.MeshBasicMaterial( {
-                  transparent:true,
-                  side: THREE.DoubleSide,
-                  map:(texture=>{
-                    texture.wrapS = THREE.RepeatWrapping
-                    return texture
-                  })(lineTexture2.clone()),
-                }),
-              ] );
-              cone.receiveShadow = true
-              cone.castShadow = true
-              cone.rotation.x = -Math.PI/2
-              const [px,py] = projection(elem.properties?.center)
-              cone.position.set(px,-py, 0.405)
-              return cone
-            },
-            objectConfig(data) {
-                return {
-                  values: {
-                      position: types.compound({
-                        x: types.number(data.mesh.position.x, {nudgeMultiplier: 0.001}),
-                        y: types.number(data.mesh.position.y, {nudgeMultiplier: 0.001}),
-                        z: types.number(data.mesh.position.z, {nudgeMultiplier: 0.001})
-                      }),
-                      rotation: types.compound({
-                        x: types.number(data.mesh.rotation.x, {nudgeMultiplier: 0.001}),
-                        y: types.number(data.mesh.rotation.y, {nudgeMultiplier: 0.001}),
-                        z: types.number(data.mesh.rotation.z, {nudgeMultiplier: 0.001})
-                      }),
-                      scale: types.number(0.06, {nudgeMultiplier: 0.001}),
-                      n11: types.number(4, {nudgeMultiplier: 0.001}),
-                      n12: types.number(-0.5, {nudgeMultiplier: 0.001}),
-                      n13: types.number(0, {nudgeMultiplier: 0.001}),
-                      n21: types.number(0, {nudgeMultiplier: 0.001}),
-                      n22: types.number(1, {nudgeMultiplier: 0.001}),
-                      n23: types.number(0, {nudgeMultiplier: 0.001}),
-                      n31: types.number(0, {nudgeMultiplier: 0.001}),
-                      n32: types.number(0, {nudgeMultiplier: 0.001}),
-                      n33: types.number(0, {nudgeMultiplier: 0.001}),
-                  },
-                  change(values, data) {
-                    data.mesh.position.set(values.position.x, values.position.y,values.position.z)
-                    data.mesh.rotation.set(values.rotation.x, values.rotation.y,values.rotation.z)
-                    data.mesh.scale.set(values.scale,values.scale, values.scale)
-                    data.mesh.material[0].map.matrixAutoUpdate = false
-                    data.mesh.material[0].map.matrix = new THREE.Matrix3().set(
-                        values.n11,
-                        values.n12,
-                        values.n13,
-                        values.n21,
-                        values.n22,
-                        values.n23,
-                        values.n31,
-                        values.n32,
-                        values.n33,
-                    )
-                  },
-                }
-            },
-          })
-        }
 
         mapGroup.add(province)
+      }))
+      await Promise.all(markingPoints.map(async e=>{
+        await createOBj(e.name,{
+          sheet:provinceSheet,
+          scene:mapGroup,
+          geometry() {
+            return new THREE.ConeGeometry( 0.1, 0.16, 4 )
+          },
+          mesh(geometry, material) {
+            const cone = new THREE.Mesh( geometry, [
+              new THREE.MeshBasicMaterial( {
+                transparent:true,
+                side: THREE.DoubleSide,
+                map:(texture=>{
+                  texture.wrapS = THREE.RepeatWrapping
+                  return texture
+                })(lineTexture.clone()),
+              }),
+              null,
+              new THREE.MeshBasicMaterial( {
+                transparent:true,
+                side: THREE.DoubleSide,
+                map:(texture=>{
+                  texture.wrapS = THREE.RepeatWrapping
+                  return texture
+                })(lineTexture2.clone()),
+              }),
+            ] );
+            cone.receiveShadow = true
+            cone.castShadow = true
+            cone.rotation.x = -Math.PI/2
+            const [px,py] = projection(e.pos)
+            cone.position.set(px,-py, 0.408)
+            return cone
+          },
+          objectConfig(data) {
+            return {
+              values: {
+                position: types.compound({
+                  x: types.number(data.mesh.position.x, {nudgeMultiplier: 0.001}),
+                  y: types.number(data.mesh.position.y, {nudgeMultiplier: 0.001}),
+                  z: types.number(data.mesh.position.z, {nudgeMultiplier: 0.001})
+                }),
+                rotation: types.compound({
+                  x: types.number(data.mesh.rotation.x, {nudgeMultiplier: 0.001}),
+                  y: types.number(data.mesh.rotation.y, {nudgeMultiplier: 0.001}),
+                  z: types.number(data.mesh.rotation.z, {nudgeMultiplier: 0.001})
+                }),
+                scale: types.number(0.09, {nudgeMultiplier: 0.001}),
+                n11: types.number(4, {nudgeMultiplier: 0.001}),
+                n12: types.number(-0.5, {nudgeMultiplier: 0.001}),
+                n13: types.number(0, {nudgeMultiplier: 0.001}),
+                n21: types.number(0, {nudgeMultiplier: 0.001}),
+                n22: types.number(1, {nudgeMultiplier: 0.001}),
+                n23: types.number(0, {nudgeMultiplier: 0.001}),
+                n31: types.number(0, {nudgeMultiplier: 0.001}),
+                n32: types.number(0, {nudgeMultiplier: 0.001}),
+                n33: types.number(0, {nudgeMultiplier: 0.001}),
+              },
+              change(values, data) {
+                data.mesh.position.set(values.position.x, values.position.y,values.position.z)
+                data.mesh.rotation.set(values.rotation.x, values.rotation.y,values.rotation.z)
+                data.mesh.scale.set(values.scale,values.scale, values.scale)
+                data.mesh.material[0].map.matrixAutoUpdate = false
+                data.mesh.material[0].map.matrix = new THREE.Matrix3().set(
+                    values.n11,
+                    values.n12,
+                    values.n13,
+                    values.n21,
+                    values.n22,
+                    values.n23,
+                    values.n31,
+                    values.n32,
+                    values.n33,
+                )
+              },
+            }
+          },
+        })
       }))
       await Promise.all(lines.map(async ([start,end]:any,k)=>{
         const [sx,sy] = projection(start)
