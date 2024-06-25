@@ -926,7 +926,6 @@ const load = async (three: {
         }
         object3dCurr = object3d
         traverse()
-        console.log(mapName, object3d, 888)
         await sheet.sequence.play({range:[4,5]})
       }
       traverse()
