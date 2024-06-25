@@ -1,5 +1,5 @@
 <template>
-  <div class="large-screen-map-animation">
+  <div class="large-screen-map-animation" ref="elRef">
     <BaseThree @load="load" @animation="animation"></BaseThree>
     <div id="aaa"></div>
   </div>
@@ -19,6 +19,8 @@ import theatreProjectState from "../../public/images/map/theatre-project-state.j
 import {Texture} from "three/src/textures/Texture";
 import {TextGeometry} from "three/examples/jsm/geometries/TextGeometry";
 import {Font} from "three/examples/jsm/loaders/FontLoader";
+import onEvent from "three-onevent-esm";
+const elRef = ref()
 
 if (import.meta.env.DEV) {
   studio.extend({
@@ -55,6 +57,7 @@ const load = async (three: {
   downloadImagesTexture(url: string, imageName?: string): Texture
   downloadFonts(fontUrl: string, familyName?: string):Promise<Font>
 }) => {
+  new onEvent(three.scene, three.camera , elRef.value)
   localStorage.clear()
   await nextTick()
   /**
@@ -73,6 +76,8 @@ const load = async (three: {
     {name:"北京市",pos:[116.405285, 39.904989],value:0},
     {name:"新疆维吾尔自治区",pos:[87.617733, 43.792818],value:0},
   ]
+  const isFirstPlay = ref(false)
+  const selectMap = ref("浙江省")
   const sheetsByIdMap = {
     "省份": {
       data:markingPoints.map(e=>e.name),
@@ -198,7 +203,9 @@ const load = async (three: {
   const flywireSheet = project.sheet('飞线')
   const {THREE, scene,camera} = three
   await project.ready
-  sheet.sequence.play()
+  sheet.sequence.play({range:[0,4]}).then(()=>{
+    isFirstPlay.value = true
+  })
   yunSheet.sequence.play({iterationCount:Infinity})
   provinceSheet.sequence.play({iterationCount:Infinity, range:[0,6]})
   flywireSheet.sequence.play({iterationCount:Infinity, range:[0,2]})
@@ -597,13 +604,12 @@ const load = async (three: {
               depth:mapDepth,
             })
             const mesh = new THREE.Mesh(geometry)
-            mesh.name = 'map'
+            mesh.name = `map-bankia-${elem.properties.name}`
             coordinatesGroup.add(mesh)
           })
           province.add(coordinatesGroup)
 
         })
-
         mapGroup.add(province)
       }))
       await Promise.all(markingPoints.map(async e=>{
@@ -612,7 +618,6 @@ const load = async (three: {
           sheet:provinceSheet,
           scene:mapGroup,
           geometry() {
-            console.log(String(e.value || 0))
               return new TextGeometry(String(e.value || 0), {
                 font: font,
                 size: 0.01,
@@ -889,27 +894,80 @@ const load = async (three: {
               }
           },
       })
-      mapGroup.traverse((object3d:THREE.Mesh)=>{
-        if(object3d.name === 'map'){
-          object3d.material = [
-            new THREE.MeshStandardMaterial({
-              color: 0x5e62da, // 纯色
-              metalness: 0.0,  // 完全金属
-              roughness: 0.0,  // 完全光滑
-              envMap:envMaps.reflection,
-              map:chinaTexture,
-              bumpMap:chinaTexture,
-              bumpScale:0.1
-            }),
-            new THREE.MeshStandardMaterial({
-              color:new THREE.Color("#2e24ae"),
-              map:chinaJianbianTexture
-            })
-          ];
-          object3d.castShadow = true
-          object3d.receiveShadow = true
+      const traverseMaps = {}
+      const traverse = ()=>{
+        mapGroup.traverse(async (object3d:THREE.Mesh)=>{
+          const [,mapType,mapName] = object3d.name.match(/^(map-bankia)-(.*)/) || []
+          if(mapType === 'map-bankia'){
+            traverseMaps[mapName] = object3d
+            object3d.material = [
+              new THREE.MeshStandardMaterial({
+                color: 0x5e62da, // 纯色
+                metalness: 0.0,  // 完全金属
+                roughness: 0.0,  // 完全光滑
+                envMap:envMaps.reflection,
+                map:chinaTexture,
+                bumpMap:chinaTexture,
+                bumpScale:0.1
+              }),
+              new THREE.MeshStandardMaterial({
+                color:new THREE.Color("#2e24ae"),
+                map:chinaJianbianTexture
+              })
+            ];
+            object3d.castShadow = true
+            object3d.receiveShadow = true
+          }
+        })
+      }
+      const clickCallBack = async(mapName,object3d)=>{
+        if(object3dCurr){
+          await sheet.sequence.play({range:[5,6]})
+        }
+        object3dCurr = object3d
+        traverse()
+        console.log(mapName, object3d, 888)
+        await sheet.sequence.play({range:[4,5]})
+      }
+      traverse()
+      watch(isFirstPlay, ()=>{
+        if(isFirstPlay.value){
+          clickCallBack(selectMap.value , traverseMaps[selectMap.value])
         }
       })
+      let object3dCurr = null
+      await createOBj('地图高亮-板块', {
+        objectConfig(data) {
+          return {
+            values:{
+              x:types.number(0, {nudgeMultiplier: 0.001}),
+              y:types.number(0, {nudgeMultiplier: 0.001}),
+              z:types.number(0.006, {nudgeMultiplier: 0.001}),
+              color:types.rgba(getRgba("#d58e1c")),
+            },
+            change(values, data) {
+              if(object3dCurr){
+                object3dCurr.material[0].setValues({
+                  color:color(values.color.toString()).rgbNumber(),
+                  map:null,
+                  envMap:null,
+                })
+                object3dCurr.position.set(values.x, values.y, values.z)
+              }
+            },
+          }
+        },
+      })
+      mapGroup.traverse((object3d:THREE.Mesh)=>{
+        const [,mapType,mapName] = object3d.name.match(/^(map-bankia)-(.*)/) || []
+        if(mapType === 'map-bankia'){
+          object3d.on('click',()=>{
+            clickCallBack(mapName,object3d)
+          })
+        }
+      })
+
+      // sheet.sequence.play({range:[4,5]})
       return mapGroup
     },
     objectConfig() {

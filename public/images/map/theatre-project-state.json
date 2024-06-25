@@ -532,6 +532,76 @@
             "trackIdByPropPath": {
               "[\"intensity\"]": "MQk4IS9-DL"
             }
+          },
+          "地图高亮-板块": {
+            "trackData": {
+              "APCnYJ_KZp": {
+                "type": "BasicKeyframedTrack",
+                "__debugName": "地图高亮-板块:[\"x\"]",
+                "keyframes": []
+              },
+              "dOub1cTuER": {
+                "type": "BasicKeyframedTrack",
+                "__debugName": "地图高亮-板块:[\"y\"]",
+                "keyframes": []
+              },
+              "aily1dRmWT": {
+                "type": "BasicKeyframedTrack",
+                "__debugName": "地图高亮-板块:[\"z\"]",
+                "keyframes": [
+                  {
+                    "id": "iH1e93mo-L",
+                    "position": 4,
+                    "connectedRight": true,
+                    "handles": [
+                      0.5,
+                      1,
+                      0.5,
+                      0
+                    ],
+                    "type": "bezier",
+                    "value": 0
+                  },
+                  {
+                    "id": "I807mQa7wj",
+                    "position": 4.967,
+                    "connectedRight": true,
+                    "handles": [
+                      0.5,
+                      1,
+                      0.5,
+                      0
+                    ],
+                    "type": "bezier",
+                    "value": 0.006
+                  },
+                  {
+                    "id": "w5aZT-GUlP",
+                    "position": 6,
+                    "connectedRight": true,
+                    "handles": [
+                      0.5,
+                      1,
+                      0.5,
+                      0
+                    ],
+                    "type": "bezier",
+                    "value": 0
+                  }
+                ]
+              },
+              "pqVzjR6vzu": {
+                "type": "BasicKeyframedTrack",
+                "__debugName": "地图高亮-板块:[\"color\"]",
+                "keyframes": []
+              }
+            },
+            "trackIdByPropPath": {
+              "[\"x\"]": "APCnYJ_KZp",
+              "[\"y\"]": "dOub1cTuER",
+              "[\"z\"]": "aily1dRmWT",
+              "[\"color\"]": "pqVzjR6vzu"
+            }
           }
         }
       }
@@ -773,14 +843,14 @@
         "length": 10,
         "type": "PositionalSequence",
         "tracksByObject": {
-          "飞线-2": {
+          "飞线-1": {
             "trackData": {
-              "cnw4ZkbgLM": {
+              "cnw4ZkbgLM飞线-1": {
                 "type": "BasicKeyframedTrack",
-                "__debugName": "飞线-2:[\"points\"]",
+                "__debugName": "飞线-1:[\"points\"]",
                 "keyframes": [
                   {
-                    "id": "EUnDAC-14I",
+                    "id": "EUnDAC-14I飞线-1",
                     "position": 0,
                     "connectedRight": true,
                     "handles": [
@@ -793,7 +863,7 @@
                     "value": 0
                   },
                   {
-                    "id": "mLzXw9V18N",
+                    "id": "mLzXw9V18N飞线-1",
                     "position": 1.967,
                     "connectedRight": true,
                     "handles": [
@@ -809,7 +879,85 @@
               }
             },
             "trackIdByPropPath": {
-              "[\"points\"]": "cnw4ZkbgLM"
+              "[\"points\"]": "cnw4ZkbgLM飞线-1"
+            }
+          },
+          "飞线-2": {
+            "trackData": {
+              "cnw4ZkbgLM飞线-2": {
+                "type": "BasicKeyframedTrack",
+                "__debugName": "飞线-2:[\"points\"]",
+                "keyframes": [
+                  {
+                    "id": "EUnDAC-14I飞线-2",
+                    "position": 0,
+                    "connectedRight": true,
+                    "handles": [
+                      0.5,
+                      1,
+                      0.5,
+                      0
+                    ],
+                    "type": "bezier",
+                    "value": 0
+                  },
+                  {
+                    "id": "mLzXw9V18N飞线-2",
+                    "position": 1.967,
+                    "connectedRight": true,
+                    "handles": [
+                      0.5,
+                      1,
+                      0.5,
+                      0
+                    ],
+                    "type": "bezier",
+                    "value": 200
+                  }
+                ]
+              }
+            },
+            "trackIdByPropPath": {
+              "[\"points\"]": "cnw4ZkbgLM飞线-2"
+            }
+          },
+          "飞线-3": {
+            "trackData": {
+              "cnw4ZkbgLM飞线-3": {
+                "type": "BasicKeyframedTrack",
+                "__debugName": "飞线-3:[\"points\"]",
+                "keyframes": [
+                  {
+                    "id": "EUnDAC-14I飞线-3",
+                    "position": 0,
+                    "connectedRight": true,
+                    "handles": [
+                      0.5,
+                      1,
+                      0.5,
+                      0
+                    ],
+                    "type": "bezier",
+                    "value": 0
+                  },
+                  {
+                    "id": "mLzXw9V18N飞线-3",
+                    "position": 1.967,
+                    "connectedRight": true,
+                    "handles": [
+                      0.5,
+                      1,
+                      0.5,
+                      0
+                    ],
+                    "type": "bezier",
+                    "value": 200
+                  }
+                ]
+              }
+            },
+            "trackIdByPropPath": {
+              "[\"points\"]": "cnw4ZkbgLM飞线-3"
             }
           }
         }
@@ -818,6 +966,7 @@
   },
   "definitionVersion": "0.4.0",
   "revisionHistory": [
+    "vrdXHiAj96e9ntwv",
     "Q5ns43ZKKfG6DZqO",
     "iaARiF_xHpEj1Pl2",
     "yz43mQE5-z7Y7SHn",
