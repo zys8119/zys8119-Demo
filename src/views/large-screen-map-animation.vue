@@ -279,6 +279,10 @@ const load = async (three: {
     china:await three.downloadImagesTexture(
         "./images/map/china.jpg",
         'china'
+    ),
+    jianbian:await three.downloadImagesTexture(
+        "./images/map/jianbian.jpg",
+        'jianbian'
     )
   }
   const envMaps = ( function () {
@@ -755,17 +759,63 @@ const load = async (three: {
               }
           },
       })
+      const chinaJianbianTexture = (texture=>{
+        texture.matrixAutoUpdate = false
+        texture.needsUpdate = true
+        texture.wrapS = THREE.RepeatWrapping
+        return texture
+      })(textures.jianbian.clone())
+      await createOBj("中国地图渐变贴图",{
+          objectConfig(data) {
+              return {
+                values:{
+                  n11: types.number(1, {nudgeMultiplier: 0.001}),
+                  n12: types.number(0, {nudgeMultiplier: 0.001}),
+                  n13: types.number(0.5, {nudgeMultiplier: 0.001}),
+                  n21: types.number(0, {nudgeMultiplier: 0.001}),
+                  n22: types.number(1, {nudgeMultiplier: 0.001}),
+                  n23: types.number(0, {nudgeMultiplier: 0.001}),
+                  n31: types.number(0, {nudgeMultiplier: 0.001}),
+                  n32: types.number(0, {nudgeMultiplier: 0.001}),
+                  n33: types.number(0, {nudgeMultiplier: 0.001}),
+                },
+                change(values, data) {
+                  requestAnimationFrame(function aa(){
+                    values.n12 += 0.01
+                    chinaJianbianTexture.matrix = new THREE.Matrix3().set(
+                        values.n11,
+                        values.n12,
+                        values.n13,
+                        values.n21,
+                        values.n22,
+                        values.n23,
+                        values.n31,
+                        values.n32,
+                        values.n33,
+                    )
+                    requestAnimationFrame(aa)
+                  })
+                },
+              }
+          },
+      })
       mapGroup.traverse((object3d:THREE.Mesh)=>{
         if(object3d.name === 'map'){
-          object3d.material = new THREE.MeshStandardMaterial({
-            color: 0x5e62da, // 纯色
-            metalness: 0.0,  // 完全金属
-            roughness: 0.0,  // 完全光滑
-            envMap:envMaps.reflection,
-            map:chinaTexture,
-            bumpMap:chinaTexture,
-            bumpScale:0.1
-          });
+          object3d.material = [
+            new THREE.MeshStandardMaterial({
+              color: 0x5e62da, // 纯色
+              metalness: 0.0,  // 完全金属
+              roughness: 0.0,  // 完全光滑
+              envMap:envMaps.reflection,
+              map:chinaTexture,
+              bumpMap:chinaTexture,
+              bumpScale:0.1
+            }),
+            new THREE.MeshStandardMaterial({
+              color:new THREE.Color("#2e24ae"),
+              map:chinaJianbianTexture
+            })
+          ];
           object3d.castShadow = true
           object3d.receiveShadow = true
         }
