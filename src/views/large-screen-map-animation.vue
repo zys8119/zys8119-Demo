@@ -17,7 +17,6 @@ import color from "color";
 import {geoMercator} from "d3-geo";
 import theatreProjectState from "../../public/images/map/theatre-project-state.json";
 import {Texture} from "three/src/textures/Texture";
-import {texture} from "three/examples/jsm/nodes/shadernode/ShaderNodeBaseElements";
 
 if (import.meta.env.DEV) {
   studio.extend({
@@ -128,7 +127,7 @@ const load = async (three: {
   const sheet = project.sheet('地图')
   const yunSheet = project.sheet('云层')
   const provinceSheet = project.sheet('省份')
-  const {THREE, scene} = three
+  const {THREE, scene,camera} = three
   await project.ready
   sheet.sequence.play()
   yunSheet.sequence.play({iterationCount:Infinity})
@@ -202,6 +201,12 @@ const load = async (three: {
       "./images/map/line2.png",
       'line2'
   )
+  const textures = {
+    earth:await three.downloadImagesTexture(
+        "./images/map/earth.jpg",
+        'earth'
+    )
+  }
   const envMaps = ( function () {
     const cubeTextureLoader = new THREE.CubeTextureLoader();
     const path = './images/map/';
@@ -333,7 +338,7 @@ const load = async (three: {
       return new THREE.CapsuleGeometry(1, 0, 50, 50)
     },
     material() {
-      return new THREE.MeshLambertMaterial({})
+      return new THREE.MeshBasicMaterial({})
     },
     mesh(geometry, material) {
       return new THREE.Mesh(geometry, material)
@@ -346,7 +351,7 @@ const load = async (three: {
             y: types.number(0),
             z: types.number(0),
           }),
-          color:types.rgba(getRgba("#08113c"))
+          color:types.rgba(getRgba("#230f80"))
         },
         change(values, data:{
           mesh: Object3D,
@@ -354,7 +359,10 @@ const load = async (three: {
           geometry: THREE.BoxGeometry,
         }) {
           data.material.setValues({
-            color:color(values.color.toString()).rgbNumber()
+            color:color(values.color.toString()).rgbNumber(),
+            alphaMap:textures.earth,
+            bumpMap:textures.earth,
+            aoMap:textures.earth,
           })
           data.mesh.rotation.set(values.rotation.x, values.rotation.y, values.rotation.z)
         },
@@ -382,7 +390,7 @@ const load = async (three: {
             y: types.number(0),
             z: types.number(0),
           }),
-          opacity: types.number(0.5, { nudgeMultiplier:0.01}),
+          opacity: types.number(0.3, { nudgeMultiplier:0.01}),
           scale: types.number(1.02, { nudgeMultiplier:0.005}),
           image: types.image('yun.png', {label: 'Texture',}),
           image2: types.image('yun2.png', {label: 'Texture',}),
@@ -395,13 +403,15 @@ const load = async (three: {
         }) {
           data.mesh.rotation.set(values.rotation.x, values.rotation.y, values.rotation.z)
           data.mesh.scale.set(values.scale, values.scale, values.scale)
-          const texture = three.downloadImagesTexture(project.getAssetUrl(values.image),project.getAssetUrl(values.image)).clone()
+          const texture = three.downloadImagesTexture(project.getAssetUrl(values.image2),project.getAssetUrl(values.image)).clone()
           texture.wrapS = THREE.MirroredRepeatWrapping
           texture.wrapT = THREE.MirroredRepeatWrapping
           texture.repeat = new THREE.Vector2(values.repeat, values.repeat)
           data.material.setValues({
             map:texture,
+            alphaMap:texture,
             opacity:values.opacity,
+            emissive:0
           })
         },
       }
@@ -439,7 +449,7 @@ const load = async (three: {
         }) {
           data.mesh.rotation.set(values.rotation.x, values.rotation.y, values.rotation.z)
           data.mesh.scale.set(values.scale, values.scale, values.scale)
-          const texture = new THREE.TextureLoader().load(project.getAssetUrl(values.image))
+          const texture = three.downloadImagesTexture(project.getAssetUrl(values.image),project.getAssetUrl(values.image)).clone()
           texture.wrapS = THREE.MirroredRepeatWrapping
           texture.wrapT = THREE.MirroredRepeatWrapping
           texture.repeat = new THREE.Vector2(values.repeat, values.repeat)
