@@ -61,10 +61,14 @@ const load = async (three: {
   light: Light
   downloadImagesTexture(url: string, imageName?: string): Texture
 }) => {
-  (theatreProjectState as any).sheetsById['省份'].sequence.tracksByObject = [
-      "浙江省",
-      "北京市"
-  ].reduce((a,b)=>{
+  const lines = [
+      [[116.405285, 39.904989],[120.153576, 30.287459]],
+  ]
+  const provinceNameMaps = [
+    "浙江省",
+    "北京市"
+  ]
+  ;(theatreProjectState as any).sheetsById['省份'].sequence.tracksByObject = provinceNameMaps.reduce((a,b)=>{
      a[b] = {
        "trackData": {
          [`GS6wSiUxXx${b}`]: {
@@ -127,6 +131,7 @@ const load = async (three: {
   const sheet = project.sheet('地图')
   const yunSheet = project.sheet('云层')
   const provinceSheet = project.sheet('省份')
+  const flywireSheet = project.sheet('飞线')
   const {THREE, scene,camera} = three
   await project.ready
   sheet.sequence.play()
@@ -518,7 +523,8 @@ const load = async (three: {
           province.add(coordinatesGroup)
 
         })
-        if(elem.properties?.center){
+        if(elem.properties?.center && provinceNameMaps.includes(elem.properties?.name)){
+          console.log(elem.properties.name, elem.properties.center)
           await createOBj(elem.properties?.name,{
             sheet:provinceSheet,
             scene:province,
@@ -599,6 +605,52 @@ const load = async (three: {
         }
 
         mapGroup.add(province)
+      }))
+      await Promise.all(lines.map(async ([start,end]:any,k)=>{
+        const [sx,sy] = projection(start)
+        const [ex,ey] = projection(end)
+        await createOBj(`飞线-${k+1}`,{
+          sheet:flywireSheet,
+          scene: mapGroup,
+          geometry() {
+            const z = 0.405
+            const curve = new THREE.QuadraticBezierCurve3(
+                new THREE.Vector3( ex,-ey, z ),
+                new THREE.Vector3( (ex+sx)/2,(-sy+-ey)/2, z+0.1 ),
+                new THREE.Vector3( sx,-sy, z),
+            );
+            return new THREE.BufferGeometry().setFromPoints( curve.getPoints( 50 ) );
+          },
+          material() {
+              return new THREE.LineBasicMaterial( {
+                color: 0xff0000,
+                linewidth: 3,
+              } )
+          },
+          mesh(geometry, material) {
+              return new THREE.Line( geometry, material )
+          },
+          objectConfig(data) {
+              return {
+                values:{
+                  points:types.number(0)
+                },
+                change(values, data) {
+                  const z = 0.405
+                  const curve = new THREE.QuadraticBezierCurve3(
+                      new THREE.Vector3( ex,-ey, z ),
+                      new THREE.Vector3( (ex+sx)/2,(-sy+-ey)/2, z+0.1 ),
+                      new THREE.Vector3( sx,-sy, z),
+                  );
+                  const points = curve.getPoints( 50 )
+                  const index = Math.ceil(values.points)
+                  console.log(index / 50)
+                  const currPoints = points.slice(0, index)
+                  data.mesh.geometry = new THREE.BufferGeometry().setFromPoints(currPoints)
+                },
+              }
+          },
+        })
       }))
       mapGroup.traverse((object3d:THREE.Mesh)=>{
         if(object3d.name === 'map'){
