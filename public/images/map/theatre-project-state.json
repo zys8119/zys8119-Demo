@@ -610,17 +610,17 @@
         "tracksByObject": {
           "浙江省": {
             "trackData": {
-              "GS6wSiUxXx": {
+              "GS6wSiUxXx浙江省": {
                 "type": "BasicKeyframedTrack",
                 "__debugName": "浙江省:[\"rotation\",\"x\"]",
                 "keyframes": []
               },
-              "9XQa_whF4S": {
+              "9XQa_whF4S浙江省": {
                 "type": "BasicKeyframedTrack",
-                "__debugName": "浙江省:[\"rotation\",\"y\"]",
+                "__debugName": "\"浙江省:[\"rotation\",\"y\"]\"",
                 "keyframes": [
                   {
-                    "id": "uKHxri1W6G",
+                    "id": "uKHxri1W6G浙江省",
                     "position": 0,
                     "connectedRight": true,
                     "handles": [
@@ -633,7 +633,7 @@
                     "value": 0
                   },
                   {
-                    "id": "XqSQhcSLb3",
+                    "id": "XqSQhcSLb3浙江省",
                     "position": 6.1,
                     "connectedRight": true,
                     "handles": [
@@ -647,16 +647,169 @@
                   }
                 ]
               },
-              "hlldCXexxh": {
+              "hlldCXexxh浙江省": {
                 "type": "BasicKeyframedTrack",
-                "__debugName": "浙江省:[\"rotation\",\"z\"]",
+                "__debugName": "\"浙江省:[\"rotation\",\"z\"]\"",
                 "keyframes": []
               }
             },
             "trackIdByPropPath": {
-              "[\"rotation\",\"x\"]": "GS6wSiUxXx",
-              "[\"rotation\",\"y\"]": "9XQa_whF4S",
-              "[\"rotation\",\"z\"]": "hlldCXexxh"
+              "[\"rotation\",\"x\"]": "GS6wSiUxXx浙江省",
+              "[\"rotation\",\"y\"]": "9XQa_whF4S浙江省",
+              "[\"rotation\",\"z\"]": "hlldCXexxh浙江省"
+            }
+          },
+          "北京市": {
+            "trackData": {
+              "GS6wSiUxXx北京市": {
+                "type": "BasicKeyframedTrack",
+                "__debugName": "北京市:[\"rotation\",\"x\"]",
+                "keyframes": []
+              },
+              "9XQa_whF4S北京市": {
+                "type": "BasicKeyframedTrack",
+                "__debugName": "\"北京市:[\"rotation\",\"y\"]\"",
+                "keyframes": [
+                  {
+                    "id": "uKHxri1W6G北京市",
+                    "position": 0,
+                    "connectedRight": true,
+                    "handles": [
+                      0.5,
+                      1,
+                      0.5,
+                      0.5
+                    ],
+                    "type": "bezier",
+                    "value": 0
+                  },
+                  {
+                    "id": "XqSQhcSLb3北京市",
+                    "position": 6.1,
+                    "connectedRight": true,
+                    "handles": [
+                      0.5,
+                      0.5,
+                      0.5,
+                      0
+                    ],
+                    "type": "bezier",
+                    "value": 6.2831
+                  }
+                ]
+              },
+              "hlldCXexxh北京市": {
+                "type": "BasicKeyframedTrack",
+                "__debugName": "\"北京市:[\"rotation\",\"z\"]\"",
+                "keyframes": []
+              }
+            },
+            "trackIdByPropPath": {
+              "[\"rotation\",\"x\"]": "GS6wSiUxXx北京市",
+              "[\"rotation\",\"y\"]": "9XQa_whF4S北京市",
+              "[\"rotation\",\"z\"]": "hlldCXexxh北京市"
+            }
+          },
+          "新疆维吾尔自治区": {
+            "trackData": {
+              "GS6wSiUxXx新疆维吾尔自治区": {
+                "type": "BasicKeyframedTrack",
+                "__debugName": "新疆维吾尔自治区:[\"rotation\",\"x\"]",
+                "keyframes": []
+              },
+              "9XQa_whF4S新疆维吾尔自治区": {
+                "type": "BasicKeyframedTrack",
+                "__debugName": "\"新疆维吾尔自治区:[\"rotation\",\"y\"]\"",
+                "keyframes": [
+                  {
+                    "id": "uKHxri1W6G新疆维吾尔自治区",
+                    "position": 0,
+                    "connectedRight": true,
+                    "handles": [
+                      0.5,
+                      1,
+                      0.5,
+                      0.5
+                    ],
+                    "type": "bezier",
+                    "value": 0
+                  },
+                  {
+                    "id": "XqSQhcSLb3新疆维吾尔自治区",
+                    "position": 6.1,
+                    "connectedRight": true,
+                    "handles": [
+                      0.5,
+                      0.5,
+                      0.5,
+                      0
+                    ],
+                    "type": "bezier",
+                    "value": 6.2831
+                  }
+                ]
+              },
+              "hlldCXexxh新疆维吾尔自治区": {
+                "type": "BasicKeyframedTrack",
+                "__debugName": "\"新疆维吾尔自治区:[\"rotation\",\"z\"]\"",
+                "keyframes": []
+              }
+            },
+            "trackIdByPropPath": {
+              "[\"rotation\",\"x\"]": "GS6wSiUxXx新疆维吾尔自治区",
+              "[\"rotation\",\"y\"]": "9XQa_whF4S新疆维吾尔自治区",
+              "[\"rotation\",\"z\"]": "hlldCXexxh新疆维吾尔自治区"
+            }
+          }
+        }
+      }
+    },
+    "飞线": {
+      "staticOverrides": {
+        "byObject": {}
+      },
+      "sequence": {
+        "subUnitsPerUnit": 30,
+        "length": 10,
+        "type": "PositionalSequence",
+        "tracksByObject": {
+          "飞线-2": {
+            "trackData": {
+              "cnw4ZkbgLM": {
+                "type": "BasicKeyframedTrack",
+                "__debugName": "飞线-2:[\"points\"]",
+                "keyframes": [
+                  {
+                    "id": "EUnDAC-14I",
+                    "position": 0,
+                    "connectedRight": true,
+                    "handles": [
+                      0.5,
+                      1,
+                      0.5,
+                      0
+                    ],
+                    "type": "bezier",
+                    "value": 0
+                  },
+                  {
+                    "id": "mLzXw9V18N",
+                    "position": 1.967,
+                    "connectedRight": true,
+                    "handles": [
+                      0.5,
+                      1,
+                      0.5,
+                      0
+                    ],
+                    "type": "bezier",
+                    "value": 200
+                  }
+                ]
+              }
+            },
+            "trackIdByPropPath": {
+              "[\"points\"]": "cnw4ZkbgLM"
             }
           }
         }
@@ -665,6 +818,7 @@
   },
   "definitionVersion": "0.4.0",
   "revisionHistory": [
+    "Q5ns43ZKKfG6DZqO",
     "iaARiF_xHpEj1Pl2",
     "yz43mQE5-z7Y7SHn",
     "lnn5bIG5dLe7xYoI",

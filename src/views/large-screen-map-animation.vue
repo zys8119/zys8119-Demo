@@ -33,15 +33,6 @@ if (import.meta.env.DEV) {
         ])
       },
     },
-    panes: [
-      {
-        class: 'example',
-        mount({paneId, node}) {
-          node.innerText = 'Hello World'
-          return () => console.log('pane closed!')
-        },
-      },
-    ],
   })
   studio.initialize()
 }
@@ -61,67 +52,129 @@ const load = async (three: {
   light: Light
   downloadImagesTexture(url: string, imageName?: string): Texture
 }) => {
+  localStorage.clear()
   const lines = [
       [[116.405285, 39.904989],[120.153576, 30.287459]],
+      [[87.617733, 43.792818],[120.153576, 30.287459]],
   ]
   const provinceNameMaps = [
     "浙江省",
-    "北京市"
+    "北京市",
+    "新疆维吾尔自治区"
   ]
-  ;(theatreProjectState as any).sheetsById['省份'].sequence.tracksByObject = provinceNameMaps.reduce((a,b)=>{
-     a[b] = {
-       "trackData": {
-         [`GS6wSiUxXx${b}`]: {
-           "type": "BasicKeyframedTrack",
-           "__debugName": `${b}:["rotation","x"]`,
-           "keyframes": []
-         },
-         [`9XQa_whF4S${b}`]: {
-           "type": "BasicKeyframedTrack",
-           "__debugName": `"${b}:[\"rotation\",\"y\"]"`,
-           "keyframes": [
-             {
-               "id": `uKHxri1W6G${b}`,
-               "position": 0,
-               "connectedRight": true,
-               "handles": [
-                 0.5,
-                 1,
-                 0.5,
-                 0.5
-               ],
-               "type": "bezier",
-               "value": 0
-             },
-             {
-               "id": `XqSQhcSLb3${b}`,
-               "position": 6.1,
-               "connectedRight": true,
-               "handles": [
-                 0.5,
-                 0.5,
-                 0.5,
-                 0
-               ],
-               "type": "bezier",
-               "value": 6.2831
-             }
-           ]
-         },
-         [`hlldCXexxh${b}`]: {
-           "type": "BasicKeyframedTrack",
-           "__debugName": `"${b}:[\"rotation\",\"z\"]"`,
-           "keyframes": []
-         }
-       },
-       "trackIdByPropPath": {
-         "[\"rotation\",\"x\"]": `GS6wSiUxXx${b}`,
-         "[\"rotation\",\"y\"]": `9XQa_whF4S${b}`,
-         "[\"rotation\",\"z\"]": `hlldCXexxh${b}`
-       }
-     }
+  const sheetsByIdMap = {
+    "省份": {
+      data:provinceNameMaps,
+      getValue(b:string){
+        return {
+          "trackData": {
+            [`GS6wSiUxXx${b}`]: {
+              "type": "BasicKeyframedTrack",
+              "__debugName": `${b}:["rotation","x"]`,
+              "keyframes": []
+            },
+            [`9XQa_whF4S${b}`]: {
+              "type": "BasicKeyframedTrack",
+              "__debugName": `"${b}:[\"rotation\",\"y\"]"`,
+              "keyframes": [
+                {
+                  "id": `uKHxri1W6G${b}`,
+                  "position": 0,
+                  "connectedRight": true,
+                  "handles": [
+                    0.5,
+                    1,
+                    0.5,
+                    0.5
+                  ],
+                  "type": "bezier",
+                  "value": 0
+                },
+                {
+                  "id": `XqSQhcSLb3${b}`,
+                  "position": 6.1,
+                  "connectedRight": true,
+                  "handles": [
+                    0.5,
+                    0.5,
+                    0.5,
+                    0
+                  ],
+                  "type": "bezier",
+                  "value": 6.2831
+                }
+              ]
+            },
+            [`hlldCXexxh${b}`]: {
+              "type": "BasicKeyframedTrack",
+              "__debugName": `"${b}:[\"rotation\",\"z\"]"`,
+              "keyframes": []
+            }
+          },
+          "trackIdByPropPath": {
+            "[\"rotation\",\"x\"]": `GS6wSiUxXx${b}`,
+            "[\"rotation\",\"y\"]": `9XQa_whF4S${b}`,
+            "[\"rotation\",\"z\"]": `hlldCXexxh${b}`
+          }
+        }
+  }
+    },
+    "飞线": {
+      data: lines,
+      getKey(b:string,k:number){
+        return `飞线-${k+1}`
+      },
+      getValue(b:string,k:number){
+        const key = this.getKey(b, k)
+        return {
+          "trackData": {
+            [`cnw4ZkbgLM${key}`]: {
+              "type": "BasicKeyframedTrack",
+              "__debugName": `${key}:["points"]`,
+              "keyframes": [
+                {
+                  "id": `EUnDAC-14I${key}`,
+                  "position": 0,
+                  "connectedRight": true,
+                  "handles": [
+                    0.5,
+                    1,
+                    0.5,
+                    0
+                  ],
+                  "type": "bezier",
+                  "value": 0
+                },
+                {
+                  "id": `mLzXw9V18N${key}`,
+                  "position": 1.967,
+                  "connectedRight": true,
+                  "handles": [
+                    0.5,
+                    1,
+                    0.5,
+                    0
+                  ],
+                  "type": "bezier",
+                  "value": 200
+                }
+              ]
+            }
+          },
+          "trackIdByPropPath": {
+            "[\"points\"]": `cnw4ZkbgLM${key}`
+          }
+        }
+      }
+    }
+  }
+  Object.keys(sheetsByIdMap).forEach((name:any) => {
+    ;(theatreProjectState as any).sheetsById[name].sequence.tracksByObject = sheetsByIdMap[name]?.data.reduce((a,b, key)=>{
+      a[sheetsByIdMap[name]?.getKey?.(b,key,name) || b] = sheetsByIdMap[name]?.getValue?.call?.(sheetsByIdMap[name],b,key,name)
       return a
-  },{})
+    },{})
+  })
+
   const project = getProject('大屏地图动效', {
     state: theatreProjectState,
     assets: {
@@ -137,6 +190,7 @@ const load = async (three: {
   sheet.sequence.play()
   yunSheet.sequence.play({iterationCount:Infinity})
   provinceSheet.sequence.play({iterationCount:Infinity, range:[0,6]})
+  flywireSheet.sequence.play({iterationCount:Infinity, range:[0,2]})
   function createOBj<
       V extends UnknownShorthandCompoundProps,
   >(key: string, config: {
@@ -524,7 +578,6 @@ const load = async (three: {
 
         })
         if(elem.properties?.center && provinceNameMaps.includes(elem.properties?.name)){
-          console.log(elem.properties.name, elem.properties.center)
           await createOBj(elem.properties?.name,{
             sheet:provinceSheet,
             scene:province,
@@ -642,10 +695,10 @@ const load = async (three: {
                       new THREE.Vector3( (ex+sx)/2,(-sy+-ey)/2, z+0.1 ),
                       new THREE.Vector3( sx,-sy, z),
                   );
-                  const points = curve.getPoints( 50 )
+                  const pointsMax = 100
+                  const points = curve.getPoints( pointsMax )
                   const index = Math.ceil(values.points)
-                  console.log(index / 50)
-                  const currPoints = points.slice(0, index)
+                  const currPoints = index <= pointsMax? points.slice(0,index) : points.slice(index-pointsMax)
                   data.mesh.geometry = new THREE.BufferGeometry().setFromPoints(currPoints)
                 },
               }
