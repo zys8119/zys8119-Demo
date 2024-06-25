@@ -17,6 +17,8 @@ import color from "color";
 import {geoMercator} from "d3-geo";
 import theatreProjectState from "../../public/images/map/theatre-project-state.json";
 import {Texture} from "three/src/textures/Texture";
+import {TextGeometry} from "three/examples/jsm/geometries/TextGeometry";
+import {Font} from "three/examples/jsm/loaders/FontLoader";
 
 if (import.meta.env.DEV) {
   studio.extend({
@@ -51,6 +53,7 @@ const load = async (three: {
   camera: PerspectiveCamera
   light: Light
   downloadImagesTexture(url: string, imageName?: string): Texture
+  downloadFonts(fontUrl: string, familyName?: string):Promise<Font>
 }) => {
   localStorage.clear()
   await nextTick()
@@ -66,9 +69,9 @@ const load = async (three: {
    * 标记点
    */
   const markingPoints = [
-    {name:"浙江省",pos:[120.153576, 30.287459]},
-    {name:"北京市",pos:[116.405285, 39.904989]},
-    {name:"新疆维吾尔自治区",pos:[87.617733, 43.792818]},
+    {name:"浙江省",pos:[120.153576, 30.287459],value:14654},
+    {name:"北京市",pos:[116.405285, 39.904989],value:0},
+    {name:"新疆维吾尔自治区",pos:[87.617733, 43.792818],value:0},
   ]
   const sheetsByIdMap = {
     "省份": {
@@ -263,6 +266,10 @@ const load = async (three: {
       object
     }
   }
+  const font = await three.downloadFonts(
+      "./images/map/YouSheBiaoTiHei.ttf",
+      'YouSheBiaoTiHei.ttf'
+  )
   const lineTexture = await three.downloadImagesTexture(
       "./images/map/line.png",
       'line'
@@ -600,6 +607,90 @@ const load = async (three: {
         mapGroup.add(province)
       }))
       await Promise.all(markingPoints.map(async e=>{
+        const [px,py] = projection(e.pos as any)
+        await createOBj(e.name+'-文字数量',{
+          sheet:provinceSheet,
+          scene:mapGroup,
+          geometry() {
+            console.log(String(e.value || 0))
+              return new TextGeometry(String(e.value || 0), {
+                font: font,
+                size: 0.01,
+                height: 0.001,
+                curveSegments: 0.01,
+                bevelEnabled: true,
+                bevelThickness: 0.00001,
+                bevelSize: 0,
+                bevelSegments: 5
+              })
+          },
+          material() {
+              return new THREE.MeshPhongMaterial({
+                flatShading: true,
+                color: '#ffae00',
+              })
+          },
+          mesh(geometry, material) {
+            const mesh = new THREE.Mesh(geometry, material)
+            mesh.castShadow = true
+            mesh.position.set(px-(0.01*e.name.length)/2,-py+0.01, 0.431)
+            mesh.rotation.set(Math.PI/2,0, 0)
+            return mesh
+          },
+          objectConfig(data) {
+              return {
+                values:{
+                  x:types.number(px-(0.01*e.name.length)/2,{nudgeMultiplier:0.001}),
+                  y:types.number(-py+0.01,{nudgeMultiplier:0.001}),
+                  z:types.number(0.431,{nudgeMultiplier:0.001}),
+                },
+                change(values, data) {
+                    data.mesh.position.set(values.x, values.y, values.z)
+                },
+              }
+          },
+        })
+        await createOBj(e.name+'-文字',{
+          sheet:provinceSheet,
+          scene:mapGroup,
+          geometry() {
+              return new TextGeometry(e.name, {
+                font: font,
+                size: 0.01,
+                height: 0.001,
+                curveSegments: 0.01,
+                bevelEnabled: true,
+                bevelThickness: 0.00001,
+                bevelSize: 0,
+                bevelSegments: 5
+              })
+          },
+          material() {
+              return new THREE.MeshPhongMaterial({
+                flatShading: true,
+                color: '#00a6ff',
+              })
+          },
+          mesh(geometry, material) {
+            const mesh = new THREE.Mesh(geometry, material)
+            mesh.castShadow = true
+            mesh.position.set(px-(0.01*e.name.length)/2,-py+0.01, 0.415)
+            mesh.rotation.set(Math.PI/2,0, 0)
+            return mesh
+          },
+          objectConfig(data) {
+              return {
+                values:{
+                  x:types.number(px-(0.01*e.name.length)/2,{nudgeMultiplier:0.001}),
+                  y:types.number(-py+0.01,{nudgeMultiplier:0.001}),
+                  z:types.number(0.415,{nudgeMultiplier:0.001}),
+                },
+                change(values, data) {
+                    data.mesh.position.set(values.x, values.y, values.z)
+                },
+              }
+          },
+        })
         await createOBj(e.name,{
           sheet:provinceSheet,
           scene:mapGroup,
@@ -629,7 +720,6 @@ const load = async (three: {
             cone.receiveShadow = true
             cone.castShadow = true
             cone.rotation.x = -Math.PI/2
-            const [px,py] = projection(e.pos)
             cone.position.set(px,-py, 0.408)
             return cone
           },
