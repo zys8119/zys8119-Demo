@@ -923,7 +923,6 @@ const load = async (three: {
         },
       })
       const clickCallBack = debounce(async(mapName)=>{
-        console.log(22)
           selectMap.value = mapName
           if(currObject3ds.length > 0){
             await sheet.sequence.play({range:[5,6]})
