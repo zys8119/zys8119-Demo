@@ -20,6 +20,7 @@ import {Texture} from "three/src/textures/Texture";
 import {TextGeometry} from "three/examples/jsm/geometries/TextGeometry";
 import {Font} from "three/examples/jsm/loaders/FontLoader";
 import onEvent from "three-onevent-esm";
+import {debounce} from "lodash";
 const elRef = ref()
 
 if (import.meta.env.DEV) {
@@ -894,6 +895,41 @@ const load = async (three: {
               }
           },
       })
+      let currObject3ds = []
+      await createOBj('地图高亮-板块', {
+        objectConfig(data) {
+          return {
+            values:{
+              x:types.number(0, {nudgeMultiplier: 0.001}),
+              y:types.number(0, {nudgeMultiplier: 0.001}),
+              z:types.number(0.006, {nudgeMultiplier: 0.001}),
+              color:types.rgba(getRgba("#d58e1c")),
+            },
+            change(values, data) {
+              currObject3ds.forEach(obj=>{
+                if(obj){
+                  obj.material[0].setValues({
+                    color:color(values.color.toString()).rgbNumber(),
+                    map:null,
+                    envMap:null,
+                  })
+                  obj.position.set(values.x, values.y, values.z)
+                }
+              })
+            },
+          }
+        },
+      })
+      const clickCallBack = debounce(async(mapName)=>{
+          currObject3ds = []
+          mapGroup.traverse((object3d:THREE.Mesh)=>{
+            const [,mapType,mapName] = object3d.name.match(/^(map-bankia)-(.*)/) || []
+            if(mapType === 'map-bankia' && mapName === selectMap.value){
+              currObject3ds.push(object3d)
+            }
+          })
+          await sheet.sequence.play({range:[4,5]})
+      })
       const traverseMaps = {}
       const traverse = ()=>{
         mapGroup.traverse(async (object3d:THREE.Mesh)=>{
@@ -917,54 +953,21 @@ const load = async (three: {
             ];
             object3d.castShadow = true
             object3d.receiveShadow = true
+            if(mapName === selectMap.value){
+              watch([selectMap,isFirstPlay], ()=>{
+                if(selectMap.value, isFirstPlay.value){
+                  clickCallBack(mapName )
+                }
+              },{immediate:true})
+            }
+            object3d.on('click',()=>{
+              clickCallBack(mapName)
+            })
           }
         })
       }
-      const clickCallBack = async(mapName,object3d)=>{
-        if(object3dCurr){
-          await sheet.sequence.play({range:[5,6]})
-        }
-        object3dCurr = object3d
-        traverse()
-        await sheet.sequence.play({range:[4,5]})
-      }
+
       traverse()
-      watch(isFirstPlay, ()=>{
-        if(isFirstPlay.value){
-          clickCallBack(selectMap.value , traverseMaps[selectMap.value])
-        }
-      })
-      let object3dCurr = null
-      await createOBj('地图高亮-板块', {
-        objectConfig(data) {
-          return {
-            values:{
-              x:types.number(0, {nudgeMultiplier: 0.001}),
-              y:types.number(0, {nudgeMultiplier: 0.001}),
-              z:types.number(0.006, {nudgeMultiplier: 0.001}),
-              color:types.rgba(getRgba("#d58e1c")),
-            },
-            change(values, data) {
-              if(object3dCurr){
-                object3dCurr.material[0].setValues({
-                  color:color(values.color.toString()).rgbNumber(),
-                  map:null,
-                  envMap:null,
-                })
-                object3dCurr.position.set(values.x, values.y, values.z)
-              }
-            },
-          }
-        },
-      })
-      mapGroup.traverse((object3d:THREE.Mesh)=>{
-        const [,mapType,mapName] = object3d.name.match(/^(map-bankia)-(.*)/) || []
-        if(mapType === 'map-bankia'){
-          object3d.on('click',()=>{
-            clickCallBack(mapName,object3d)
-          })
-        }
-      })
 
       // sheet.sequence.play({range:[4,5]})
       return mapGroup
