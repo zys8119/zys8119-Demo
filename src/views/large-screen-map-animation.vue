@@ -908,10 +908,8 @@ const load = async (three: {
             change(values, data) {
               currObject3ds.forEach(obj=>{
                 if(obj){
-                  obj.material[0].setValues({
+                  obj.material = new THREE.MeshLambertMaterial({
                     color:color(values.color.toString()).rgbNumber(),
-                    map:null,
-                    envMap:null,
                   })
                   obj.position.set(values.x, values.y, values.z)
                 }
@@ -922,7 +920,9 @@ const load = async (three: {
       })
       const clickCallBack = debounce(async(mapName)=>{
           selectMap.value = mapName
-          await sheet.sequence.play({range:[5,6]})
+          if(currObject3ds.length > 0){
+            await sheet.sequence.play({range:[5,6]})
+          }
           currObject3ds = []
           mapGroup.traverse((object3d:THREE.Mesh)=>{
             const [,mapType,mapName] = object3d.name.match(/^(map-bankia)-(.*)/) || []
@@ -934,6 +934,7 @@ const load = async (three: {
           await sheet.sequence.play({range:[4,5]})
       })
       const traverseMaps = {}
+      //todo 地图板块样式处理
       const traverse = (isInit?:boolean)=>{
         mapGroup.traverse(async (object3d:THREE.Mesh)=>{
           const [,mapType,mapName] = object3d.name.match(/^(map-bankia)-(.*)/) || []
@@ -947,7 +948,7 @@ const load = async (three: {
                 envMap:envMaps.reflection,
                 map:chinaTexture,
                 bumpMap:chinaTexture,
-                bumpScale:0.1
+                bumpScale:0.1,
               }),
               new THREE.MeshStandardMaterial({
                 color:new THREE.Color("#2e24ae"),
