@@ -21,6 +21,7 @@ import {TextGeometry} from "three/examples/jsm/geometries/TextGeometry";
 import {Font} from "three/examples/jsm/loaders/FontLoader";
 import onEvent from "three-onevent-esm";
 import {debounce} from "lodash";
+import {OrbitControls} from "three/examples/jsm/controls/OrbitControls";
 const elRef = ref()
 
 if (import.meta.env.DEV) {
@@ -54,12 +55,15 @@ const load = async (three: {
   THREE: typeof THREE
   scene: Scene
   camera: PerspectiveCamera
+  controls: OrbitControls
   light: Light
   downloadImagesTexture(url: string, imageName?: string): Texture
   downloadFonts(fontUrl: string, familyName?: string):Promise<Font>
 }) => {
+  three.controls.enablePan = false
+  three.controls.enableZoom = false
+  three.controls.enableRotate = false
   new onEvent(three.scene, three.camera , elRef.value)
-  localStorage.clear()
   await nextTick()
   /**
    * 飞线
@@ -966,7 +970,7 @@ const load = async (three: {
                   }
                 },{immediate:true})
               }
-              object3d.on('click',()=>{
+              object3d.on('hover',()=>{
                 clickCallBack(mapName)
               })
             }
@@ -1007,7 +1011,10 @@ const load = async (three: {
     },
   })
 }
-const animation = async ({scene}: { scene: Scene }) => {
+const animation = async (three: {
+  scene: Scene,
+  controls: OrbitControls
+}) => {
 }
 </script>
 

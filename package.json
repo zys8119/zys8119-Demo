@@ -114,7 +114,7 @@
         "swiper": "^9.1.1",
         "tesseract.js": "^5.0.5",
         "three": "^0.160.0",
-        "three-onevent-esm": "^0.0.4",
+        "three-onevent-esm": "^0.0.5",
         "unocss": "^0.53.1",
         "unplugin-vue-components": "^0.26.0",
         "use-canvas-image": "^0.0.7",
