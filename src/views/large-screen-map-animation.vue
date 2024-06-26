@@ -1,5 +1,5 @@
 <template>
-  <div class="large-screen-map-animation" ref="elRef">
+  <div class="large-screen-map-animation abs-content" ref="elRef">
     <BaseThree @load="load" @animation="animation"></BaseThree>
     <div id="aaa"></div>
   </div>
@@ -923,6 +923,7 @@ const load = async (three: {
         },
       })
       const clickCallBack = debounce(async(mapName)=>{
+        console.log(22)
           selectMap.value = mapName
           if(currObject3ds.length > 0){
             await sheet.sequence.play({range:[5,6]})
@@ -936,7 +937,7 @@ const load = async (three: {
           })
           traverse()
           await sheet.sequence.play({range:[4,5]})
-      })
+      },100)
       const traverseMaps = {}
       //todo 地图板块样式处理
       const traverse = (isInit?:boolean)=>{
@@ -970,7 +971,7 @@ const load = async (three: {
                   }
                 },{immediate:true})
               }
-              object3d.on('hover',()=>{
+              object3d.on('hover',(e)=>{
                 clickCallBack(mapName)
               })
             }
