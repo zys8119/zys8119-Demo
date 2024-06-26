@@ -921,6 +921,8 @@ const load = async (three: {
         },
       })
       const clickCallBack = debounce(async(mapName)=>{
+          selectMap.value = mapName
+          await sheet.sequence.play({range:[5,6]})
           currObject3ds = []
           mapGroup.traverse((object3d:THREE.Mesh)=>{
             const [,mapType,mapName] = object3d.name.match(/^(map-bankia)-(.*)/) || []
@@ -928,10 +930,11 @@ const load = async (three: {
               currObject3ds.push(object3d)
             }
           })
+          traverse()
           await sheet.sequence.play({range:[4,5]})
       })
       const traverseMaps = {}
-      const traverse = ()=>{
+      const traverse = (isInit?:boolean)=>{
         mapGroup.traverse(async (object3d:THREE.Mesh)=>{
           const [,mapType,mapName] = object3d.name.match(/^(map-bankia)-(.*)/) || []
           if(mapType === 'map-bankia'){
@@ -953,21 +956,24 @@ const load = async (three: {
             ];
             object3d.castShadow = true
             object3d.receiveShadow = true
-            if(mapName === selectMap.value){
-              watch([selectMap,isFirstPlay], ()=>{
-                if(selectMap.value, isFirstPlay.value){
-                  clickCallBack(mapName )
-                }
-              },{immediate:true})
+            if(isInit){
+              if(mapName === selectMap.value){
+                const stopWatch = watch([selectMap,isFirstPlay], ()=>{
+                  if(selectMap.value && isFirstPlay.value){
+                    clickCallBack(mapName)
+                    stopWatch()
+                  }
+                },{immediate:true})
+              }
+              object3d.on('click',()=>{
+                clickCallBack(mapName)
+              })
             }
-            object3d.on('click',()=>{
-              clickCallBack(mapName)
-            })
           }
         })
       }
 
-      traverse()
+      traverse(true)
 
       // sheet.sequence.play({range:[4,5]})
       return mapGroup
