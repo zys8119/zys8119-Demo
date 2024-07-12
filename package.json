@@ -5,7 +5,7 @@
     "main": "index.js",
     "homepage": "https://zys8119.github.io/zys8119-Demo/#/",
     "scripts": {
-        "dev": "vite --force --host",
+        "dev": "vite --force --host --mode developmentaaa",
         "build": "vite build",
         "preview": "wireit"
     },
@@ -81,6 +81,8 @@
         "dayjs": "^1.11.10",
         "docx4js": "^3.2.20",
         "drauu": "^0.4.0",
+        "earth-flyline": "^1.5.2",
+        "es-drager": "^1.2.11",
         "fs-extra": "^11.1.0",
         "gsap": "^3.12.3",
         "hammerjs": "^2.0.8",
@@ -105,6 +107,7 @@
         "pdfjs-dist": "^4.0.189",
         "pinyin": "4.0.0-alpha.0",
         "plugin-formula-latex": "^1.0.12",
+        "polaris-doc-viewer": "^0.5.21",
         "protable": "^0.1.3",
         "recorder-core": "^1.3.23122400",
         "sass": "^1.59.3",
