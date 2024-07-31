@@ -25,6 +25,8 @@ module.exports.parse = async (raw, { axios, yaml, notify, console }, { name, url
         {name:"hdslb.com",type:'DIRECT'},
         {name:"bilivideo.com",type:'DIRECT'},
         {name:"bilivideo.cn",type:'DIRECT'},
+        {name:"zhijiasoft.com",type:'DIRECT'},
+        // {name:"zhijiasoft.com",type:'REJECT'},
         "yy.com",
         "juejin.com",
         "zhihu.com",
