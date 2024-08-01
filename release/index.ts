@@ -7,22 +7,24 @@ import argv from './argv';
 (async () => {
     try {
         const releases = createReleases();
-        const a = await releases.list();
+        const rlist = await releases.list();
+        const ref = execSync(`git log -n 1 --pretty=format:"%H"`).toString().trim();
         const defaultVerions = typeof argv.version === 'string' ? argv.version : '3.0.0';
         let version =
             typeof argv.version === 'string'
                 ? argv.version
                 : argv.update
-                ? a?.[0]?.name || defaultVerions
-                : a?.[0]?.name
-                ? execSync(`semver ${a?.[0]?.name} -i`).toString().trim()
+                ? rlist?.[0]?.name || defaultVerions
+                : rlist?.[0]?.name
+                ? execSync(`semver ${rlist?.[0]?.name} -i`).toString().trim()
                 : defaultVerions;
         releases[argv.update ? 'update' : 'create']({
             description: template(readFileSync(resolve(__dirname, '../changelog.md'), 'utf-8'))({
-                version
+                version,
+                commitHex: ref
             }),
             tag_name: version,
-            ref: execSync(`git log -n 1 --pretty=format:"%H"`).toString().trim(),
+            ref,
             zipDir: 'dist/**',
             filename: '前端部署资源包'
         })
