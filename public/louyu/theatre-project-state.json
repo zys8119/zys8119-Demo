@@ -1,0 +1,176 @@
+{
+    "sheetsById": {
+        "楼宇": {
+            "staticOverrides": {
+                "byObject": {}
+            },
+            "sequence": {
+                "subUnitsPerUnit": 30,
+                "length": 45.58,
+                "type": "PositionalSequence",
+                "tracksByObject": {
+                    "楼宇": {
+                        "trackData": {
+                            "HMmF6EqZ5y": {
+                                "type": "BasicKeyframedTrack",
+                                "__debugName": "楼宇:[\"rotation\",\"x\"]",
+                                "keyframes": []
+                            },
+                            "gbXcBdrkHV": {
+                                "type": "BasicKeyframedTrack",
+                                "__debugName": "楼宇:[\"rotation\",\"y\"]",
+                                "keyframes": [
+                                    {
+                                        "id": "m917EloANg",
+                                        "position": 0,
+                                        "connectedRight": true,
+                                        "handles": [0.5, 1, 0.5, 0.5],
+                                        "type": "bezier",
+                                        "value": 0
+                                    },
+                                    {
+                                        "id": "hEfxglREjy",
+                                        "position": 45.433,
+                                        "connectedRight": true,
+                                        "handles": [0.5, 0.5, 0.5, 0],
+                                        "type": "bezier",
+                                        "value": 6.283
+                                    }
+                                ]
+                            },
+                            "HL_JYbrHax": {
+                                "type": "BasicKeyframedTrack",
+                                "__debugName": "楼宇:[\"rotation\",\"z\"]",
+                                "keyframes": []
+                            },
+                            "6s8MNg0vCU": {
+                                "type": "BasicKeyframedTrack",
+                                "__debugName": "楼宇:[\"position\",\"x\"]",
+                                "keyframes": [
+                                    {
+                                        "id": "HbKGQOjTzi",
+                                        "position": 0,
+                                        "connectedRight": true,
+                                        "handles": [0.5, 1, 0.5, 0],
+                                        "type": "bezier",
+                                        "value": 111.4
+                                    },
+                                    {
+                                        "id": "-DGDlFY4UG",
+                                        "position": 16.033,
+                                        "connectedRight": true,
+                                        "handles": [0.5, 1, 0.5, 0],
+                                        "type": "bezier",
+                                        "value": 154.3999999999997
+                                    },
+                                    {
+                                        "id": "uxG0Uo6uZr",
+                                        "position": 29.6,
+                                        "connectedRight": true,
+                                        "handles": [0.5, 1, 0.5, 0],
+                                        "type": "bezier",
+                                        "value": 201.8999999999998
+                                    },
+                                    {
+                                        "id": "GdK0AEv5Wd",
+                                        "position": 45.433,
+                                        "connectedRight": true,
+                                        "handles": [0.5, 1, 0.5, 0],
+                                        "type": "bezier",
+                                        "value": 111.4
+                                    }
+                                ]
+                            },
+                            "VdCQBBCTlB": {
+                                "type": "BasicKeyframedTrack",
+                                "__debugName": "楼宇:[\"position\",\"y\"]",
+                                "keyframes": [
+                                    {
+                                        "id": "_QinFUp0Mc",
+                                        "position": 0,
+                                        "connectedRight": true,
+                                        "handles": [0.5, 1, 0.5, 0],
+                                        "type": "bezier",
+                                        "value": -68.6
+                                    },
+                                    {
+                                        "id": "pu25qxZC87",
+                                        "position": 16.033,
+                                        "connectedRight": true,
+                                        "handles": [0.5, 1, 0.5, 0],
+                                        "type": "bezier",
+                                        "value": -68.6
+                                    },
+                                    {
+                                        "id": "An8fM_DjM5",
+                                        "position": 29.6,
+                                        "connectedRight": true,
+                                        "handles": [0.5, 1, 0.5, 0],
+                                        "type": "bezier",
+                                        "value": -59.399999999999984
+                                    },
+                                    {
+                                        "id": "UY6aYVz07G",
+                                        "position": 45.433,
+                                        "connectedRight": true,
+                                        "handles": [0.5, 1, 0.5, 0],
+                                        "type": "bezier",
+                                        "value": -68.6
+                                    }
+                                ]
+                            },
+                            "sSzxzen3K7": {
+                                "type": "BasicKeyframedTrack",
+                                "__debugName": "楼宇:[\"position\",\"z\"]",
+                                "keyframes": [
+                                    {
+                                        "id": "M56lwfm0Ke",
+                                        "position": 0,
+                                        "connectedRight": true,
+                                        "handles": [0.5, 1, 0.5, 0],
+                                        "type": "bezier",
+                                        "value": 152.2
+                                    },
+                                    {
+                                        "id": "oLb3V8uDtB",
+                                        "position": 16.033,
+                                        "connectedRight": true,
+                                        "handles": [0.5, 1, 0.5, 0],
+                                        "type": "bezier",
+                                        "value": 106.30000000000025
+                                    },
+                                    {
+                                        "id": "_xY5fYdQur",
+                                        "position": 29.6,
+                                        "connectedRight": true,
+                                        "handles": [0.5, 1, 0.5, 0],
+                                        "type": "bezier",
+                                        "value": 92.60000000000038
+                                    },
+                                    {
+                                        "id": "62TQlt9ERg",
+                                        "position": 45.433,
+                                        "connectedRight": true,
+                                        "handles": [0.5, 1, 0.5, 0],
+                                        "type": "bezier",
+                                        "value": 152.2
+                                    }
+                                ]
+                            }
+                        },
+                        "trackIdByPropPath": {
+                            "[\"rotation\",\"x\"]": "HMmF6EqZ5y",
+                            "[\"rotation\",\"y\"]": "gbXcBdrkHV",
+                            "[\"rotation\",\"z\"]": "HL_JYbrHax",
+                            "[\"position\",\"x\"]": "6s8MNg0vCU",
+                            "[\"position\",\"y\"]": "VdCQBBCTlB",
+                            "[\"position\",\"z\"]": "sSzxzen3K7"
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "definitionVersion": "0.4.0",
+    "revisionHistory": ["z4oO9L8BEh_QikXL"]
+}
