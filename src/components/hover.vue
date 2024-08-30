@@ -17,7 +17,7 @@ const props = withDefaults(defineProps<{
 }>(),{
     isClick:true
 })
-const emits = defineEmits(['update:modelValue'])
+const emits = defineEmits(['update:modelValue','change'])
 const {modelValue} = useVModels(props,emits)
 const {focused} =  useFocus(p)
 const setValue = (val:boolean)=>{
@@ -29,8 +29,10 @@ useMagicKeys({
         if(focused.value){
             if(/[0-9]/.test(e.key)){
                 modelValue.value = Number(e.key)
+                emits('change')
             }else if(/Backspace|Delete/.test(e.key)){
                 modelValue.value = 0
+                emits('change')
             }
         }
     }

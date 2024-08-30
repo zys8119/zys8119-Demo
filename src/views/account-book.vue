@@ -29,8 +29,10 @@
             <tbody>
                 <tr v-for="row,k in data" :key="k">
                     <td class="b-0 b-l-1 b-t-1 abs-r" v-for="cell,kk in row" :key="kk" :tabindex="k">
-                        <hover :useKey="cell.useKey" :edit="cell.edit" v-model="cell.value">
-                            <div class="p-15px h-10px of-auto" v-bind="cell.props" :ref="editRef.bind(null,cell, row)">{{ cell.formatValue(cell.value) || cell.value }}</div>
+                        <hover :useKey="cell.useKey" :edit="cell.edit" v-model="cell.value" @change="cell.isUpdate = true">
+                            <div class="p-15px h-10px of-auto" :class="{
+                                'text-#f00':cell.isUpdate
+                            }" v-bind="cell.props" :ref="editRef.bind(null,cell, row)">{{ cell.formatValue(cell.value) || cell.value }}</div>
                             <template #hover="{setValue}">
                                 <n-select
                                     v-if="cell.type === 'select'"
@@ -140,7 +142,7 @@ const cerateRow = ()=>{
         }
     })
 }
-const data = ref([cerateRow()])
+const data = ref<any[]>([cerateRow()])
 const add = ()=>{
     data.value.push(cerateRow())
 }
@@ -148,6 +150,7 @@ const editRef = (cell, row, el:any)=>{
     if(cell.edit){
         useMutationObserver(el,(e)=>{
             cell.value = el.innerText
+            cell.isUpdate = true
     },{
         characterData:true,
         childList:true,
