@@ -9,21 +9,17 @@ const el = ref()
 const p = useParentElement(el)
 const isHover= ref<boolean>(false)
 const { isOutside } = useMouseInElement(p)
-const props = defineProps<{
+const props = withDefaults(defineProps<{
     useKey?:boolean
     modelValue?:any
     edit?:boolean
-}>()
+    isClick?:boolean
+}>(),{
+    isClick:true
+})
 const emits = defineEmits(['update:modelValue'])
 const {modelValue} = useVModels(props,emits)
 const {focused} =  useFocus(p)
-defineSlots<{
-    default?():any
-    hover?(_:{
-        isHover:typeof isHover.value,
-        setValue?(bool:boolean):void
-    }):any
-}>()
 const setValue = (val:boolean)=>{
     if(props.useKey){return}
     isHover.value = val
@@ -40,11 +36,14 @@ useMagicKeys({
     }
 })
 onMounted(()=>{
-    p.value.addEventListener('click', ()=>{
-        if(!props.edit){
-            (p.value as any).focus()
-        }
-    })
+    if(!props.isClick){
+        p.value.addEventListener('click', ()=>{
+            if(!props.edit){
+                (p.value as any).focus()
+            }
+        })
+    }
+    
 })
 </script>
 <style scoped lang="less">

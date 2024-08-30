@@ -1,5 +1,5 @@
 <template>
-    <div class='aaaa'>
+    <div class='aaaa w-100%'>
         <table class="w-100% m-x-auto b-1-0 b-t-0" border cellpadding="0" cellspacing="0">
             <thead>
                 <tr>
@@ -30,7 +30,7 @@
                 <tr v-for="row,k in data" :key="k">
                     <td class="b-0 b-l-1 b-t-1 abs-r" v-for="cell,kk in row" :key="kk" :tabindex="k">
                         <hover :useKey="cell.useKey" :edit="cell.edit" v-model="cell.value">
-                            <div class="p-15px" v-bind="cell.props" >{{ cell.formatValue(cell.value) || cell.value }}</div>
+                            <div class="p-15px h-10px of-auto" v-bind="cell.props" :ref="editRef.bind(null,cell, row)">{{ cell.formatValue(cell.value) || cell.value }}</div>
                             <template #hover="{setValue}">
                                 <n-select
                                     v-if="cell.type === 'select'"
@@ -77,6 +77,7 @@ const getSelect = (config?:Record<any, any>)=>merge({
     },config)
 const keyMap = ref({
     0:getSelect({ 
+        isClick:false,
         value:dayjs().format('MM'),
         props:{
             placeholder:"请选择月份", 
@@ -87,6 +88,7 @@ const keyMap = ref({
         },
     }),
     1:getSelect({ 
+        isClick:false,
         value:dayjs().format('DD'),
         props:{
             placeholder:"请选择日期", 
@@ -142,6 +144,19 @@ const data = ref([cerateRow()])
 const add = ()=>{
     data.value.push(cerateRow())
 }
+const editRef = (cell, row, el:any)=>{
+    if(cell.edit){
+        useMutationObserver(el,(e)=>{
+            cell.value = el.innerText
+    },{
+        characterData:true,
+        childList:true,
+        subtree:true
+    })
+    }
+    
+}
+
 </script>
 <style scoped lang="less">
 .aaaa{
