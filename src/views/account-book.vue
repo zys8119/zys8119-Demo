@@ -29,7 +29,7 @@
             <tbody>
                 <tr v-for="row,k in data" :key="k">
                     <td class="b-0 b-l-1 b-t-1 abs-r" v-for="cell,kk in row" :key="kk" :tabindex="k">
-                        <hover :useKey="cell.useKey" :edit="cell.edit" v-model="cell.value" @change="cell.isUpdate = true">
+                        <hover :disabled="cell.disabled" :useKey="cell.useKey" :edit="cell.edit" v-model="cell.value" @change="cell.isUpdate = true">
                             <div class="p-15px h-10px of-auto" :class="{
                                 'text-#f00':cell.isUpdate
                             }" v-bind="cell.props" :ref="editRef.bind(null,cell, row)">{{ cell.formatValue(cell.value) || cell.value }}</div>
@@ -122,12 +122,12 @@ const keyMap = ref({
         }
     }
 })
-const cerateRow = ()=>{
+const cerateRow = (options?:any)=>{
     return new Array(35).fill({}).map((e,k)=>{
         const mapInfo = cloneDeep(get(keyMap.value, k, {
             useKey:true,
         }))
-        return {
+        return merge({
             type:get(mapInfo,'type', 'input-number'),
             value:get(mapInfo,'value', 0),
             useKey:get(mapInfo,'useKey', false),
@@ -139,10 +139,17 @@ const cerateRow = ()=>{
                 showButton:false,
             }),
             formatValue:get(mapInfo,'formatValue', (val:any)=> val)
-        }
+        }, options)
     })
 }
-const data = ref<any[]>([cerateRow()])
+const data = ref<any[]>([cerateRow(),cerateRow({
+    useKey:false,
+    edit:false,
+    disabled:false,
+    props:{
+        contenteditable:false
+    }
+})])
 const add = ()=>{
     data.value.push(cerateRow())
 }

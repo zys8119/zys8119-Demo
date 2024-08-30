@@ -1,6 +1,6 @@
 <template>
     <div ref="el" class='hover'>
-        <slot v-if="isOutside && !isHover || useKey || edit"></slot>
+        <slot v-if="isOutside && !isHover || !disabled || useKey || edit"></slot>
         <slot v-else name="hover" :isHover="isHover" :setValue="setValue"></slot>
     </div>
 </template>
@@ -14,6 +14,7 @@ const props = withDefaults(defineProps<{
     modelValue?:any
     edit?:boolean
     isClick?:boolean
+    disabled?:boolean
 }>(),{
     isClick:true
 })
