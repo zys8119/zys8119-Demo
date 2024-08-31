@@ -1,6 +1,6 @@
 <template>
     <div ref="el" class='hover'>
-        <slot v-if="isOutside && !isHover || !disabled || useKey || edit"></slot>
+        <slot v-if="isOutside && !isHover || disabled || useKey || edit"></slot>
         <slot v-else name="hover" :isHover="isHover" :setValue="setValue"></slot>
     </div>
 </template>
@@ -27,7 +27,7 @@ const setValue = (val:boolean)=>{
 }
 useMagicKeys({
     onEventFired(e){
-        if(focused.value){
+        if(!props.disabled && focused.value){
             if(/[0-9]/.test(e.key)){
                 modelValue.value = Number(e.key)
                 emits('change')
@@ -39,7 +39,7 @@ useMagicKeys({
     }
 })
 onMounted(()=>{
-    if(!props.isClick){
+    if(!props.disabled && !props.isClick){
         p.value.addEventListener('click', ()=>{
             if(!props.edit){
                 (p.value as any).focus()

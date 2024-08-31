@@ -14,7 +14,7 @@ import VueSql from 'vitejs-plugin-vue-sql'
 // vite.config.ts
 import ReactivityTransform from '@vue-macros/reactivity-transform/vite'
 import UnoCss from 'unocss/vite'
-// import VineBrowser from './vite/VineBrowser'
+import VineBrowser from './vite/VineBrowser'
 export default defineConfig({
     base:"",
     build:{
@@ -73,7 +73,7 @@ export default defineConfig({
                 "b":"bbbb"
             }
         }),
-        // VineBrowser(),
+        VineBrowser(),
     ],
     resolve:{
         alias:{
