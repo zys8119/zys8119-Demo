@@ -32,7 +32,7 @@ useMagicKeys({
                 modelValue.value = Number(e.key)
                 emits('change')
             }else if(/Backspace|Delete/.test(e.key)){
-                modelValue.value = 0
+                modelValue.value = ''
                 emits('change')
             }
         }

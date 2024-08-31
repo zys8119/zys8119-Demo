@@ -1,6 +1,6 @@
 <template>
-    <div class='aaaa w-100%'>
-        <table class="w-100% m-x-auto b-1-0 b-t-0" border cellpadding="0" cellspacing="0">
+    <div class='aaaa'>
+        <table class="m-x-auto b-1-0 b-t-0" border cellpadding="0" cellspacing="0">
             <thead>
                 <tr>
                     <th class="p-15px b-0 b-l-1 b-t-1" colspan="2">
@@ -27,10 +27,11 @@
                 </tr>
             </thead>
             <tbody>
-                <tr v-for="row,k in data" :key="k">
+                <tr v-for="row,k in tableData" :key="k">
                     <td :rowspan="cell.rowSpan" :colspan="cell.colSpan" class="b-0 b-l-1 b-t-1 abs-r" v-for="cell,kk in row" :key="kk" :tabindex="k">
                         <hover :disabled="cell.disabled" :useKey="cell.useKey" :edit="cell.edit" v-model="cell.value" @change="cell.isUpdate = true">
                             <div class="p-15px h-10px of-auto" :class="{
+                                'text-#0001ff':kk > 4 && /[0-9]/.test(cell.formatValue(cell.value, kk, row, k)),
                                 'text-#f00':cell.isUpdate
                             }" v-bind="cell.props" :ref="editRef.bind(null,cell, row)">{{ cell.formatValue(cell.value, kk, row, k) }}</div>
                             <template #hover="{setValue}">
@@ -71,6 +72,7 @@
 <script setup lang="ts" title="记账本表格" content="财务记账本表格">
 import dayjs from "dayjs"
 import {get, cloneDeep, merge} from "lodash"
+import BigNumber from "bignumber.js"
 const units = ref(["千","百","十","万","千","百","十","元","角","分"])
 const year = ref(dayjs().toDate())
 const yearStr = computed(()=> dayjs(year.value).format('YYYY'))
@@ -122,7 +124,7 @@ const keyMap = ref({
         }
     }
 })
-const cerateRow = (options?:any)=>{
+const cerateRow = (options?:any, data:any[] = [])=>{
     const getLng = get(options,'getLng', ()=> 35)
     return new Array(getLng()).fill({}).map((e,k)=>{
         const mapInfo = cloneDeep(get(keyMap.value, k, {
@@ -130,7 +132,7 @@ const cerateRow = (options?:any)=>{
         }))
         return merge({
             type:get(mapInfo,'type', 'input-number'),
-            value:get(mapInfo,'value', 0),
+            value:get(mapInfo,'value', String(data[k] || '') || ''),
             useKey:get(mapInfo,'useKey', false),
             edit:get(mapInfo,'edit', false),
             year:yearStr.value,
@@ -146,15 +148,18 @@ const cerateRow = (options?:any)=>{
         })
     })
 }
-const data = ref<any[]>([cerateRow(),cerateRow({
+
+const data = ref<any[]>([])
+const totalRow = computed(()=> [cerateRow({
     useKey:false,
     edit:false,
     disabled:true,
     formatValue(v, k){
         if(k === 0){
             return "总计："
-        }else if(k === 1){return ''}
-        return v
+        }
+        else if(k === 1){return ''}
+        return String(v || '')
     },
     colSpan:k=>({0:2,1:3}[k]) || null,
     props:{
@@ -162,7 +167,7 @@ const data = ref<any[]>([cerateRow(),cerateRow({
     },
     getLng(){return 32}
 })])
-console.log(data.value[1])
+const tableData = computed(()=> data.value.concat(totalRow.value))
 const add = ()=>{
     data.value.push(cerateRow())
 }
@@ -179,7 +184,17 @@ const editRef = (cell, row, el:any)=>{
     }
     
 }
-
+const setData = (dataRow:Array<any[]>)=>{
+    data.value = dataRow.map(e=>cerateRow({}, e))
+}
+onMounted(()=>{
+    setData([
+        [8,20, null,null,"测试"]
+        .concat([0,0,0,1,0,0,0,0,0,0])
+        .concat([0,0,0,0,0,0,0,0,0,0])
+        .concat([0,0,0,0,0,0,0,0,0,0])
+    ])
+})
 </script>
 <style scoped lang="less">
 .aaaa{
