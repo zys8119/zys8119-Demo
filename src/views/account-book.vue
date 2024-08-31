@@ -36,8 +36,14 @@
                             <div class="p-15px h-10px of-auto" :class="{
                                 'text-#0001ff': kk > 4 && /[0-9]/.test(cell.formatValue(cell.value, kk, row, k)),
                                 'text-#f00': cell.isUpdate
-                            }" v-bind="cell.props" :ref="editRef.bind(null, cell, row)">{{ cell.formatValue(cell.value,
-                                kk, row, k) }}</div>
+                            }" v-bind="cell.props" :ref="editRef.bind(null, cell, row)">
+                                <template v-if="cell.autoCalcValue">
+                                    {{ autoCalcValue(cell, kk, row, k) }}
+                                </template>
+                                <template v-else>
+                                    {{ cell.formatValue(cell.value,kk, row, k) }}
+                                </template>
+                            </div>
                             <template #hover="{ setValue }">
                                 <n-select v-if="cell.type === 'select'" @blur="setValue(false)" @focus="setValue(true)"
                                     class="w-80px" value-format="MM" v-model:value="cell.value" v-bind="cell.props" />
@@ -141,6 +147,7 @@ const cerateRow = (options?: any, data: any[] = []) => {
             props: {
                 contenteditable: false,
             },
+            autoCalcValue:true
         } : {})
     })
 }
@@ -267,6 +274,9 @@ const editRef = (cell, row, el: any) => {
 }
 const setData = (dataRow: Array<any[]>) => {
     data.value = dataRow.map(e => cerateRow({}, e))
+}
+const autoCalcValue = (cell:any,kk:number,row:any[], k:number)=>{
+    return 'asda'
 }
 onMounted(() => {
     setData([
