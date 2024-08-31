@@ -32,7 +32,7 @@
                         <hover :disabled="cell.disabled" :useKey="cell.useKey" :edit="cell.edit" v-model="cell.value" @change="cell.isUpdate = true">
                             <div class="p-15px h-10px of-auto" :class="{
                                 'text-#f00':cell.isUpdate
-                            }" v-bind="cell.props" :ref="editRef.bind(null,cell, row)">{{ cell.formatValue(cell.value, kk, row, k) || cell.value }}</div>
+                            }" v-bind="cell.props" :ref="editRef.bind(null,cell, row)">{{ cell.formatValue(cell.value, kk, row, k) }}</div>
                             <template #hover="{setValue}">
                                 <n-select
                                     v-if="cell.type === 'select'"
@@ -153,7 +153,7 @@ const data = ref<any[]>([cerateRow(),cerateRow({
     formatValue(v, k){
         if(k === 0){
             return "总计："
-        }else if(k === 1){return 'asdasdas'}
+        }else if(k === 1){return ''}
         return v
     },
     colSpan:k=>({0:2,1:3}[k]) || null,
