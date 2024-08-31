@@ -153,7 +153,7 @@ const data = ref<any[]>([cerateRow(),cerateRow({
     formatValue(v, k){
         if(k === 0){
             return "总计："
-        }else if(k === 2){return 'asdasdas'}
+        }else if(k === 1){return 'asdasdas'}
         return v
     },
     colSpan:k=>({0:2,1:3}[k]) || null,
