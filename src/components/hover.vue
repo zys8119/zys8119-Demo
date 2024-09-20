@@ -1,6 +1,6 @@
 <template>
     <div ref="el" class='hover'>
-        <slot v-if="isOutside && !isHover || useKey || edit"></slot>
+        <slot v-if="isOutside && !isHover || disabled || useKey || edit"></slot>
         <slot v-else name="hover" :isHover="isHover" :setValue="setValue"></slot>
     </div>
 </template>
@@ -9,42 +9,44 @@ const el = ref()
 const p = useParentElement(el)
 const isHover= ref<boolean>(false)
 const { isOutside } = useMouseInElement(p)
-const props = defineProps<{
+const props = withDefaults(defineProps<{
     useKey?:boolean
     modelValue?:any
     edit?:boolean
-}>()
-const emits = defineEmits(['update:modelValue'])
+    isClick?:boolean
+    disabled?:boolean
+}>(),{
+    isClick:true
+})
+const emits = defineEmits(['update:modelValue','change'])
 const {modelValue} = useVModels(props,emits)
 const {focused} =  useFocus(p)
-defineSlots<{
-    default?():any
-    hover?(_:{
-        isHover:typeof isHover.value,
-        setValue?(bool:boolean):void
-    }):any
-}>()
 const setValue = (val:boolean)=>{
     if(props.useKey){return}
     isHover.value = val
 }
 useMagicKeys({
     onEventFired(e){
-        if(focused.value){
+        if(!props.disabled && focused.value){
             if(/[0-9]/.test(e.key)){
                 modelValue.value = Number(e.key)
+                emits('change')
             }else if(/Backspace|Delete/.test(e.key)){
-                modelValue.value = 0
+                modelValue.value = ''
+                emits('change')
             }
         }
     }
 })
 onMounted(()=>{
-    p.value.addEventListener('click', ()=>{
-        if(!props.edit){
-            (p.value as any).focus()
-        }
-    })
+    if(!props.disabled && !props.isClick){
+        p.value.addEventListener('click', ()=>{
+            if(!props.edit){
+                (p.value as any).focus()
+            }
+        })
+    }
+    
 })
 </script>
 <style scoped lang="less">
