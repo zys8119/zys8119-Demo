@@ -24,6 +24,7 @@ declare module 'vue' {
     NSpace: typeof import('naive-ui')['NSpace']
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']
+    Scroll: typeof import('./src/components/scroll.vue')['default']
     WujieVue: typeof import('@zys/wujie-vue/wujie-vue.vue')['default']
   }
 }

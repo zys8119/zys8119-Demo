@@ -12,3 +12,5 @@
 huawei
 *.pdf
 *.pdf
+cypress.config.js
+cypress/
