@@ -37,7 +37,7 @@ const props = withDefaults(defineProps<Partial<{
 })
 const children = ref<HTMLDivElement[]>([])
 const animation = computed(()=>{
-    return `${props.animationName} ${props.duration}ms ease infinite`
+    return `${Math.ceil(height.value/50)*1000}ms infinite`
 })
 useCssVars(()=>{
     return {
@@ -63,10 +63,10 @@ const css = computed(()=> `
     }`
 }).join("\n")}\n}
 `)
-watchEffect(()=>{
-    console.log(css.value,children.value)
-})
-useStyleTag(css,{id:"scroll-content-animation"})
+// watchEffect(()=>{
+//     console.log(css.value,children.value)
+// })
+// useStyleTag(css,{id:"scroll-content-animation"})
 const addEventListenerChildList = ()=>{
     children.value = Array.from((refHidden.value.querySelectorAll("& > *") || []) as HTMLDivElement[])
 }
@@ -78,8 +78,16 @@ onMounted(addEventListenerChildList)
 <style scoped lang="less">
 
 .scroll{
+    @keyframes scroll-content-animation{
+        form{
+            transform: translateY(0);
+        }
+        to{
+            transform: translateY(calc(var(--height) * -1));
+        }
+    }
     .scroll-content{
-        animation: var(--animation);
+        animation: scroll-content-animation var(--animation);
     }
     // animation: name duration timing-function delay iteration-count direction fill-mode;
 }
