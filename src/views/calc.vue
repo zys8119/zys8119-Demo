@@ -3,7 +3,7 @@
         <div class="container abs-r" v-if="question.question">
             <h1>可爱的数学题</h1>
             <div class="flex text-50px flex-wrap">
-                <div v-for="item,i in (question.expressionLengthArr || 0)" :key="i">
+                <div class="b-1px b-dashed b-#999 b-rd-4px" v-for="item,i in (question.expressionLengthArr || 0)" :key="i">
                     {{ item.icon }}
                 </div>
             </div>
@@ -19,6 +19,7 @@
     </div>
 </template>
 <script setup lang="ts" title="计算小能手">
+
 const active = ref(0)
 type QuestionType = {
     question:string
@@ -29,11 +30,15 @@ type QuestionType = {
     }>
 }
 const list = ref<Array<QuestionType>>([])
-const question = computed<QuestionType>(()=> (list.value[active.value] || {
-    answer:0,
-    expressionLengthArr:[],
-    question:null
-}) as any)
+const question = computed<QuestionType>(()=> {
+    const item = (list.value[active.value] || {
+        answer:0,
+        expressionLengthArr:[],
+        question:null
+    }) as any
+
+    return item
+})
 // 示例使用：生成 3 个算式，确保所有结果是整数
 const operators = ref(['+', '-']);
 const range = ref({ min: 1, max: 10 });
@@ -41,7 +46,7 @@ const numOfQuestions = ref(10);// 生成的题目数量
 const minLength = ref(2);  // 最短长度
 const maxLength = ref(4);  // 最长长度
 const ensureIntegers = ref(true);  // 确保所有结果都是整数
-const icons = ref(["💣","🧨","🪓"]);  // 确保所有结果都是整数
+const icons = ref(["💣","🧨","🪓","🧲","🔧","🔫","🩸","🎈","❤️","⚙️"]);  // 确保所有结果都是整数
 const answer = ref<number>()
 const speak = (text: string) => {
     speechSynthesis.cancel()
@@ -132,7 +137,6 @@ function generateRandomQuestionsWithAnswers(numOfQuestions, operators, range, mi
         icon:icons.value[randomInt(0,icons.value.length - 1)]?.repeat?.(nextNum) || ''
       })
     }
-    console.log(expression, currentResult,expressionLengthArr)
     // 存储算式及其答案
     questionsWithAnswers.push({
       question: expression,
@@ -172,6 +176,11 @@ list.value = generateRandomQuestionsWithAnswers(
     width: 350px;
     box-shadow: 0px 4px 15px rgba(0, 0, 0, 0.1);
     margin: auto;
+}
+.text-ellipsis {
+  white-space: nowrap; /* 不换行 */
+  overflow: hidden; /* 超出部分隐藏 */
+  text-overflow: ellipsis; /* 使用省略符号 */
 }
 
 h1 {
