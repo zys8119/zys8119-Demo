@@ -7,6 +7,10 @@ export {}
 
 declare module 'vue' {
   export interface GlobalComponents {
+    AiAssistant: typeof import('./src/components/ai/ai-assistant.vue')['default']
+    AiChat: typeof import('./src/components/ai/ai-chat.vue')['default']
+    AiHistory: typeof import('./src/components/ai/ai-history.vue')['default']
+    AiMention: typeof import('./src/components/ai/ai-mention.vue')['default']
     Card: typeof import('./src/components/card.vue')['default']
     FooterFixed: typeof import('./src/components/footer-fixed.vue')['default']
     Hover: typeof import('./src/components/hover.vue')['default']
