@@ -1,19 +1,33 @@
 <template>
     <div class='calc abs-content'>
-        <div class="container">
+        <div class="container abs-r">
             <h1>可爱的数学题</h1>
-            <div class="question">5 + 3 = ?</div>
+            <div class="question">{{ question.question }} = ?</div>
 
             <div class="input-container">
                 <input @keyup.enter="checkAnswer" v-model="answer" type="number" placeholder="你的答案">
             </div>
             <button @click="checkAnswer">提交</button>
             <div class="feedback" id="feedback"></div>
+            <div class="abs-end top-15px right-15px text-#999">{{ active+1 }}/{{ list.length }}</div>
         </div>
-
     </div>
 </template>
-<script setup lang="ts">
+<script setup lang="ts" title="计算小能手">
+const active = ref(0)
+type QuestionType = {
+    question:string
+    answer:number
+}
+const list = ref<Array<QuestionType>>([])
+const question = computed<QuestionType>(()=> (list.value[active.value] || {}) as any)
+// 示例使用：生成 3 个算式，确保所有结果是整数
+const operators = ref(['+', '-']);
+const range = ref({ min: 1, max: 10 });
+const numOfQuestions = ref(3);
+const minLength = ref(2);  // 最短长度
+const maxLength = ref(2);  // 最长长度
+const ensureIntegers = ref(true);  // 确保所有结果都是整数
 const answer = ref<number>()
 const speak = (text: string) => {
     speechSynthesis.cancel()
@@ -27,9 +41,15 @@ function checkAnswer() {
     const correctAnswer = 8;  // 题目答案是 5 + 3 = 8
     const feedback = document.getElementById('feedback');
 
-    if (answer.value == correctAnswer) {
+    if (answer.value == question.value.answer) {
         feedback.innerHTML = '<span class="happy-face">😊</span> 太棒了！答对啦！';
+        if(active.value == list.value.length - 1){
+            feedback.innerHTML = '<span class="happy-face">😊</span> 恭喜你，完成所有题目！';
+            return speak('恭喜你，完成所有题目！')
+        }
         speak('太棒了！答对啦！')
+        active.value++
+        answer.value = null
     } else {
         feedback.innerHTML = '<span class="sad-face">😢</span> 再试试哦，加油！';
         speak('再试试哦，加油！')
@@ -98,19 +118,15 @@ function generateRandomQuestionsWithAnswers(numOfQuestions, operators, range, mi
 
 
 onMounted(() => {
-
-// 示例使用：生成 3 个算式，确保所有结果是整数
-const operators = ['+', '-', '*', '/'];
-const range = { min: 1, max: 10 };
-const numOfQuestions = 3;
-const minLength = 2;  // 最短长度
-const maxLength = 4;  // 最长长度
-const ensureIntegers = true;  // 确保所有结果都是整数
-
-const randomQuestionsWithAnswers = generateRandomQuestionsWithAnswers(numOfQuestions, operators, range, minLength, maxLength, ensureIntegers);
-console.log(randomQuestionsWithAnswers);
-
-})
+list.value = generateRandomQuestionsWithAnswers(
+    numOfQuestions.value,
+    operators.value,
+    range.value,
+    minLength.value, 
+    maxLength.value,
+    ensureIntegers.value)
+    console.log(list.value)
+}) as any
 </script>
 <style scoped lang="less">
 .calc {
