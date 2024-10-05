@@ -4,7 +4,7 @@
             <h1>可爱的数学题</h1>
             <div class="flex text-50px flex-wrap">
                 <div class="b-1px b-dashed b-#999 b-rd-4px" v-for="item,i in (question.expressionLengthArr || 0)" :key="i">
-                    {{ item.icon }}
+                    {{ item.icon }}-{{ item.type }}
                 </div>
             </div>
             <div class="question">{{ question.question }} = ?</div>
@@ -36,7 +36,34 @@ const question = computed<QuestionType>(()=> {
         expressionLengthArr:[],
         question:null
     }) as any
-
+    let icons:any = []
+    let index = 0
+    for (let i = 0; i < item.expressionLengthArr.length; i++) {
+        const element = item.expressionLengthArr[i];
+        const arr:any = Array.from(element.icon)
+        if (element.type === '+') {
+            icons = arr.map(e=>({icon:e, type:'init'})).concat(icons)
+            new Array(index).fill(0).forEach(()=>{
+                const obj = icons.findLast((e:any)=>e.type !== 'delete')
+                if(obj) {
+                    obj.type = 'delete'
+                    index -= 1
+                }
+            })
+        } else if (element.type === '-') {
+            arr.forEach(()=>{
+                const obj = icons.findLast((e:any)=>e.type !== 'delete')
+                if(obj) {
+                    obj.type = 'delete'
+                }else{
+                    index +=1
+                }
+            })
+        }else{
+            icons = icons.concat(arr.map(e=>({icon:e, type:'init66'})))
+        }
+    }
+    item.expressionLengthArr = icons
     return item
 })
 // 示例使用：生成 3 个算式，确保所有结果是整数
@@ -44,7 +71,7 @@ const operators = ref(['+', '-']);
 const range = ref({ min: 1, max: 10 });
 const numOfQuestions = ref(10);// 生成的题目数量
 const minLength = ref(2);  // 最短长度
-const maxLength = ref(4);  // 最长长度
+const maxLength = ref(2);  // 最长长度
 const ensureIntegers = ref(true);  // 确保所有结果都是整数
 const icons = ref(["💣","🧨","🪓","🧲","🔧","🔫","🩸","🎈","❤️","⚙️"]);  // 确保所有结果都是整数
 const answer = ref<number>()
