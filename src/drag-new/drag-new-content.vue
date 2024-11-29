@@ -54,37 +54,39 @@
             class="abs bg-$esDragerColorOp op-bg-10 b-1px b-dashed b-$esDragerColor"
             :style="boxSelectionInfoStyle"
         ></div>
-        <div
-            class="pointer-events-none abs-end-bottom w-200px h-100px b-1 b-solid b-#000 bg-#000 bg-op-10 of-hidden"
-            ref="thumbnailRef"
-        >
-            <div class="abs-center">
-                <div
-                    class="abs-r bg-#fff bg-op-100"
-                    :style="{
-                        width: thumbnailStyle.width + 'px',
-                        height: thumbnailStyle.height + 'px',
-                        transform: `scale(${thumbnailStyle.scale})`
-                    }"
-                >
+        <Teleport :to="thumbnailCurrentTo">
+            <div
+                class="pointer-events-none abs-end-bottom w-200px h-100px b-1 b-solid b-#000 bg-#000 bg-op-10 of-hidden"
+                ref="thumbnailRef"
+            >
+                <div class="abs-center">
                     <div
-                        class="abs"
+                        class="abs-r bg-#fff bg-op-100"
                         :style="{
-                            left: item.left - thumbnailStyle.left + 'px',
-                            top: item.top - thumbnailStyle.top + 'px',
-                            width: item.width + 'px',
-                            height: item.height + 'px'
+                            width: thumbnailStyle.width + 'px',
+                            height: thumbnailStyle.height + 'px',
+                            transform: `scale(${thumbnailStyle.scale})`
                         }"
-                        :class="{
-                            'bg-#aaa': !item.isThumbnailDragerVisibleArea,
-                            'bg-$esDragerColor op-30': item.isThumbnailDragerVisibleArea
-                        }"
-                        v-for="(item, key) in thumbnailDragerList"
-                        :key="key"
-                    ></div>
+                    >
+                        <div
+                            class="abs"
+                            :style="{
+                                left: item.left - thumbnailStyle.left + 'px',
+                                top: item.top - thumbnailStyle.top + 'px',
+                                width: item.width + 'px',
+                                height: item.height + 'px'
+                            }"
+                            :class="{
+                                'bg-#aaa': !item.isThumbnailDragerVisibleArea,
+                                'bg-$esDragerColor op-30': item.isThumbnailDragerVisibleArea
+                            }"
+                            v-for="(item, key) in thumbnailDragerList"
+                            :key="key"
+                        ></div>
+                    </div>
                 </div>
             </div>
-        </div>
+        </Teleport>
     </div>
 </template>
 <script setup lang="ts">
@@ -104,20 +106,24 @@ type DragerListType = Array<
           }>)
     | any
 >;
+const el = useCurrentElement();
 const props = withDefaults(
     defineProps<{
         modelValue?: DragerListType;
         config?: Record<string, any>;
         grid?: number;
         gridCount?: number;
+        thumbnailTo?: any;
     }>(),
     {
         modelValue: () => [],
         config: () => ({}),
         grid: 10,
-        gridCount: 5
+        gridCount: 5,
+        thumbnailTo: null
     }
 );
+const thumbnailCurrentTo = computed(() => props.thumbnailTo || el.value || 'body');
 const emit = defineEmits(['update:list', 'update:config', 'update:grid', 'update:gridCount']);
 const { modelValue: dragerList, config: DragerCommonConfig } = useVModels(props, emit);
 const dragNewContentContainer = ref();
@@ -593,13 +599,16 @@ const save = async (
 };
 defineExpose({
     el: dragNewContentContainer,
-    save
+    save,
+    elementX,
+    elementY
 });
 </script>
 <style scoped lang="less">
 .drag-new-content {
     .drag-new-content-contextmenu {
         border-radius: 4px;
+
         &-item {
             padding: var(--gap);
             cursor: pointer;
