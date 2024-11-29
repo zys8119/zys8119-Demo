@@ -1,9 +1,6 @@
 <template>
-    <div
-        class="drag-new-panel b-l-solid b-1 b-$border-color h-100% bg-$bg2 w-$panel-width p-$gap select-none"
-        @click.stop
-        @keydown.stop
-    >
+    <div class="drag-new-panel b-l-solid b-1 b-$border-color h-100% bg-$bg2 w-$panel-width p-$gap select-none"
+        @click.stop @keydown.stop>
         <n-collapse :default-expanded-names="['attribute', 'canvasAttribute']">
             <n-collapse-item v-if="modelValue" title="属性" name="attribute">
                 <div class="flex flex-col gap-$gap">
@@ -17,10 +14,18 @@
                     </div>
                     <div class="flex-center-start">
                         <div class="flex-shrink-0">类型：</div>
-                        <n-ellipsis
-                            class="b-1 b-solid b-#ffb500 text-#ffb500 b-rd-2px p-x-10px p-y-2px"
-                            >{{ modelValue.elementYype }}</n-ellipsis
-                        >
+                        <n-ellipsis class="b-1 b-solid b-#ffb500 text-#ffb500 b-rd-2px p-x-10px p-y-2px">{{
+                            modelValue.elementYype }}</n-ellipsis>
+                    </div>
+                    <div class="flex-center-start">
+                        <div class="flex-shrink-0">样式：</div>
+                        <n-grid x-gap="12" :cols="3">
+                            <n-gi v-for="(item, index) in images" :key="index">
+                                <n-image @click.stop="modelValue.backgroundImage === item ? modelValue.backgroundImage = null : modelValue.backgroundImage = item" class="b-2 b-solid b-#0000 of-hidden cursor-pointer" :class="{
+                                    ' b-#ffb500':modelValue.backgroundImage === item
+                                }" width="50" preview-disabled height="50" object-fit="cover" :src="item"></n-image>
+                            </n-gi>
+                        </n-grid>
                     </div>
                     <div class="flex-center-start" v-for="(label, key) in NumberMap" :key="key">
                         <div class="flex-shrink-0">{{ label }}：</div>
@@ -28,22 +33,12 @@
                     </div>
                     <div class="flex-center-start" v-for="(label, key) in ColorMap" :key="key">
                         <div class="flex-shrink-0">{{ label }}：</div>
-                        <n-color-picker
-                            v-model:value="modelValue[key]"
-                            clearable
-                            :swatches="swatches"
-                            :to="false"
-                            @click.stop
-                        />
+                        <n-color-picker v-model:value="modelValue[key]" clearable :swatches="swatches" :to="false"
+                            @click.stop />
                     </div>
                     <div class="flex-center-start">
                         <div class="flex-shrink-0">内容：</div>
-                        <n-input
-                            type="textarea"
-                            v-model:value="modelValue.value"
-                            clearable
-                            placeholder="请输入内容"
-                        />
+                        <n-input type="textarea" v-model:value="modelValue.value" clearable placeholder="请输入内容" />
                     </div>
                 </div>
             </n-collapse-item>
@@ -52,6 +47,12 @@
     </div>
 </template>
 <script setup lang="ts">
+import zuoweiImg from "@/src/assets/icons/座位.svg?url"
+const imgs = import.meta.glob('@/src/assets/darg/*', {
+    eager: true,
+    import: 'default'
+});
+const images = ref(Object.values(imgs).concat([zuoweiImg]))
 const props = withDefaults(
     defineProps<{
         modelValue?: any;
@@ -108,6 +109,5 @@ const swatches = ref([
 ]);
 </script>
 <style scoped lang="less">
-.drag-new-panel {
-}
+.drag-new-panel {}
 </style>

@@ -7,17 +7,18 @@
             'b-rd-$radius': ['ConferenceRotundityAndRect'].includes(elementYype),
             'select-none': !isEdit
         }"
+        :style="dataStyle"
         @dblclick="dblclick"
     >
         <div
             v-if="isSaveMode"
-            class="abs-content flex-center text-center"
+            class="abs-content flex-center text-center  text-$color"
             v-html="saveValue(data.value)"
         ></div>
         <textarea
             v-else
             ref="inputRef"
-            class="abs-content bg-#0000 text-center b-none cursor-move align-content-center"
+            class="abs-content bg-#0000 text-center b-none cursor-move align-content-center  text-$color"
             :class="{
                 'pointer-events-none': !isEdit,
                 'select-none': !isEdit
@@ -41,6 +42,7 @@ const props = withDefaults(
         isSaveMode: false
     }
 );
+
 const emits = defineEmits(['update:data', 'update:config']);
 const { data } = useVModels(props, emits);
 const elementYype = computed(() => props.data.elementYype);
@@ -51,6 +53,14 @@ useCssVars(() => ({
     borderColor: props.data.borderColor,
     borderWidth: `${isNaN(Number(props.data.borderWidth)) ? 1 : Number(props.data.borderWidth)}px`
 }));
+const dataStyle = computed(() => {
+    return Object.assign({
+        backgroundImage: `url(${data.value.backgroundImage})`,
+    }, elementYype.value === 'Seat' ? {
+        backgroundSize: '100% 100%',
+        backgroundRepeat: 'no-repeat',
+    }:{});
+})
 const isEdit = ref(false);
 const inputRef = ref();
 const dblclick = () => {
