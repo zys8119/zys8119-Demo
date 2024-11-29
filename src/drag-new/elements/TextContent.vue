@@ -1,0 +1,67 @@
+<template>
+    <div
+        class="Text abs-content text-#000 bg-$backgroundColor text-$color of-hidden"
+        :class="{
+            'b-solid b-width-$borderWidth b-color-$borderColor': !['Text'].includes(elementYype),
+            'b-rd-50%': ['Rotundity', 'ConferenceRotundity'].includes(elementYype),
+            'b-rd-$radius': ['ConferenceRotundityAndRect'].includes(elementYype),
+            'select-none': !isEdit
+        }"
+        @dblclick="dblclick"
+    >
+        <div
+            v-if="isSaveMode"
+            class="abs-content flex-center text-center"
+            v-html="saveValue(data.value)"
+        ></div>
+        <textarea
+            v-else
+            ref="inputRef"
+            class="abs-content bg-#0000 text-center b-none cursor-move align-content-center"
+            :class="{
+                'pointer-events-none': !isEdit,
+                'select-none': !isEdit
+            }"
+            @blur="isEdit = false"
+            v-model="data.value"
+            type="textarea"
+        />
+    </div>
+</template>
+<script setup lang="ts">
+const props = withDefaults(
+    defineProps<{
+        data?: any;
+        config?: any;
+        isSaveMode?: boolean;
+    }>(),
+    {
+        data: () => ({}),
+        config: () => ({}),
+        isSaveMode: false
+    }
+);
+const emits = defineEmits(['update:data', 'update:config']);
+const { data } = useVModels(props, emits);
+const elementYype = computed(() => props.data.elementYype);
+useCssVars(() => ({
+    radius: `${props.data.height}px`,
+    backgroundColor: props.data.backgroundColor,
+    color: props.data.color,
+    borderColor: props.data.borderColor,
+    borderWidth: `${isNaN(Number(props.data.borderWidth)) ? 1 : Number(props.data.borderWidth)}px`
+}));
+const isEdit = ref(false);
+const inputRef = ref();
+const dblclick = () => {
+    isEdit.value = true;
+    inputRef.value.focus();
+};
+const saveValue = (value = '') => {
+    return (value || '').replace(/\n/g, '<br>');
+};
+</script>
+<style scoped lang="less">
+.Text {
+}
+</style>
