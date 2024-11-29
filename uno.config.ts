@@ -24,6 +24,9 @@ export default defineConfig({
         bold: 'font-bold',
     },
     rules: [
+        ["align-content-center",{
+            'align-content':'center'
+        }],
         [
             /^tr-?([xy])(?:-?(-?.+))?$/,
             (match) => {
