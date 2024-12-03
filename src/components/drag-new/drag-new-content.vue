@@ -584,7 +584,7 @@ const save = async (
                                         nextTick(() => {
                                             setTimeout(() => {
                                                 index += 1;
-                                            });
+                                            }, 100);
                                         });
                                     }
                                 },
