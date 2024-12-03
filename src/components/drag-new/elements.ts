@@ -27,3 +27,6 @@ export const useElements = () => {
     return elements;
 };
 export default useElements;
+
+const _Symbol = Symbol('drag-new-bus');
+export const bus = useEventBus(_Symbol);

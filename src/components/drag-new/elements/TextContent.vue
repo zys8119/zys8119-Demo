@@ -32,6 +32,7 @@
     </div>
 </template>
 <script setup lang="ts">
+import { bus } from '../elements';
 import zuoweiImgRaw from "@/src/assets/icons/座位.svg?raw"
 const props = withDefaults(
     defineProps<{
@@ -80,6 +81,12 @@ const dblclick = () => {
 const saveValue = (value = '') => {
     return (value || '').replace(/\n/g, '<br>');
 };
+watch(isEdit, () => {
+    bus.emit({
+        type: 'TextContentEdit',
+        data: isEdit.value
+    });
+});
 </script>
 <style scoped lang="less">
 .Text {

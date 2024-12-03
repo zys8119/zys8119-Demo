@@ -5,6 +5,7 @@
 </template>
 
 <script setup lang="ts" title="座位布局（拖拽布局）">
+import { bus } from '@/src/components/drag-new/elements';
 const router = useRouter();
 const scaleRatio = ref(1);
 const contentRef = ref();
@@ -414,10 +415,18 @@ watch([KeyS, Ctrl, Meta], () => {
         handleSave();
     }
 });
+const isEdit = ref(false);
+bus.on(({ type, data }: any) => {
+    if (type === 'TextContentEdit') {
+        isEdit.value = data;
+    }
+});
 watch([Delete, Backspace], () => {
-    elementsList.value = elementsList.value.filter((item: any) => {
-        return !item.selected;
-    });
+    if (!isEdit.value) {
+        elementsList.value = elementsList.value.filter((item: any) => {
+            return !item.selected;
+        });
+    }
 });
 </script>
 
