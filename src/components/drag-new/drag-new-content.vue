@@ -581,6 +581,7 @@ const save = async (
                                 class: 'abs',
                                 ref: (el) => {
                                     if (el) {
+                                        // 延时的目的是等待元素渲染完成
                                         nextTick(() => {
                                             setTimeout(() => {
                                                 index += 1;
