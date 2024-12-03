@@ -30,6 +30,7 @@
     </div>
 </template>
 <script setup lang="ts">
+import zuoweiImgRaw from "@/src/assets/icons/座位.svg?raw"
 const props = withDefaults(
     defineProps<{
         data?: any;
@@ -54,8 +55,12 @@ useCssVars(() => ({
     borderWidth: `${isNaN(Number(props.data.borderWidth)) ? 1 : Number(props.data.borderWidth)}px`
 }));
 const dataStyle = computed(() => {
+    let backgroundImage = data.value.backgroundImage;
+    if(/座位\.svg$/.test(data.value.backgroundImage)){
+        backgroundImage = `data:image/svg+xml;base64,${btoa(zuoweiImgRaw.replace('#888888',data.value.seatColor || '#888888'))}`
+    }
     return Object.assign({
-        backgroundImage: `url(${data.value.backgroundImage})`,
+        backgroundImage: `url(${backgroundImage})`,
     }, elementYype.value === 'Seat' ? {
         backgroundSize: '100% 100%',
         backgroundRepeat: 'no-repeat',

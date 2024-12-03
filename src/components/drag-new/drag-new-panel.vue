@@ -81,11 +81,13 @@ const NumberMap = ref({
     borderWidth: '边框粗细',
     angle: '角度'
 });
-const ColorMap = ref({
+const ColorMap = computed(()=> Object.assign({
     backgroundColor: '背景',
     color: '字体颜色',
-    borderColor: '边框颜色'
-});
+    borderColor: '边框颜色',
+},modelValue.value.elementYype === 'Seat' ? {
+    seatColor: '座位颜色',
+}:{}));
 const swatches = ref([
     '#00000000',
     '#FFFFFF',
