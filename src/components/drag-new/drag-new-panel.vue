@@ -48,6 +48,7 @@
 </template>
 <script setup lang="ts">
 import zuoweiImg from "@/src/assets/icons/座位.svg?url"
+import {set, get} from "lodash"
 const imgs = import.meta.glob('@/src/assets/darg/*', {
     eager: true,
     import: 'default'
@@ -63,12 +64,22 @@ const props = withDefaults(
 );
 const emit = defineEmits(['update:modelValue']);
 const { modelValue } = useVModels(props, emit);
+// 设置默认值映射
+const defaultValueMap = ref({
+    borderWidth:v=>typeof v === 'number'? v : 1,
+    fontSize:v=>typeof v === 'number'? v : 14,
+    fontX:v=>typeof v === 'number'? v : 0,
+    fontY:v=>typeof v === 'number'? v : 0,
+});
 watch(
     modelValue,
     () => {
+        // 设置默认值
+
         if (modelValue.value) {
-            modelValue.value.borderWidth =
-                typeof modelValue.value.borderWidth === 'number' ? modelValue.value.borderWidth : 1;
+            for (const key in defaultValueMap.value) {
+                set(modelValue.value, key, defaultValueMap.value[key](get(modelValue.value, key)))
+            }
         }
     },
     { immediate: true }
@@ -79,7 +90,10 @@ const NumberMap = ref({
     width: '宽度',
     height: '高度',
     borderWidth: '边框粗细',
-    angle: '角度'
+    angle: '角度',
+    fontSize: '字体大小',
+    fontX: '字体X',
+    fontY: '字体Y',
 });
 const ColorMap = computed(()=> Object.assign({
     backgroundColor: '背景',

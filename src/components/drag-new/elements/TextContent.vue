@@ -10,15 +10,16 @@
         :style="dataStyle"
         @dblclick="dblclick"
     >
-        <div
+        <div class="abs-content transform translate-x-$fontX translate-y-$fontY">
+            <div
             v-if="isSaveMode"
-            class="abs-content flex-center text-center  text-$color"
+            class="abs-content flex-center text-center  text-$color text-size-$fontSize"
             v-html="saveValue(data.value)"
         ></div>
         <textarea
             v-else
             ref="inputRef"
-            class="abs-content bg-#0000 text-center b-none cursor-move align-content-center  text-$color"
+            class="abs-content bg-#0000 text-center b-none cursor-move align-content-center  text-$color text-size-$fontSize"
             :class="{
                 'pointer-events-none': !isEdit,
                 'select-none': !isEdit
@@ -27,6 +28,7 @@
             v-model="data.value"
             type="textarea"
         />
+        </div>
     </div>
 </template>
 <script setup lang="ts">
@@ -51,6 +53,9 @@ useCssVars(() => ({
     radius: `${props.data.height}px`,
     backgroundColor: props.data.backgroundColor,
     color: props.data.color,
+    fontSize: `${props.data.fontSize}px`,
+    fontX: `${props.data.fontX}px`,
+    fontY: `${props.data.fontY}px`,
     borderColor: props.data.borderColor,
     borderWidth: `${isNaN(Number(props.data.borderWidth)) ? 1 : Number(props.data.borderWidth)}px`
 }));
