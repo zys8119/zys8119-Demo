@@ -26,10 +26,7 @@
                 }"
             >
                 <div class="abs-content z-1">
-                    <component
-                        :is="item.renderContent(item)"
-                        v-bind="item.contentProps"
-                    ></component>
+                    <component :is="renderContent(item)" v-bind="item.contentProps"></component>
                 </div>
             </Drager>
             <div
@@ -124,7 +121,13 @@ const props = withDefaults(
     }
 );
 const thumbnailCurrentTo = computed(() => props.thumbnailTo || el.value || 'body');
-const emit = defineEmits(['update:list', 'update:config', 'update:grid', 'update:gridCount']);
+const emit = defineEmits([
+    'update:list',
+    'update:config',
+    'update:grid',
+    'update:gridCount',
+    'update:modelValue'
+]);
 const { modelValue: dragerList, config: DragerCommonConfig } = useVModels(props, emit);
 const dragNewContentContainer = ref();
 const { width: widthContainer, height: heightContainer } =
@@ -204,12 +207,13 @@ const setSelected = (id: string | number | Array<string | number>) => {
     });
 };
 const contextmenuClick = async (item: any) => {
-    await item?.click?.();
+    await item?.click?.(item);
     showContextmenu.value = false;
     showContextmenuInfo.value = null;
     contextmenuStyle.value = null;
 };
 const { isOutside } = useMouseInElement(contextmenuRef);
+const createElementId = () => Date.now().toString();
 const contextmenuBtnLists = ref([
     {
         name: '删除',
@@ -221,18 +225,78 @@ const contextmenuBtnLists = ref([
                 1
             );
         }
+    },
+    {
+        name: '复制',
+        click() {
+            const id = createElementId();
+            const copyData = cloneDeep(showContextmenuInfo.value);
+            const size = 10;
+            copyData.left += size;
+            copyData.top += size;
+            copyData.id = id;
+            dragerList.value.push(copyData);
+            setSelected(id);
+        }
+    },
+    {
+        name: '置顶',
+        click: () => {
+            const target = dragerList.value.find(
+                (item: any) => showContextmenuInfo.value.id === item.id
+            );
+            dragerList.value.splice(dragerList.value.indexOf(target), 1);
+            dragerList.value.push(target);
+        }
+    },
+    {
+        name: '置底',
+        click: () => {
+            const target = dragerList.value.find(
+                (item: any) => showContextmenuInfo.value.id === item.id
+            );
+            dragerList.value.splice(dragerList.value.indexOf(target), 1);
+            dragerList.value.unshift(target);
+        }
+    },
+    {
+        name: '上移一层',
+        click: () => {
+            let targetIndex = dragerList.value.findIndex(
+                (item) => item.id === showContextmenuInfo.value.id
+            );
+            if (targetIndex < dragerList.value.length - 1) {
+                let target = dragerList.value.splice(targetIndex, 1)[0];
+                dragerList.value.splice(targetIndex + 1, 0, target);
+            }
+        }
+    },
+    {
+        name: '下移一层',
+        click: () => {
+            let targetIndex = dragerList.value.findIndex(
+                (item) => item.id === showContextmenuInfo.value.id
+            );
+            if (targetIndex > 0) {
+                let target = dragerList.value.splice(targetIndex, 1)[0];
+                dragerList.value.splice(targetIndex - 1, 0, target);
+            }
+        }
     }
-    // {name:"剪切"},
-    // {name:"复制"},
-    // {name:"创建副本"},
-    // {name:"置顶"},
-    // {name:"置底"},
-    // {name:"上移一层"},
-    // {name:"下移一层"},
-    // {name:"锁定/解锁"},
 ]);
+const renderContent = (data: any) => {
+    const content = elementsTypesMap[data.elementYype]?.content || get(data, 'content', data.name);
+    if (typeof content === 'object') {
+        return h(content, {
+            data,
+            config: DragerCommonConfig.value
+        });
+    } else {
+        return h('div', {}, content);
+    }
+};
 const dragNewAsideElement = (data: any) => {
-    const id = Date.now().toString();
+    const id = createElementId();
     const newData = merge(
         {
             id,
@@ -248,19 +312,6 @@ const dragNewAsideElement = (data: any) => {
         },
         get(data, 'config', {}),
         {
-            renderContent: ((content: any) => {
-                content = elementsTypesMap[data.elementYype]?.content || content;
-                return (data: any) => {
-                    if (typeof content === 'object') {
-                        return h(content, {
-                            data,
-                            config: DragerCommonConfig.value
-                        });
-                    } else {
-                        return h('div', {}, content);
-                    }
-                };
-            })(get(data, 'content', data.name)),
             contentProps: get(data, 'contentProps', {})
         }
     );
@@ -546,7 +597,7 @@ const save = async (
                             },
                             [
                                 h(
-                                    item.renderContent(item),
+                                    renderContent(item),
                                     merge({}, item.contentProps, {
                                         // 是否是保存模式
                                         isSaveMode: true

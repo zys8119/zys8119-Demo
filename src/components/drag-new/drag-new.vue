@@ -1,11 +1,7 @@
 <template>
     <dragNewLayout class="drag-seat-arrangement-new">
         <template #header>
-            <dragNewHeader
-                :btns="headerBtns"
-                title="排座面板"
-                subtitle="(会议室：0001)"
-            ></dragNewHeader>
+            <dragNewHeader :btns="headerBtns" :title="title" :subtitle="subtitle"></dragNewHeader>
         </template>
         <template #aside>
             <dragNewAside :elements="elements" class="w-$aside-width"></dragNewAside>
@@ -24,8 +20,8 @@
         >
             <dragNewContent
                 :thumbnailTo="thumbnailToContentRef"
-                v-model="elementsList"
-                v-model:config="DragerCommonConfig"
+                v-model="modelValue"
+                v-model:config="currConfig"
                 :grid="grid"
                 :gridCount="gridCount"
                 ref="contentRef"
@@ -40,42 +36,76 @@
 </template>
 <script setup lang="ts">
 import { useElements } from './elements';
+import { merge } from 'lodash';
+const props = withDefaults(
+    defineProps<{
+        scaleRatio?: number;
+        grid?: number;
+        gridCount?: number;
+        config?: Record<string, any>;
+        modelValue?: any[];
+        headerBtns?: any[];
+        active?: any;
+        title?: string;
+        subtitle?: any;
+    }>(),
+    {
+        scaleRatio: 1,
+        grid: 10,
+        gridCount: 5,
+        config: () => ({}),
+        modelValue: () => [],
+        headerBtns: () => [],
+        active: () => []
+    }
+);
+
+const emits = defineEmits([
+    'update:scaleRatio',
+    'update:grid',
+    'update:gridCount',
+    'update:cofnig',
+    'update:headerBtns',
+    'update:active',
+    'update:modelValue'
+]);
+const { scaleRatio, grid, gridCount, config, modelValue, headerBtns, active } = useVModels(
+    props,
+    emits
+);
+const currConfig = computed({
+    get: () => {
+        return merge(
+            {
+                gridX: grid.value,
+                gridY: grid.value,
+                scaleRatio: scaleRatio.value
+            },
+            config.value
+        );
+    },
+    set(v) {
+        config.value = v;
+    }
+});
 const contentRef = ref();
-const grid = ref(10);
-const gridCount = ref(5);
-const scaleRatio = ref(1);
-const DragerCommonConfig = computed(() => ({
-    gridX: grid.value,
-    gridY: grid.value,
-    snapToGrid: true,
-    snap: true,
-    markline: true,
-    rotatable: true,
-    color: '#3a7afe',
-    scaleRatio: scaleRatio.value
-}));
+
 const thumbnailToContentRef = ref();
 const elements = useElements();
-const elementsList = ref([]);
+
 const activeElement = computed(() => {
-    return elementsList.value.find((item: any) => item.selected);
+    return modelValue.value.find((item: any) => item.selected);
 });
-const headerBtnsHandleClick = async (type: number) => {
-    if (type === 3) {
-        const data: Blob = await contentRef.value.save();
-        const a = document.createElement('a');
-        a.href = URL.createObjectURL(data);
-        a.download = '排座.png';
-        a.click();
-        a.remove();
+watch(
+    activeElement,
+    (v) => {
+        active.value = v;
+    },
+    {
+        immediate: true,
+        deep: true
     }
-};
-const headerBtns = ref([
-    { name: '保存', click: headerBtnsHandleClick.bind(null, 1) },
-    { name: '导出', click: headerBtnsHandleClick.bind(null, 2) },
-    { name: '预览', click: headerBtnsHandleClick.bind(null, 3) },
-    { name: '返回后台', click: headerBtnsHandleClick.bind(null, 4) }
-]);
+);
 const elementMouse = useMouseInElement(contentRef);
 const { Alt } = useMagicKeys({
     passive: false,
@@ -124,6 +154,13 @@ const onMouseDown = () => {
     };
     window.addEventListener('mouseup', mouseup);
 };
+defineExpose({
+    contentRef,
+    thumbnailToContentRef,
+    async save(...args: any[]) {
+        return contentRef.value.save(...args);
+    }
+});
 </script>
 <style scoped lang="less">
 .drag-seat-arrangement-new {
