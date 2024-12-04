@@ -71,7 +71,8 @@
                                 left: item.left - thumbnailStyle.left + 'px',
                                 top: item.top - thumbnailStyle.top + 'px',
                                 width: item.width + 'px',
-                                height: item.height + 'px'
+                                height: item.height + 'px',
+                                transform: `rotate(${item.angle}deg)`
                             }"
                             :class="{
                                 'bg-#aaa': !item.isThumbnailDragerVisibleArea,
@@ -580,8 +581,8 @@ const save = async (
                             {
                                 class: 'abs',
                                 ref: (el) => {
+                                    // 延时的目的是等待元素渲染完成
                                     if (el) {
-                                        // 延时的目的是等待元素渲染完成
                                         nextTick(() => {
                                             setTimeout(() => {
                                                 index += 1;
@@ -593,7 +594,8 @@ const save = async (
                                     left: item.left - thumbnailStyle.value.left + margin + 'px',
                                     top: item.top - thumbnailStyle.value.top + margin + 'px',
                                     width: item.width + 'px',
-                                    height: item.height + 'px'
+                                    height: item.height + 'px',
+                                    transform: `rotate(${item.angle}deg)`
                                 }
                             },
                             [
