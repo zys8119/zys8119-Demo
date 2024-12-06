@@ -2,7 +2,7 @@ import axios, { AxiosRequestConfig } from "axios";
 
 const serve = axios.create({
   baseURL: import.meta.env.VITE_API,
-  timeout: 5000,
+  timeout: 0,
 });
 serve.interceptors.request.use(
   (config) => {
@@ -14,7 +14,6 @@ serve.interceptors.request.use(
 );
 serve.interceptors.response.use(
   (response) => {
-    console.log(11);
     return response.data;
   },
   (error) => {

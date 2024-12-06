@@ -1,7 +1,7 @@
 export default {
-  qrcode() {
+  login() {
     return request({
-      url: "/tiktok/qrcode",
+      url: "/tiktok/login",
       method: "get",
     });
   },
