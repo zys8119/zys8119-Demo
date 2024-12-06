@@ -1,6 +1,9 @@
-export const $apiData = {}
+import tiktok from "./tiktok"
+export const $apiData = {
+    tiktok: tiktok
+}
 export {
-
+    tiktok
 }
 export default $apiData
 
