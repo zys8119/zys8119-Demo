@@ -83,8 +83,6 @@ onMounted(async () => {
 })
 const onPlay = async (item) => {
   const video = document.getElementById('video') as HTMLVideoElement;
-  // video.src = item.url;
-  // video.play();
   if (/\.mp4$/.test(item.url)) {
     video.src = item.url;
     video.play();
