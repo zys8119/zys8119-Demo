@@ -28,7 +28,7 @@
         </n-collapse>
       </div>
       <div class="flex-1">
-        <video id="video" class="w-100% h-100%" controls></video>
+        <video id="video" class="w-100% h-100%" controls autoplay></video>
       </div>
     </div>
   </div>
@@ -37,6 +37,8 @@
 <script setup lang="ts">
 import axios from "axios"
 import Hls from "hls.js"
+import videojs from "video.js"
+import "video.js/dist/video-js.css"
 const search = ref()
 const lives = ref({})
 const onSearch = async () => {
@@ -80,8 +82,9 @@ onMounted(async () => {
   lives.value = results
 })
 const onPlay = async (item) => {
-
   const video = document.getElementById('video') as HTMLVideoElement;
+  // video.src = item.url;
+  // video.play();
   const hls = new Hls();
   hls.loadSource(item.url);
   hls.attachMedia(video);
