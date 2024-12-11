@@ -85,7 +85,9 @@ onMounted(async () => {
   } while (tv.length > 0)
   lives.value = results
 })
-
+watchEffect(() => {
+  console.log(lives.value)
+})
 const onPlay = async (item?: any) => {
   if (item) {
     router.replace({
@@ -97,18 +99,20 @@ const onPlay = async (item?: any) => {
   } else {
     item = route.query
   }
-  const video = document.getElementById('video') as HTMLVideoElement;
-  if (/\.mp4$/.test(item.url)) {
-    video.src = item.url;
-    video.play();
-    return
+  if (item.url) {
+    const video = document.getElementById('video') as HTMLVideoElement;
+    if (/\.mp4$/.test(item.url)) {
+      video.src = item.url;
+      video.play();
+      return
+    }
+    const hls = new Hls();
+    hls.loadSource(item.url);
+    hls.attachMedia(video);
+    hls.on(Hls.Events.MANIFEST_LOADED, () => {
+      video.play();
+    });
   }
-  const hls = new Hls();
-  hls.loadSource(item.url);
-  hls.attachMedia(video);
-  hls.on(Hls.Events.MANIFEST_LOADED, () => {
-    video.play();
-  });
 }
 onMounted(() => {
   onPlay()
