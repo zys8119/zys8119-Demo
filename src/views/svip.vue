@@ -20,7 +20,9 @@
             </template>
             <div class="text-#fff" v-for="(items2, index) in items" :key="index">
               <div class="text-#fff cursor-pointer lh-40px p-x-30px hover:text-#003cff hover:bg-#14162c hover:bg-op-50"
-                v-for="(item, index) in items2" :key="index" @click="onPlay(item)">
+                :class="{
+                  '!text-#1a9951': route.query.id == item.id
+                }" v-for="(item, index) in items2" :key="index" @click="onPlay(item)">
                 <n-ellipsis>{{ item.name }}</n-ellipsis>
               </div>
             </div>
@@ -39,6 +41,8 @@ import axios from "axios"
 import Hls from "hls.js"
 import videojs from "video.js"
 import "video.js/dist/video-js.css"
+const router = useRouter()
+const route = useRoute()
 const search = ref()
 const lives = ref({})
 const onSearch = async () => {
@@ -81,7 +85,18 @@ onMounted(async () => {
   } while (tv.length > 0)
   lives.value = results
 })
-const onPlay = async (item) => {
+
+const onPlay = async (item?: any) => {
+  if (item) {
+    router.replace({
+      query: {
+        ...item,
+        type: 'lives'
+      }
+    })
+  } else {
+    item = route.query
+  }
   const video = document.getElementById('video') as HTMLVideoElement;
   if (/\.mp4$/.test(item.url)) {
     video.src = item.url;
@@ -95,6 +110,9 @@ const onPlay = async (item) => {
     video.play();
   });
 }
+onMounted(() => {
+  onPlay()
+})
 </script>
 
 <style scoped lang="less">
