@@ -57,11 +57,11 @@ const onSearch = async () => {
   console.log(res.data)
 }
 onMounted(async () => {
-  const tvRes = await axios({
-    url: "http://127.0.0.1:82/svip/lives/proxy",
+  const tvRes: { data: string } = await axios({
+    url: "https://m3u.ibert.me/txt/fmml_ipv6.txt",
     method: "get",
-  })
-  const tv = tvRes.data.data.split('\n')
+  });
+  const tv = tvRes.data.split('\n')
   const results = {}
   let oneName = null
   do {
