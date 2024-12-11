@@ -90,6 +90,7 @@
     "gsap": "^3.12.5",
     "hammerjs": "^2.0.8",
     "hel-micro": "^4.9.11",
+    "hls.js": "^1.5.17",
     "html-docx-js": "^0.3.1",
     "html2canvas": "^1.4.1",
     "html2docx": "^0.1.3",
