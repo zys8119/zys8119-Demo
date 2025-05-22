@@ -62,7 +62,7 @@ export default defineConfig({
       dir: "src/api",
     }),
     AutoRoute({
-      views: "src/views",
+      views: "src/views2",
       routes_extend: "./routes_extend.ts",
     }),
     AutoConfig({
