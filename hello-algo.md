@@ -1,4 +1,4 @@
-# js 算法
+# hello-algo
 
 > 算法集合
 

@@ -22,4 +22,4 @@
   })
 })()
 ```
-## [js算法](./js算法.md)
+## [算法（hello-algo）](./hello-algo.md)
