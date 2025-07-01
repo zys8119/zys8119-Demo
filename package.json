@@ -152,6 +152,7 @@
     "unplugin-auto-import": "^0.15.3",
     "vite": "^4.5.5",
     "vite-plugin-windicss": "^1.9.4",
+    "vitejs-get-vue-ref": "^0.0.2",
     "vitejs-plugin-config-auto-import": "^0.0.5",
     "web-auto-deploy": "^0.0.2",
     "windicss": "^3.5.6",
