@@ -47,27 +47,27 @@ const drawTree = async (ctx: CanvasRenderingContext2D, sx: number, sy: number) =
             ctx.lineTo(0, -offset * p)
             ctx.stroke()
         }, 0.1)
-        // if (Math.floor(Math.random() * 2)) {
-        ctx.save()
-        ctx.beginPath()
-        ctx.fillStyle = '#f00'
-        ctx.globalAlpha = 1
-        ctx.arc(0, -offset, Math.random() * 5, 0, Math.PI * 2)
-        ctx.fill()
-        const r = Math.random() * 5
-        ctx.beginPath()
-        const sizes = 5
-        new Array(sizes).fill(0).forEach((_, k) => {
-            ctx.globalAlpha = 0.5
-            ctx.lineWidth = 0.1
-            ctx.strokeStyle = "#fff"
-            const [x, y] = getArcPoints(0, -offset, r, 360 / sizes * k)
-            ctx.arc(x, y, r, 0, Math.PI * 2)
-            ctx.stroke()
-        })
-        ctx.fill()
-        ctx.restore()
-        // }
+        if (Math.floor(Math.random() * 2)) {
+            ctx.save()
+            ctx.beginPath()
+            ctx.fillStyle = '#f00'
+            ctx.globalAlpha = 1
+            ctx.arc(0, -offset, Math.random() * 5, 0, Math.PI * 2)
+            ctx.fill()
+            const r = Math.random() * 5
+            ctx.beginPath()
+            const sizes = 5
+            new Array(sizes).fill(0).forEach((_, k) => {
+                ctx.globalAlpha = 0.5
+                ctx.lineWidth = 0.1
+                ctx.strokeStyle = "#fff"
+                const [x, y] = getArcPoints(0, -offset, r, 360 / sizes * k)
+                ctx.arc(x, y, r, 0, Math.PI * 2)
+                ctx.stroke()
+            })
+            ctx.fill()
+            ctx.restore()
+        }
         await drawTreeBranch(level + 1, offset)
         ctx.restore()
     }
