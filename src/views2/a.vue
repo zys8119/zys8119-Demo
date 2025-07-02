@@ -29,13 +29,13 @@ function getArcPoints(cx, cy, radius, deg) {
 }
 
 const deg = 35
-const getOffset = () => Math.random() * 100 + 10
+const getOffset = () => Math.random() * 50 + 10
 const lineWidth = 5
 const drawTree = async (ctx: CanvasRenderingContext2D, sx: number, sy: number) => {
     const offset = getOffset()
     ctx.strokeStyle = '#000'
     const drawTreeBranchItem = async (level = 0, bool: boolean, offset: number) => {
-        if (level > Math.random() * 15 + 3) return
+        if (level > Math.random() * 17 + 3) return
         ctx.save()
         ctx.beginPath()
         ctx.translate(0, -offset)
