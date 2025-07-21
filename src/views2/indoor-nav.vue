@@ -5,6 +5,7 @@
     </div>
 </template>
 <script setup lang="ts">
+import PF from 'pathfinding';
 const canvasRef = ref<HTMLCanvasElement | null>(null);
 const grids = ref(new Array(50).fill(0).map(() => new Array(50).fill(0)));
 const gridSize = 16;
@@ -39,10 +40,12 @@ const houses = [
         backgroundColor: '#009dff',
     },
 ];
+
 onMounted(async () => {
     const canvas = canvasRef.value as unknown as HTMLCanvasElement;
     const ctx = canvas.getContext('2d') as CanvasRenderingContext2D;
     await draw(ctx, canvas);
+
 })
 const draw = (ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement) => {
     canvas.width = canvasBox;
@@ -106,6 +109,24 @@ const draw = (ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement) => {
     for (let j = 0; j < grids.value[0].length; j++) {
         ctx.fillText(j.toString(), j * gridSize + gridSize / 2, 10);
     }
+    // 寻址
+    const grid = new PF.Grid(grids.value);
+    const finder = new PF.AStarFinder();
+    const path = finder.findPath(3, 1, 4, 6, grid);
+    // 绘制路径
+    ctx.strokeStyle = '#00ff00';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    path.forEach((point, index) => {
+        const x = point[0] * gridSize + gridSize / 2;
+        const y = point[1] * gridSize + gridSize / 2;
+        if (index === 0) {
+            ctx.moveTo(x, y);
+        } else {
+            ctx.lineTo(x, y);
+        }
+    });
+    ctx.stroke();
 };
 </script>
 <style scoped lang="less">
