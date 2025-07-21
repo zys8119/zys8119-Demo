@@ -1,18 +1,33 @@
-declare module "mockjs-async"{
-    import * as Mockjs from "mockjs"
-    export = Mockjs
-}
+import hls from "highlight.js";
+const code = `
+function aa<T>():T
 
-declare module "protable" {
-    interface FromArray{
-        (selector:string,data:Array<Record<any, any>>, options:{
-            contents:Record<any, (content:any)=> any>
-        }):void
-    }
-    export const fromArray:FromArray
-}
-
-declare module "*.vue"{
-    export  {}
-}
-// 冒泡排序
+aa<{
+    a:string
+    b:number
+}>("<asa>")
+`;
+hls.registerLanguage("aaa", (hljs) => {
+  return {
+    name: "AAA",
+    contains: [
+      {
+        className: "keyword",
+        begin: /function.*/,
+        contains: [
+          {
+            className: "aaa",
+            begin: /function/,
+          },
+          {
+            className: "bbb",
+            begin: /\saa/,
+          },
+        ],
+        // returnBegin: true,
+        end: /T/,
+      },
+    ],
+  };
+});
+console.log(hls.highlight(code, { language: "aaa" }).value);
