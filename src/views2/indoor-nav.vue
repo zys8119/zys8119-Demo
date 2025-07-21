@@ -27,8 +27,12 @@ const houses = [
         points: [[0, 5], [20, 7]],
         enter: [
             {
-                user: 'Boss',
-                points: [3, 1]
+                user: 'user1',
+                points: [2, 6]
+            },
+            {
+                user: 'user1',
+                points: [4, 6]
             }
         ],
         color: '#fff',
