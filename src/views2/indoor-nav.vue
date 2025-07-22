@@ -8,11 +8,11 @@
             <n-form>
                 <n-form-item label="起点">
                     <n-select class="w-200px" placeholder="请选择起点" clearable filterable v-model:value="start"
-                        :options="stations"></n-select>
+                        :options="stations" @change="targetChange"></n-select>
                 </n-form-item>
                 <n-form-item label="目标点">
                     <n-select class="w-200px" placeholder="请选择目标点" clearable filterable v-model:value="end"
-                        :options="stations"></n-select>
+                        :options="stations" @change="targetChange"></n-select>
                 </n-form-item>
             </n-form>
         </div>
@@ -256,22 +256,41 @@ onMounted(async () => {
     await draw(ctx, canvas);
 })
 const newPath = ref([])
-const drawAnimation = async (ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement) => {
-    if (newPath.value.length < 2) { return }
-    ctx.fillStyle = '#ff0000';
+const originPath = ref([])
+const isDone = ref(false)
+const targetChange = () => {
+    isDone.value = false
+}
+const drawAnimationRun = async (ctx: CanvasRenderingContext2D, isAnimation?: boolean, newPath?: number[][]) => {
     let index = 0
-    let sp = newPath.value[index]
-    while (index < newPath.value.length) {
-        if (newPath.value.length < 2) { break }
-        const ep = newPath.value[index]
+    let sp = newPath[index]
+    while (index < newPath.length) {
+        if (isAnimation && (newPath.length < 2 || isDone.value)) { break }
+        const ep = newPath[index]
         const w = ep[0] - sp[0]
         const h = ep[1] - sp[1]
-        await winframe(p => {
-            ctx.fillRect((sp[0] + w * p) * gridSize, (sp[1] + h * p) * gridSize, gridSize, gridSize);
-        }, 500)
+        if (isAnimation) {
+            await winframe(p => {
+                ctx.fillRect((sp[0] + w * p) * gridSize, (sp[1] + h * p) * gridSize, gridSize, gridSize);
+            }, 1)
+        } else {
+            ctx.fillRect((sp[0] + w) * gridSize, (sp[1] + h) * gridSize, gridSize, gridSize);
+        }
         sp = ep
         index++
     }
+    isDone.value = true
+}
+const drawAnimation = async (ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement) => {
+    ctx.fillStyle = '#ff0000';
+    if (isDone.value) {
+        newPath.value.forEach(e => {
+            ctx.fillRect(e[0] * gridSize, e[1] * gridSize, gridSize, gridSize);
+        })
+        return await drawAnimationRun(ctx, false, originPath.value)
+    }
+    if (newPath.value.length < 2 || isDone.value) { return }
+    await drawAnimationRun(ctx, true, originPath.value)
 }
 const draw = async (ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement) => {
     const offset = gridSize
@@ -337,11 +356,13 @@ const draw = async (ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement) =>
     });
     // 寻址
     newPath.value = []
+    originPath.value = []
     if (startPoint.value && endPoint.value) {
         const grid = new PF.Grid(grids.value);
         const finder = new PF.BiBreadthFirstFinder({
         });
         const path = finder.findPath(startPoint.value[0], startPoint.value[1], endPoint.value[0], endPoint.value[1], grid.clone());
+        originPath.value = path
         const _newPath = PF.Util.compressPath(path);
         newPath.value = _newPath
         // 绘制寻址路径
