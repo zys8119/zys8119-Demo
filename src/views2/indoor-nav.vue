@@ -14,6 +14,110 @@
                     <n-select class="w-200px" placeholder="请选择目标点" clearable filterable v-model:value="end"
                         :options="stations" @change="targetChange"></n-select>
                 </n-form-item>
+                <n-grid :cols="3">
+                    <n-grid-item>
+                        <n-form-item label="网格">
+                            <n-color-picker :render-label="renderColorPickerLabel" class="w-40px" placeholder="请选择目标点"
+                                clearable filterable v-model:value="colors.gridColor"></n-color-picker>
+                        </n-form-item>
+                    </n-grid-item>
+                    <n-grid-item>
+                        <n-form-item label="工位">
+                            <n-color-picker :render-label="renderColorPickerLabel" class="w-40px" placeholder="请选择目标点"
+                                clearable filterable v-model:value="colors.workColor"></n-color-picker>
+                        </n-form-item>
+                    </n-grid-item>
+                    <n-grid-item>
+                        <n-form-item label="墙体">
+                            <n-color-picker :render-label="renderColorPickerLabel" class="w-40px" placeholder="请选择目标点"
+                                clearable filterable v-model:value="colors.wallColor"></n-color-picker>
+                        </n-form-item>
+                    </n-grid-item>
+                    <n-grid-item>
+                        <n-form-item label="boss区域">
+                            <n-color-picker :render-label="renderColorPickerLabel" class="w-40px" placeholder="请选择"
+                                clearable filterable v-model:value="colors.bossColor"></n-color-picker>
+                        </n-form-item>
+                    </n-grid-item>
+                    <n-grid-item>
+                        <n-form-item label="会议室区域">
+                            <n-color-picker :render-label="renderColorPickerLabel" class="w-40px" placeholder="请选择"
+                                clearable filterable v-model:value="colors.conferenceColor1"></n-color-picker>
+                        </n-form-item>
+                    </n-grid-item>
+                    <n-grid-item>
+                        <n-form-item label="大会议室区域">
+                            <n-color-picker :render-label="renderColorPickerLabel" class="w-40px" placeholder="请选择"
+                                clearable filterable v-model:value="colors.conferenceColor2"></n-color-picker>
+                        </n-form-item>
+                    </n-grid-item>
+                    <n-grid-item>
+                        <n-form-item label="人事区域">
+                            <n-color-picker :render-label="renderColorPickerLabel" class="w-40px" placeholder="请选择"
+                                clearable filterable v-model:value="colors.personnelColor"></n-color-picker>
+                        </n-form-item>
+                    </n-grid-item>
+                    <n-grid-item>
+                        <n-form-item label="神秘区域">
+                            <n-color-picker :render-label="renderColorPickerLabel" class="w-40px" placeholder="请选择"
+                                clearable filterable v-model:value="colors.mysteriousAreaColor"></n-color-picker>
+                        </n-form-item>
+                    </n-grid-item>
+                    <n-grid-item>
+                        <n-form-item label="洗手间区域">
+                            <n-color-picker :render-label="renderColorPickerLabel" class="w-40px" placeholder="请选择"
+                                clearable filterable v-model:value="colors.toiletColor"></n-color-picker>
+                        </n-form-item>
+                    </n-grid-item>
+                    <n-grid-item>
+                        <n-form-item label="电梯区域">
+                            <n-color-picker :render-label="renderColorPickerLabel" class="w-40px" placeholder="请选择"
+                                clearable filterable v-model:value="colors.liftColor"></n-color-picker>
+                        </n-form-item>
+                    </n-grid-item>
+                    <n-grid-item>
+                        <n-form-item label="文本区域">
+                            <n-color-picker :render-label="renderColorPickerLabel" class="w-40px" placeholder="请选择"
+                                clearable filterable v-model:value="colors.textAreaColor"></n-color-picker>
+                        </n-form-item>
+                    </n-grid-item>
+                    <n-grid-item>
+                        <n-form-item label="文本">
+                            <n-color-picker :render-label="renderColorPickerLabel" class="w-40px" placeholder="请选择"
+                                clearable filterable v-model:value="colors.textColor"></n-color-picker>
+                        </n-form-item>
+                    </n-grid-item>
+                    <n-grid-item>
+                        <n-form-item label="动画路径">
+                            <n-color-picker :render-label="renderColorPickerLabel" class="w-40px" placeholder="请选择"
+                                clearable filterable v-model:value="colors.lineActiveColor"></n-color-picker>
+                        </n-form-item>
+                    </n-grid-item>
+                    <n-grid-item>
+                        <n-form-item label="路径">
+                            <n-color-picker :render-label="renderColorPickerLabel" class="w-40px" placeholder="请选择"
+                                clearable filterable v-model:value="colors.lineColor"></n-color-picker>
+                        </n-form-item>
+                    </n-grid-item>
+                    <n-grid-item>
+                        <n-form-item label="目标点">
+                            <n-color-picker :render-label="renderColorPickerLabel" class="w-40px" placeholder="请选择"
+                                clearable filterable v-model:value="colors.endPointColor"></n-color-picker>
+                        </n-form-item>
+                    </n-grid-item>
+                    <n-grid-item>
+                        <n-form-item label="起点">
+                            <n-color-picker :render-label="renderColorPickerLabel" class="w-40px" placeholder="请选择"
+                                clearable filterable v-model:value="colors.startPointColor"></n-color-picker>
+                        </n-form-item>
+                    </n-grid-item>
+                    <n-grid-item>
+                        <n-form-item label="点位置">
+                            <n-color-picker :render-label="renderColorPickerLabel" class="w-40px" placeholder="请选择"
+                                clearable filterable v-model:value="colors.pointColor"></n-color-picker>
+                        </n-form-item>
+                    </n-grid-item>
+                </n-grid>
             </n-form>
         </div>
     </div>
@@ -24,6 +128,26 @@ import winframe from 'winframe';
 const canvasRef = ref<HTMLCanvasElement | null>(null);
 const start = ref()
 const end = ref()
+const colors = ref({
+    gridColor: "#f4f4f4",
+    workColor: "#009dff",
+    wallColor: "#009dff",
+    bossColor: "#009dff",
+    conferenceColor1: "#009dff",
+    conferenceColor2: "#009dff",
+    personnelColor: "#009dff",
+    mysteriousAreaColor: "#009dff",
+    toiletColor: "#009dff",
+    liftColor: "#009dff",
+    textAreaColor: "#ffffff",
+    textColor: "#6d1b0d",
+    pointColor: "#a0a0a0",
+    startPointColor: '#47f900',
+    endPointColor: "#f90047",
+    lineColor: "#2e2bf7",
+    lineActiveColor: '#ff0000',
+})
+const renderColorPickerLabel = () => null
 const createStation = (title, points) => {
     return {
         title,
@@ -41,11 +165,11 @@ const createStation = (title, points) => {
             }
             return a
         }, []),
-        color: '#fff',
-        backgroundColor: '#009dff',
+        color: colors.value.textAreaColor,
+        backgroundColor: colors.value.workColor,
     }
 }
-const houses = ref([
+const houses = computed(() => [
     {
         title: 'Boss办公室',
         points: [[0, 0], [25, 2]],
@@ -55,8 +179,8 @@ const houses = ref([
                 points: [3, 2]
             }
         ],
-        color: '#fff',
-        backgroundColor: '#009dff',
+        color: colors.value.textAreaColor,
+        backgroundColor: colors.value.bossColor,
     },
     ...new Array(5).fill(0).map((_, k) => {
         k = k + 1
@@ -82,8 +206,8 @@ const houses = ref([
                 points: [10, 40]
             }
         ],
-        color: '#fff',
-        backgroundColor: '#009dff',
+        color: colors.value.textAreaColor,
+        backgroundColor: colors.value.conferenceColor1,
     },
     {
         title: '电梯/前台',
@@ -98,25 +222,25 @@ const houses = ref([
                 points: [30, 40]
             }
         ],
-        color: '#fff',
-        backgroundColor: '#009dff',
+        color: colors.value.textAreaColor,
+        backgroundColor: colors.value.liftColor,
     },
     {
         title: '墙体',
         points: [[25, 12], [33, 37]],
         enter: [],
-        color: '#fff',
-        backgroundColor: '#009dff',
+        color: colors.value.textAreaColor,
+        backgroundColor: colors.value.wallColor,
     },
     {
         title: '墙体2',
         points: [[25, 8], [33, 10]],
         enter: [],
-        color: '#fff',
-        backgroundColor: '#009dff',
+        color: colors.value.textAreaColor,
+        backgroundColor: colors.value.wallColor,
     },
     {
-        title: '卫生间',
+        title: '洗手间',
         points: [[25, 0], [33, 5]],
         enter: [
             {
@@ -124,8 +248,8 @@ const houses = ref([
                 points: [28, 5]
             },
         ],
-        color: '#fff',
-        backgroundColor: '#009dff',
+        color: colors.value.textAreaColor,
+        backgroundColor: colors.value.toiletColor,
     },
     {
         title: '神秘区域',
@@ -140,8 +264,8 @@ const houses = ref([
                 points: [38, 44]
             }
         ],
-        color: '#fff',
-        backgroundColor: '#009dff',
+        color: colors.value.textAreaColor,
+        backgroundColor: colors.value.mysteriousAreaColor,
     },
     {
         title: '人事/行政',
@@ -152,8 +276,8 @@ const houses = ref([
                 points: [35, 27]
             },
         ],
-        color: '#fff',
-        backgroundColor: '#009dff',
+        color: colors.value.textAreaColor,
+        backgroundColor: colors.value.personnelColor,
     },
     {
         title: '大会议室',
@@ -164,24 +288,24 @@ const houses = ref([
                 points: [34, 23]
             },
         ],
-        color: '#fff',
-        backgroundColor: '#009dff',
+        color: colors.value.textAreaColor,
+        backgroundColor: colors.value.conferenceColor2,
     },
     {
         title: '立柱',
         points: [[21, 6], [23, 8]],
         enter: [
         ],
-        color: '#fff',
-        backgroundColor: '#009dff',
+        color: colors.value.textAreaColor,
+        backgroundColor: colors.value.wallColor,
     },
     {
         title: '立柱',
         points: [[21, 27], [23, 29]],
         enter: [
         ],
-        color: '#fff',
-        backgroundColor: '#009dff',
+        color: colors.value.textAreaColor,
+        backgroundColor: colors.value.wallColor,
     },
     {
         title: '茶水间/休息区域',
@@ -204,7 +328,7 @@ const houses = ref([
                 points: [42, 5]
             },
         ],
-        color: '#fff',
+        color: colors.value.textAreaColor,
         backgroundColor: '#009dff',
     },
 ]);
@@ -282,7 +406,7 @@ const drawAnimationRun = async (ctx: CanvasRenderingContext2D, isAnimation?: boo
     isDone.value = true
 }
 const drawAnimation = async (ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement) => {
-    ctx.fillStyle = '#ff0000';
+    ctx.fillStyle = colors.value.lineActiveColor;
     if (isDone.value) {
         newPath.value.forEach(e => {
             ctx.fillRect(e[0] * gridSize, e[1] * gridSize, gridSize, gridSize);
@@ -299,7 +423,7 @@ const draw = async (ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement) =>
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     ctx.fillStyle = '#ffffffff';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
-    ctx.strokeStyle = '#ccc';
+    ctx.strokeStyle = colors.value.gridColor;
     ctx.lineWidth = 1;
     ctx.save()
     ctx.translate(offset, offset)
@@ -345,11 +469,11 @@ const draw = async (ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement) =>
         enter.forEach(({ user, points }) => {
             const x = points[0] * gridSize;
             const y = points[1] * gridSize;
-            ctx.fillStyle = '#a0a0a0';
+            ctx.fillStyle = colors.value.pointColor;
             ctx.beginPath();
             ctx.arc(x + gridSize / 2, y + gridSize / 2, 5, 0, Math.PI * 2);
             ctx.fill();
-            ctx.fillStyle = '#6d1b0d';
+            ctx.fillStyle = colors.value.textColor;
             ctx.font = '12px Arial';
             ctx.fillText(user, x + gridSize / 2, y + gridSize / 2 - 10);
         });
@@ -366,7 +490,7 @@ const draw = async (ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement) =>
         const _newPath = PF.Util.compressPath(path);
         newPath.value = _newPath
         // 绘制寻址路径
-        ctx.strokeStyle = '#2e2bf7';
+        ctx.strokeStyle = colors.value.lineColor;
         ctx.lineWidth = 2;
         ctx.beginPath();
         _newPath.forEach((point, index) => {
@@ -383,14 +507,14 @@ const draw = async (ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement) =>
 
     if (startPoint.value) {
         // 绘制起点
-        ctx.fillStyle = '#47f900';
+        ctx.fillStyle = colors.value.startPointColor;
         ctx.beginPath();
         ctx.arc(startPoint.value[0] * gridSize + gridSize / 2, startPoint.value[1] * gridSize + gridSize / 2, 5, 0, Math.PI * 2);
         ctx.fill();
     }
     if (endPoint.value) {
         // 绘制终点
-        ctx.fillStyle = '#f90047';
+        ctx.fillStyle = colors.value.endPointColor;
         ctx.beginPath();
         ctx.arc(endPoint.value[0] * gridSize + gridSize / 2, endPoint.value[1] * gridSize + gridSize / 2, 5, 0, Math.PI * 2);
         ctx.fill();
