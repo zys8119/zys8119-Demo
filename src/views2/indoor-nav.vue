@@ -4,11 +4,26 @@
         <div class="flex-1 w-100% abs-r">
             <canvas class="abs-center" ref="canvasRef"></canvas>
         </div>
+        <div class="abs-end p-15px">
+            <n-form>
+                <n-form-item label="起点">
+                    <n-select class="w-200px" placeholder="请选择起点" clearable filterable v-model:value="start"
+                        :options="stations"></n-select>
+                </n-form-item>
+                <n-form-item label="目标点">
+                    <n-select class="w-200px" placeholder="请选择目标点" clearable filterable v-model:value="end"
+                        :options="stations"></n-select>
+                </n-form-item>
+            </n-form>
+        </div>
     </div>
 </template>
 <script setup lang="ts">
 import PF from 'pathfinding';
+import winframe from 'winframe';
 const canvasRef = ref<HTMLCanvasElement | null>(null);
+const start = ref()
+const end = ref()
 const createStation = (title, points) => {
     return {
         title,
@@ -16,11 +31,11 @@ const createStation = (title, points) => {
         enter: new Array(Math.abs(points[0][0] - points[1][0])).fill(0).reduce((a, b, i) => {
             if (i % 3 === 0) {
                 a.push({
-                    user: `工位-${i + 1}`,
+                    user: `${i + 1}`,
                     points: [points[0][0] + i, points[0][1] - 1]
                 });
                 a.push({
-                    user: `工位-${i + 1}`,
+                    user: `${i + 1}`,
                     points: [points[0][0] + i, points[1][1]]
                 });
             }
@@ -206,6 +221,24 @@ const housesEnter = computed(() => {
         return acc.concat(house.enter.map(e => e.points || []));
     }, [] as number[][]);
 });
+const stations = computed(() => {
+    return houses.value.reduce((acc, house) => {
+        return acc.concat(house.enter.map(e => {
+            return {
+                label: `${house.title}/${e.user}`,
+                value: (e.points || []).join('-'),
+                title: e.user,
+                points: e.points || []
+            }
+        }));
+    }, [] as number[][]);
+})
+const startPoint = computed<any>(() => {
+    return stations.value.find((e: any) => e.value === start.value)?.points
+})
+const endPoint = computed(() => {
+    return stations.value.find((e: any) => e.value === end.value)?.points
+})
 const isRectInside = (x: number, y: number) => {
     return housesPoints.value.some(points => {
         const [start, end] = points;
@@ -221,14 +254,31 @@ onMounted(async () => {
     const canvas = canvasRef.value as unknown as HTMLCanvasElement;
     const ctx = canvas.getContext('2d') as CanvasRenderingContext2D;
     await draw(ctx, canvas);
-
 })
-const draw = (ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement) => {
+const newPath = ref([])
+const drawAnimation = async (ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement) => {
+    if (newPath.value.length < 2) { return }
+    ctx.fillStyle = '#ff0000';
+    let index = 0
+    let sp = newPath.value[index]
+    while (index < newPath.value.length) {
+        if (newPath.value.length < 2) { break }
+        const ep = newPath.value[index]
+        const w = ep[0] - sp[0]
+        const h = ep[1] - sp[1]
+        await winframe(p => {
+            ctx.fillRect((sp[0] + w * p) * gridSize, (sp[1] + h * p) * gridSize, gridSize, gridSize);
+        }, 500)
+        sp = ep
+        index++
+    }
+}
+const draw = async (ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement) => {
     const offset = gridSize
     canvas.width = canvasBox + offset * 2;
     canvas.height = canvasBox + offset * 2;
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-    ctx.fillStyle = '#f0f0f0';
+    ctx.fillStyle = '#ffffffff';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
     ctx.strokeStyle = '#ccc';
     ctx.lineWidth = 1;
@@ -242,16 +292,16 @@ const draw = (ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement) => {
             ctx.strokeRect(x, y, gridSize, gridSize);
         }
     }
-    // 绘制xy轴序号
-    ctx.fillStyle = '#c1c1c1';
-    ctx.font = '12px Arial';
-    for (let i = 0; i < grids.value.length; i++) {
-        ctx.fillText(i.toString(), 0 - offset, i * gridSize + gridSize / 2);
-    }
+    // // 绘制xy轴序号
+    // ctx.fillStyle = '#c1c1c1';
+    // ctx.font = '12px Arial';
+    // for (let i = 0; i < grids.value.length; i++) {
+    //     ctx.fillText(i.toString(), 0 - offset, i * gridSize + gridSize / 2);
+    // }
 
-    for (let j = 0; j < grids.value[0].length; j++) {
-        ctx.fillText(j.toString(), j * gridSize + gridSize / 2, 10 - offset);
-    }
+    // for (let j = 0; j < grids.value[0].length; j++) {
+    //     ctx.fillText(j.toString(), j * gridSize + gridSize / 2, 10 - offset);
+    // }
 
     //绘制房屋
     houses.value.forEach(({ points, backgroundColor, title, color }) => {
@@ -276,7 +326,7 @@ const draw = (ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement) => {
         enter.forEach(({ user, points }) => {
             const x = points[0] * gridSize;
             const y = points[1] * gridSize;
-            ctx.fillStyle = '#ff0000';
+            ctx.fillStyle = '#a0a0a0';
             ctx.beginPath();
             ctx.arc(x + gridSize / 2, y + gridSize / 2, 5, 0, Math.PI * 2);
             ctx.fill();
@@ -286,26 +336,49 @@ const draw = (ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement) => {
         });
     });
     // 寻址
-    const grid = new PF.Grid(grids.value);
-    const finder = new PF.BiBreadthFirstFinder({
-    });
-    const path = finder.findPath(3, 2, 4, 7, grid.clone());
-    const newPath = PF.Util.compressPath(path);
-    // 绘制路径
-    ctx.strokeStyle = '#00ff00';
-    ctx.lineWidth = 2;
-    ctx.beginPath();
-    newPath.forEach((point, index) => {
-        const x = point[0] * gridSize + gridSize / 2;
-        const y = point[1] * gridSize + gridSize / 2;
-        if (index === 0) {
-            ctx.moveTo(x, y);
-        } else {
-            ctx.lineTo(x, y);
-        }
-    });
-    ctx.stroke();
+    newPath.value = []
+    if (startPoint.value && endPoint.value) {
+        const grid = new PF.Grid(grids.value);
+        const finder = new PF.BiBreadthFirstFinder({
+        });
+        const path = finder.findPath(startPoint.value[0], startPoint.value[1], endPoint.value[0], endPoint.value[1], grid.clone());
+        const _newPath = PF.Util.compressPath(path);
+        newPath.value = _newPath
+        // 绘制寻址路径
+        ctx.strokeStyle = '#2e2bf7';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        _newPath.forEach((point, index) => {
+            const x = point[0] * gridSize + gridSize / 2;
+            const y = point[1] * gridSize + gridSize / 2;
+            if (index === 0) {
+                ctx.moveTo(x, y);
+            } else {
+                ctx.lineTo(x, y);
+            }
+        });
+        ctx.stroke();
+    }
+
+    if (startPoint.value) {
+        // 绘制起点
+        ctx.fillStyle = '#47f900';
+        ctx.beginPath();
+        ctx.arc(startPoint.value[0] * gridSize + gridSize / 2, startPoint.value[1] * gridSize + gridSize / 2, 5, 0, Math.PI * 2);
+        ctx.fill();
+    }
+    if (endPoint.value) {
+        // 绘制终点
+        ctx.fillStyle = '#f90047';
+        ctx.beginPath();
+        ctx.arc(endPoint.value[0] * gridSize + gridSize / 2, endPoint.value[1] * gridSize + gridSize / 2, 5, 0, Math.PI * 2);
+        ctx.fill();
+    }
+    await drawAnimation(ctx, canvas)
     ctx.restore()
+    requestAnimationFrame(async () => {
+        await draw(ctx, canvas);
+    })
 };
 </script>
 <style scoped lang="less">
