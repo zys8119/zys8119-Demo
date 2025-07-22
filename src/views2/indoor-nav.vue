@@ -80,7 +80,7 @@ const houses = ref([
             },
             {
                 user: '入口2',
-                points: [10, 40]
+                points: [30, 40]
             }
         ],
         color: '#fff',
@@ -94,9 +94,21 @@ const houses = ref([
         backgroundColor: '#009dff',
     },
     {
-        title: '墙体',
-        points: [[25, 0], [33, 10]],
+        title: '墙体2',
+        points: [[25, 8], [33, 10]],
         enter: [],
+        color: '#fff',
+        backgroundColor: '#009dff',
+    },
+    {
+        title: '卫生间',
+        points: [[25, 0], [33, 5]],
+        enter: [
+            {
+                user: '门',
+                points: [28, 5]
+            },
+        ],
         color: '#fff',
         backgroundColor: '#009dff',
     },
@@ -116,16 +128,82 @@ const houses = ref([
         color: '#fff',
         backgroundColor: '#009dff',
     },
+    {
+        title: '人事/行政',
+        points: [[35, 25], [50, 27]],
+        enter: [
+            {
+                user: '门',
+                points: [35, 27]
+            },
+        ],
+        color: '#fff',
+        backgroundColor: '#009dff',
+    },
+    {
+        title: '大会议室',
+        points: [[35, 8], [50, 25]],
+        enter: [
+            {
+                user: '门',
+                points: [34, 23]
+            },
+        ],
+        color: '#fff',
+        backgroundColor: '#009dff',
+    },
+    {
+        title: '立柱',
+        points: [[21, 6], [23, 8]],
+        enter: [
+        ],
+        color: '#fff',
+        backgroundColor: '#009dff',
+    },
+    {
+        title: '立柱',
+        points: [[21, 27], [23, 29]],
+        enter: [
+        ],
+        color: '#fff',
+        backgroundColor: '#009dff',
+    },
+    {
+        title: '茶水间/休息区域',
+        points: [],
+        enter: [
+            {
+                user: '饮水机',
+                points: [33, 2]
+            },
+            {
+                user: '咖啡',
+                points: [36, 0]
+            },
+            {
+                user: '冰箱',
+                points: [46, 0]
+            },
+            {
+                user: '休息区',
+                points: [42, 5]
+            },
+        ],
+        color: '#fff',
+        backgroundColor: '#009dff',
+    },
 ]);
 const housesPoints = computed(() => {
     return houses.value.reduce((acc, house) => {
-        acc.push(house.points);
+        if (house.points.length >= 2) {
+            acc.push(house.points);
+        }
         return acc;
     }, [] as number[][][]);
 });
 const housesEnter = computed(() => {
     return houses.value.reduce((acc, house) => {
-        return acc.concat(house.enter.map(e => e.points));
+        return acc.concat(house.enter.map(e => e.points || []));
     }, [] as number[][]);
 });
 const isRectInside = (x: number, y: number) => {
@@ -177,6 +255,7 @@ const draw = (ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement) => {
 
     //绘制房屋
     houses.value.forEach(({ points, backgroundColor, title, color }) => {
+        if (points.length < 2) { return }
         const startX = points[0][0] * gridSize;
         const startY = points[0][1] * gridSize;
         const endX = points[1][0] * gridSize;
