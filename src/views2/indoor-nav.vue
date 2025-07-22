@@ -1,6 +1,6 @@
 <template>
     <div class='indoor-nav flex-center abs-content flex-col'>
-        <div class="flex-center text-30px bold">室内导航演示</div>
+        <div class="flex-center text-30px bold">室内避障导航演示</div>
         <div class="flex-1 w-100% abs-r">
             <canvas class="abs-center" ref="canvasRef"></canvas>
         </div>
