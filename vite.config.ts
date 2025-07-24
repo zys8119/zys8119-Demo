@@ -14,6 +14,7 @@ import ReactivityTransform from "@vue-macros/reactivity-transform/vite";
 import UnoCss from "unocss/vite";
 import VineBrowser from "./vite/VineBrowser";
 import GetVueRef from "vitejs-get-vue-ref";
+import Markdown from "unplugin-vue-markdown/vite";
 export default defineConfig({
   base: "",
   build: {
@@ -24,12 +25,25 @@ export default defineConfig({
       file: "./src/sql/sql.ts",
     }),
     UnoCss(),
-    Vue(),
+    Markdown({}),
+    Vue({
+      include: [
+        /\.vue$/,
+        /\.md$/, // .md
+      ],
+    }),
     vueJsx(),
     ReactivityTransform(),
     Components({
       dts: "components.d.ts",
+      include: [
+        /\.[tj]sx?$/, // .ts, .tsx, .js, .jsx
+        /\.vue$/,
+        /\.md$/, // .md
+      ],
       resolvers: [NaiveUiResolver()],
+      globs: ["src/components/**/*.{vue,tsx,md}"],
+      extensions: ["vue", "md"],
     }),
     AutoImport({
       include: [
@@ -65,6 +79,7 @@ export default defineConfig({
     AutoRoute({
       views: "src/views2",
       routes_extend: "./routes_extend.ts",
+      handleHotUpdate: () => true,
     }),
     AutoConfig({
       globalActive: "b",
