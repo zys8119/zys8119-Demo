@@ -42,8 +42,7 @@ export default defineConfig({
         /\.md$/, // .md
       ],
       resolvers: [NaiveUiResolver()],
-      globs: ["src/components/**/*.{vue,tsx,md}"],
-      extensions: ["vue", "md"],
+      extensions: ["vue", "md", "ts", "tsx"],
     }),
     AutoImport({
       include: [
