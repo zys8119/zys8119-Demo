@@ -1,33 +1,19 @@
 <template>
-    <div
-        class="Text abs-content text-#000 bg-$backgroundColor text-$color of-hidden"
-        :class="{
-            'b-solid b-width-$borderWidth b-color-$borderColor': !['Text'].includes(elementYype),
-            'b-rd-50%': ['Rotundity', 'ConferenceRotundity'].includes(elementYype),
-            'b-rd-$radius': ['ConferenceRotundityAndRect'].includes(elementYype),
-            'select-none': !isEdit
-        }"
-        :style="dataStyle"
-        @dblclick="dblclick"
-    >
+    <div class="Text abs-content text-#000 bg-$backgroundColor text-$color of-hidden" :class="{
+        'b-solid b-width-$borderWidth b-color-$borderColor': !['Text'].includes(elementYype),
+        'b-rd-50%': ['Rotundity', 'ConferenceRotundity'].includes(elementYype),
+        'b-rd-$radius': ['ConferenceRotundityAndRect'].includes(elementYype),
+        'select-none': !isEdit
+    }" :style="dataStyle" @dblclick="dblclick">
         <div class="abs-content transform translate-x-$fontX translate-y-$fontY">
-            <div
-            v-if="isSaveMode"
-            class="abs-content flex-center text-center  text-$color text-size-$fontSize"
-            v-html="saveValue(data.value)"
-        ></div>
-        <textarea
-            v-else
-            ref="inputRef"
-            class="abs-content bg-#0000 text-center b-none cursor-move align-content-center  text-$color text-size-$fontSize"
-            :class="{
-                'pointer-events-none': !isEdit,
-                'select-none': !isEdit
-            }"
-            @blur="isEdit = false"
-            v-model="data.value"
-            type="textarea"
-        />
+            <div v-if="isSaveMode" class="abs-content flex-center text-center  text-$color text-size-$fontSize"
+                v-html="saveValue(data.value)"></div>
+            <textarea v-else ref="inputRef"
+                class="abs-content bg-#0000 text-center b-none cursor-move align-content-center  text-$color text-size-$fontSize"
+                :class="{
+                    'pointer-events-none': !isEdit,
+                    'select-none': !isEdit
+                }" @blur="isEdit = false" v-model="data.value" type="textarea" />
         </div>
     </div>
 </template>
@@ -62,15 +48,15 @@ useCssVars(() => ({
 }));
 const dataStyle = computed(() => {
     let backgroundImage = data.value.backgroundImage;
-    if(/座位\.svg$/.test(data.value.backgroundImage)){
-        backgroundImage = `data:image/svg+xml;base64,${btoa(zuoweiImgRaw.replace('#888888',data.value.seatColor || '#888888'))}`
+    if (/座位\.svg$/.test(data.value.backgroundImage)) {
+        backgroundImage = `data:image/svg+xml;base64,${btoa(zuoweiImgRaw.replace('#888888', data.value.seatColor || '#888888'))}`
     }
     return Object.assign({
         backgroundImage: `url(${backgroundImage})`,
     }, elementYype.value === 'Seat' ? {
         backgroundSize: '100% 100%',
         backgroundRepeat: 'no-repeat',
-    }:{});
+    } : {});
 })
 const isEdit = ref(false);
 const inputRef = ref();
@@ -89,6 +75,5 @@ watch(isEdit, () => {
 });
 </script>
 <style scoped lang="less">
-.Text {
-}
+.Text {}
 </style>

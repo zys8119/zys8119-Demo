@@ -1,25 +1,25 @@
 export const useTextContent = (extendProps: Record<string, any> = {}) => {
-    return defineComponent(
-        (props) => {
-            return () =>
-                h(
-                    defineAsyncComponent(() => import('./TextContent.vue')),
-                    {
-                        ...props,
-                        ...extendProps
-                    }
-                );
+  return defineComponent(
+    (props) => {
+      return () =>
+        h(
+          defineAsyncComponent(() => import("./TextContentRender.vue")),
+          {
+            ...props,
+            ...extendProps,
+          }
+        );
+    },
+    {
+      props: {
+        data: {
+          type: Object,
         },
-        {
-            props: {
-                data: {
-                    type: Object
-                },
-                config: {
-                    type: Object
-                }
-            }
-        }
-    );
+        config: {
+          type: Object,
+        },
+      },
+    }
+  );
 };
 export default useTextContent;

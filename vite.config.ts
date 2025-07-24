@@ -15,17 +15,46 @@ import UnoCss from "unocss/vite";
 import VineBrowser from "./vite/VineBrowser";
 import GetVueRef from "vitejs-get-vue-ref";
 import Markdown from "unplugin-vue-markdown/vite";
+import hljs from "highlight.js";
+import MarkdownVueDemo from "vitejs-markdown-vue-demo/vite";
 export default defineConfig({
   base: "",
   build: {
     outDir: "docs",
   },
   plugins: [
+    MarkdownVueDemo(),
     VueSql({
       file: "./src/sql/sql.ts",
     }),
     UnoCss(),
-    Markdown({}),
+    // MarkdownVueDemo(),
+    Markdown({
+      markdownItOptions: {
+        highlight(code, lang) {
+          if (lang) {
+            try {
+              return hljs.highlight(code, {
+                language:
+                  {
+                    vue: "html",
+                    js: "javascript",
+                    jsx: "javascript",
+                    ts: "typescript",
+                    tsx: "typescript",
+                    css: "css",
+                    less: "css",
+                    sass: "css",
+                  }[lang] || lang,
+              }).value;
+            } catch (error) {
+              return hljs.highlight(code, { language: "text" }).value;
+            }
+          }
+          return hljs.highlight(code, { language: "text" }).value;
+        },
+      },
+    }),
     Vue({
       include: [
         /\.vue$/,
