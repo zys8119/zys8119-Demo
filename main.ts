@@ -1,7 +1,7 @@
 // import VConsoleHide from "vconsole-hide"
 // new VConsoleHide()
+import "github-markdown-css/github-markdown-dark.css";
 import "highlight.js/styles/github-dark.css";
-import "github-markdown-css/github-markdown-light.css";
 import App from "./App.vue";
 import route from "./route";
 import "swiper/css";
