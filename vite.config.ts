@@ -120,7 +120,10 @@ export default defineConfig({
       },
     }),
     VineBrowser(),
+<<<<<<< HEAD
     GetVueRef(),
+=======
+>>>>>>> 2d6a32a ([add] vueflow)
   ],
   resolve: {
     alias: {
