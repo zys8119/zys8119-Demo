@@ -1,5 +1,5 @@
 <template>
-    <div class='a abs-content abs-f' oncontextmenu.prevent="">
+    <div class='a abs-content abs-f' ref="box" oncontextmenu.prevent="">
         <VueFlow :nodes="nodes" :edges="edges">
             <MiniMap pannable zoomable />
             <Controls ref="controls">
@@ -24,6 +24,9 @@
                 <Handle id="a" type="target" class="top-30%" :position="Position.Left" />
             </template>
             <Background />
+            <div class="abs z-5 top-50% tr-y--50% left-10">
+                <div class="cursor-pointer" draggable="true">判断条件</div>
+            </div>
         </VueFlow>
     </div>
 </template>
@@ -35,16 +38,21 @@ import { Controls, ControlButton } from '@vue-flow/controls'
 import { NodeToolbar } from '@vue-flow/node-toolbar'
 import { Background } from '@vue-flow/background'
 const controls = ref<typeof Controls>()
-
+const box = ref<HTMLDivElement>()
+const { x, y } = useMouseInElement(box)
 const { selectNodesOnDrag,
     nodesConnectable,
     onConnect,
     addEdges,
     onSelectionContextMenu,
-    getNodes
+    getNodes,
+    project
 } = useVueFlow({
     nodesConnectable: true,
 
+})
+watchEffect(() => {
+    console.log(project({ x: x.value, y: y.value }), 'project')
 })
 watch(getNodes, (edges) => {
     console.log(edges.find(e => e.selected), 'edges')
@@ -118,6 +126,13 @@ const nodes = ref<Node[]>([
             hello: 'world',
         },
     },
+    {
+        id: '6',
+        position: { x: 0, y: 0 },
+        data: {
+            label: 'custom',
+        },
+    }
 ])
 
 // these are our edges
