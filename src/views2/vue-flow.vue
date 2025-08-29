@@ -2,16 +2,7 @@
     <div class='a abs-content abs-f' ref="box" @dragover.prevent @drop="onDrop" oncontextmenu.prevent="">
         <VueFlow :nodes="nodes" :edges="edges">
             <MiniMap pannable zoomable />
-            <Controls ref="controls">
-                <template #icon-zoom-in>
-                    <div class="ev">as
-                        <!-- <button @click="zoomIn()">Add Node</button> -->
-                    </div>
-                </template>
-                <ControlButton>
-                    <i class="fa fa-plus"></i>asdasd
-                </ControlButton>
-            </Controls>
+            <Controls />
             <template #node-custom="{ data }">
                 <div class="w-100px h-100px bg-#f00 flex-center">askj</div>
                 <NodeToolbar :is-visible="data.toolbarVisible" :position="data.toolbarPosition">
@@ -37,7 +28,6 @@ import { MiniMap } from '@vue-flow/minimap'
 import { Controls, ControlButton } from '@vue-flow/controls'
 import { NodeToolbar } from '@vue-flow/node-toolbar'
 import { Background } from '@vue-flow/background'
-const controls = ref<typeof Controls>()
 const box = ref<HTMLDivElement>()
 const { x, y } = useMouseInElement(box)
 const { selectNodesOnDrag,
@@ -50,7 +40,6 @@ const { selectNodesOnDrag,
     addNodes
 } = useVueFlow({
     nodesConnectable: true,
-
 })
 // watchEffect(() => {
 //     console.log(project({ x: x.value, y: y.value }), 'project')
