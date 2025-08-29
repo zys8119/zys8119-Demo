@@ -1,5 +1,5 @@
 <template>
-    <div class='a abs-content abs-f' ref="box" oncontextmenu.prevent="">
+    <div class='a abs-content abs-f' ref="box" @dragover.prevent @drop="onDrop" oncontextmenu.prevent="">
         <VueFlow :nodes="nodes" :edges="edges">
             <MiniMap pannable zoomable />
             <Controls ref="controls">
@@ -24,8 +24,8 @@
                 <Handle id="a" type="target" class="top-30%" :position="Position.Left" />
             </template>
             <Background />
-            <div class="abs z-5 top-50% tr-y--50% left-10">
-                <div class="cursor-pointer" draggable="true">判断条件</div>
+            <div class="abs z-5 top-50% tr-y--50% left-10 bg-#f00">
+                <div class="cursor-pointer" draggable="true" @dragstart="onDragStart($event, 'customNode')">判断条件</div>
             </div>
         </VueFlow>
     </div>
@@ -46,16 +46,31 @@ const { selectNodesOnDrag,
     addEdges,
     onSelectionContextMenu,
     getNodes,
-    project
+    project,
+    addNodes
 } = useVueFlow({
     nodesConnectable: true,
 
 })
-watchEffect(() => {
-    console.log(project({ x: x.value, y: y.value }), 'project')
-})
+// watchEffect(() => {
+//     console.log(project({ x: x.value, y: y.value }), 'project')
+// })
+const onDragStart = (event: DragEvent, nodeType: string) => {
+    event.dataTransfer.setData('node/type', nodeType)
+    event.dataTransfer.effectAllowed = 'move'
+}
+const onDrop = (event: DragEvent) => {
+    const type = event.dataTransfer?.getData('node/type')
+    console.log(type)
+    const id = Date.now().toString()
+    addNodes({
+        id,
+        position: project({ x: x.value, y: y.value }),
+        data: { label: `${type} node ${id}` },
+    })
+}
 watch(getNodes, (edges) => {
-    console.log(edges.find(e => e.selected), 'edges')
+    // console.log(edges.find(e => e.selected), 'edges')
 }, { immediate: true, deep: true })
 onConnect((params) => addEdges(params))
 onMounted(() => {
