@@ -24,7 +24,7 @@
                 <Handle id="a" type="target" class="top-30%" :position="Position.Left" />
             </template>
             <Background />
-            <div class="abs z-5 top-50% tr-y--50% left-10 bg-#f00">
+            <div class="abs z-5 top-50% tr-y--50% left-10 bg-#f00" @dragover.stop.prevent @drop.stop.prevent>
                 <div class="cursor-pointer" draggable="true" @dragstart="onDragStart($event, 'customNode')">判断条件</div>
             </div>
         </VueFlow>
