@@ -7,48 +7,48 @@
 <script setup lang="ts">
 const el = ref()
 const p = useParentElement(el)
-const isHover= ref<boolean>(false)
+const isHover = ref<boolean>(false)
 const { isOutside } = useMouseInElement(p)
 const props = withDefaults(defineProps<{
-    useKey?:boolean
-    modelValue?:any
-    edit?:boolean
-    isClick?:boolean
-    disabled?:boolean
-}>(),{
-    isClick:true
+    useKey?: boolean
+    modelValue?: any
+    edit?: boolean
+    isClick?: boolean
+    disabled?: boolean
+}>(), {
+    isClick: true
 })
-const emits = defineEmits(['update:modelValue','change'])
-const {modelValue} = useVModels(props,emits)
-const {focused} =  useFocus(p)
-const setValue = (val:boolean)=>{
-    if(props.useKey){return}
+const emits = defineEmits(['update:modelValue', 'change'])
+const { modelValue } = useVModels(props, emits)
+const { focused } = useFocus(p)
+const setValue = (val: boolean) => {
+    if (props.useKey) { return }
     isHover.value = val
 }
 useMagicKeys({
-    onEventFired(e){
-        if(!props.disabled && focused.value){
-            if(/[0-9]/.test(e.key)){
+    onEventFired(e) {
+        if (!props.disabled && focused.value) {
+            if (/[0-9]/.test(e.key)) {
                 modelValue.value = Number(e.key)
                 emits('change')
-            }else if(/Backspace|Delete/.test(e.key)){
+            } else if (/Backspace|Delete/.test(e.key)) {
                 modelValue.value = ''
                 emits('change')
             }
         }
     }
 })
-onMounted(()=>{
-    if(!props.disabled && !props.isClick){
-        p.value.addEventListener('click', ()=>{
-            if(!props.edit){
+onMounted(() => {
+    if (!props.disabled && !props.isClick) {
+        p.value.addEventListener('click', () => {
+            if (!props.edit) {
                 (p.value as any).focus()
             }
         })
     }
-    
+
 })
 </script>
 <style scoped lang="less">
-.hover{}
+.hover {}
 </style>

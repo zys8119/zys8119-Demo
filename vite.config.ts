@@ -17,12 +17,18 @@ import GetVueRef from "vitejs-get-vue-ref";
 import Markdown from "unplugin-vue-markdown/vite";
 import hljs from "highlight.js";
 import MarkdownVueDemo from "vitejs-markdown-vue-demo/vite";
+import VueDevTools from "vite-plugin-vue-devtools";
 export default defineConfig({
   base: "",
   build: {
     outDir: "docs",
   },
   plugins: [
+    VueDevTools({
+      componentInspector: {
+        enabled: false,
+      },
+    }),
     MarkdownVueDemo(),
     VueSql({
       file: "./src/sql/sql.ts",
@@ -107,7 +113,7 @@ export default defineConfig({
     AutoRoute({
       views: "src/views2",
       routes_extend: "./routes_extend.ts",
-      handleHotUpdate: () => true,
+      // handleHotUpdate: () => true,
     }),
     AutoConfig({
       globalActive: "b",

@@ -1,7 +1,15 @@
 <template>
   <div class="luyin abs-content flex-center">
-      <n-button @click="recOpen">开始</n-button>
-      <n-button @click="recStop">结束</n-button>
+    <div class="audio-controls">
+      <div class="audio-button start-button" @click="recOpen">
+        <svg-icon name="yuyin" class="icon-yuyin"></svg-icon>
+        <span>开始录音</span>
+      </div>
+      <div class="audio-button stop-button" @click="recStop">
+        <svg-icon name="stopVoice" class="icon-stop"></svg-icon>
+        <span>结束录音</span>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -9,6 +17,7 @@
 import Recorder from 'recorder-core'
 import 'recorder-core/src/engine/mp3'
 import 'recorder-core/src/engine/mp3-engine'
+import SvgIcon from '@/src/components/svg-icon.tsx'
 let rec,wave;
 /**调用open打开录音请求好录音权限**/
 const recOpen = (success:()=>void)=>{//一般在显示出录音按钮或相关的录音界面时进行此方法调用，后面用户点击开始录音时就能畅通无阻了
@@ -67,6 +76,60 @@ onMounted(async ()=>{
 
 <style scoped lang="less">
 .luyin {
-
+  .audio-controls {
+    display: flex;
+    gap: 20px;
+    justify-content: center;
+    
+    .audio-button {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      cursor: pointer;
+      background-color: #f5f5f5;
+      border-radius: 12px;
+      padding: 15px;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+      transition: all 0.3s ease;
+      
+      &:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+      }
+      
+      &:active {
+        transform: translateY(1px);
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      }
+      
+      .icon-yuyin, .icon-stop {
+        font-size: 32px;
+        margin-bottom: 8px;
+      }
+      
+      span {
+        font-size: 14px;
+        color: #333;
+      }
+    }
+    
+    .start-button {
+      background-color: #e6f7ff;
+      border: 1px solid #91d5ff;
+      
+      .icon-yuyin {
+        color: #1890ff;
+      }
+    }
+    
+    .stop-button {
+      background-color: #fff1f0;
+      border: 1px solid #ffa39e;
+      
+      .icon-stop {
+        color: #ff4d4f;
+      }
+    }
+  }
 }
 </style>

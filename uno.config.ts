@@ -1,4 +1,4 @@
-import { defineConfig, presetWind4 } from "unocss";
+import { defineConfig } from "unocss";
 import { default as less } from "less";
 const tint = (color: string, amount: number) =>
   less.functions?.functionRegistry
@@ -9,7 +9,6 @@ const tint = (color: string, amount: number) =>
     .toRGB();
 export default defineConfig({
   // ...UnoCSS options
-  presets: [presetWind4()],
   shortcuts: {
     "flex-center": "flex justify-center items-center",
     "flex-center-start": "flex justify-start items-center",
@@ -115,6 +114,18 @@ export default defineConfig({
         };
       },
     ],
+    [
+      /^u-?(text|bg|color|w)-?(.*)/,
+      (m) => {
+        return {
+          text: `.${m[0]}{color:${m[2].replace("0x", "#")};}`,
+          color: `.${m[0]}{color:${m[2].replace("0x", "#")};}`,
+          bg: `.${m[0]}{background-color:${m[2].replace("0x", "#")};}`,
+          w: `.${m[0]}{width:${m[2]}%;}`,
+          h: `.${m[0]}{height:${m[2]}%;}`,
+        }[m[1]];
+      },
+    ],
   ],
   variants: [
     (matcher) => {
@@ -124,6 +135,50 @@ export default defineConfig({
           matcher: m[2],
           selector: (s) => `.${m[1]}:hover ${s}`,
         };
+      }
+    },
+    (matcher, { rawSelector }) => {
+      const important = /^!|!$/.test(rawSelector) ? "!" : "";
+      const importantStart = /^!/.test(rawSelector) ? important : "";
+      const importantEnd = /!$/.test(rawSelector) ? important : "";
+      const matcherReplace = (matcher) =>
+        matcher.replace(/(\.|:|\[|\]|#|&|!|>|\+|~)/g, "\\$1");
+      if (/^[^-]+-hover-self-/.test(matcher)) {
+        const m = matcher.match(/^([^-]+)-hover-(self-.*)/);
+        const mm = m[2].match(/^self-([^\:]+):((?=:*([^:]+):(.*))|(.*))/);
+        return {
+          matcher: `${mm[4] || mm[2]}`,
+          selector: () => {
+            return `.${matcherReplace(
+              `${importantStart}${m[1] === "&" ? matcher : m[1]}${importantEnd}`
+            )}:hover ${mm[3] ? `:${mm[3]}` : ""} ${
+              m[1] === "&" ? "" : `.${matcherReplace(matcher)}`
+            } ${mm[1]}`;
+          },
+        };
+      }
+      if (/^self/.test(matcher)) {
+        const m = matcher.match(/^self-([^\:]+):((?=:*(.*):(.*))|(.*))/);
+        if (m) {
+          return {
+            matcher: `${m[4] || m[2]}`,
+            selector: () => {
+              return `.${matcherReplace(
+                `${importantStart}${matcher}${importantEnd}`
+              )} ${m[1]}${m[3] ? `:${m[3]}` : ""}`;
+            },
+          };
+        } else {
+          const m = matcher.match(/^self(.*):((?=:*(.+)?:(.*))|(.*))/);
+          return {
+            matcher: `${m[4] || m[2]}`,
+            selector: () => {
+              return `.${matcherReplace(
+                `${importantStart}${matcher}${importantEnd}`
+              )} ${m[1]}${m[3] ? `:${m[3]}` : ""}`;
+            },
+          };
+        }
       }
     },
   ],
