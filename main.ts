@@ -4,11 +4,6 @@ import "github-markdown-css/github-markdown-dark.css";
 import "highlight.js/styles/github-dark.css";
 import App from "./App.vue";
 import route from "./route";
-import "swiper/css";
-import "swiper/css/navigation";
-import "swiper/css/pagination";
-import "swiper/css/mousewheel";
-import "swiper/css/effect-fade";
 import "@/src/less/style.less";
 import "virtual:uno.css";
 import "./global";
@@ -18,6 +13,7 @@ route.beforeEach((to, from, next) => {
     : `张云山-${to.meta.title || "个人博客"}`;
   next();
 });
+console.log(route.options);
 const app = createApp(App).use(route);
 
 app.config.errorHandler = (err) => {

@@ -111,7 +111,7 @@ export default defineConfig({
       dir: "src/api",
     }),
     AutoRoute({
-      views: "src/views2",
+      views: "src/views",
       routes_extend: "./routes_extend.ts",
       // handleHotUpdate: () => true,
     }),

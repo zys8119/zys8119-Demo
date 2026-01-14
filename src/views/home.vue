@@ -1,9 +1,9 @@
 <template>
     <div class='test'>
-        asdasda
+        aasdsaasdaasdaskajshdkasdkasasdjkasjldjsalsasdlas
     </div>
 </template>
-<script setup lang="ts">
+<script setup lang="ts" path="/">
 
 </script>
 <style scoped lang="less">
