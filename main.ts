@@ -13,7 +13,6 @@ route.beforeEach((to, from, next) => {
     : `张云山-${to.meta.title || "个人博客"}`;
   next();
 });
-console.log(route.options);
 const app = createApp(App).use(route);
 
 app.config.errorHandler = (err) => {
