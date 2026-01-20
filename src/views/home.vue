@@ -635,6 +635,124 @@
         </div>
       </transition>
 
+      <!-- 加入会议对话框 -->
+      <transition name="fade">
+        <div class="join-dialog-overlay" v-if="showJoinMeetingDialog" @click="closeJoinDialog">
+          <div class="join-dialog" @click.stop>
+            <div class="join-dialog-header">
+              <h4>加入会议</h4>
+              <button class="close-btn-small" @click="closeJoinDialog">×</button>
+            </div>
+
+            <div class="join-dialog-body">
+              <!-- 入会方式切换 -->
+              <div class="join-methods">
+                <button
+                  class="method-btn"
+                  :class="{ active: joinMeetingType === 'code' }"
+                  @click="joinMeetingType = 'code'"
+                >
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                    <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                  </svg>
+                  会议号
+                </button>
+                <button
+                  class="method-btn"
+                  :class="{ active: joinMeetingType === 'link' }"
+                  @click="joinMeetingType = 'link'"
+                >
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                    <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
+                    <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
+                  </svg>
+                  会议链接
+                </button>
+                <button
+                  class="method-btn"
+                  :class="{ active: joinMeetingType === 'qr' }"
+                  @click="joinMeetingType = 'qr'"
+                >
+                  <svg viewBox="0 0 24 24" fill="currentColor">
+                    <rect x="3" y="3" width="7" height="7" rx="1"></rect>
+                    <rect x="14" y="3" width="7" height="7" rx="1"></rect>
+                    <rect x="3" y="14" width="7" height="7" rx="1"></rect>
+                    <rect x="14" y="14" width="3" height="3"></rect>
+                    <rect x="18" y="14" width="3" height="3"></rect>
+                    <rect x="14" y="18" width="3" height="3"></rect>
+                    <rect x="18" y="18" width="3" height="3"></rect>
+                  </svg>
+                  扫码加入
+                </button>
+              </div>
+
+              <!-- 会议号输入 -->
+              <div class="join-input-section" v-if="joinMeetingType === 'code'">
+                <label>输入会议号</label>
+                <input
+                  v-model="joinMeetingInput"
+                  type="text"
+                  placeholder="例如: 001-ABC-XYZ"
+                  class="join-input"
+                  @keyup.enter="confirmJoinMeeting"
+                />
+                <p class="input-hint">支持格式: 001-ABC-XYZ 或 001ABCXYZ</p>
+              </div>
+
+              <!-- 会议链接输入 -->
+              <div class="join-input-section" v-if="joinMeetingType === 'link'">
+                <label>输入或粘贴会议链接</label>
+                <input
+                  v-model="joinMeetingInput"
+                  type="text"
+                  placeholder="https://smartmeet.app/join/..."
+                  class="join-input"
+                  @keyup.enter="confirmJoinMeeting"
+                />
+                <button class="paste-btn" @click="pasteFromClipboard">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                    <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path>
+                    <rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect>
+                  </svg>
+                  从剪贴板粘贴
+                </button>
+              </div>
+
+              <!-- 二维码扫描 -->
+              <div class="join-input-section qr-section" v-if="joinMeetingType === 'qr'">
+                <div class="qr-scanner-placeholder">
+                  <svg class="camera-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                    <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path>
+                    <circle cx="12" cy="13" r="4"></circle>
+                  </svg>
+                  <p>打开摄像头扫描会议二维码</p>
+                  <button class="open-camera-btn" @click="openCamera">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                      <rect x="2" y="7" width="20" height="15" rx="2" ry="2"></rect>
+                      <polyline points="17 2 12 7 7 2"></polyline>
+                    </svg>
+                    开启摄像头
+                  </button>
+                </div>
+              </div>
+
+              <!-- 加入按钮 -->
+              <div class="join-actions">
+                <button class="join-confirm-btn" @click="confirmJoinMeeting" :disabled="!joinMeetingInput && joinMeetingType !== 'qr'">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                    <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"></path>
+                    <polyline points="10 17 15 12 10 7"></polyline>
+                    <line x1="15" y1="12" x2="3" y2="12"></line>
+                  </svg>
+                  立即加入
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </transition>
+
       <!-- 历史记录面板 -->
       <transition name="slide-left">
         <div class="history-panel" v-if="showHistoryPanel">
@@ -1482,8 +1600,52 @@ const copyMeetingCode = async () => {
 
 // 加入会议
 const joinMeeting = () => {
-  console.log('加入会议')
-  // TODO: 实现加入会议对话框
+  showJoinMeetingDialog.value = true
+  joinMeetingInput.value = ''
+  joinMeetingType.value = 'code'
+}
+
+// 关闭加入会议对话框
+const closeJoinDialog = () => {
+  showJoinMeetingDialog.value = false
+  joinMeetingInput.value = ''
+}
+
+// 从剪贴板粘贴
+const pasteFromClipboard = async () => {
+  try {
+    const text = await navigator.clipboard.readText()
+    if (text) {
+      joinMeetingInput.value = text.trim()
+    }
+  } catch (err) {
+    console.error('无法访问剪贴板:', err)
+    alert('无法访问剪贴板，请手动粘贴')
+  }
+}
+
+// 确认加入会议
+const confirmJoinMeeting = () => {
+  if (!joinMeetingInput.value && joinMeetingType.value !== 'qr') {
+    alert('请输入会议信息')
+    return
+  }
+
+  console.log('加入会议:', {
+    type: joinMeetingType.value,
+    input: joinMeetingInput.value
+  })
+
+  // TODO: 实现实际的加入会议逻辑
+  alert(`正在加入会议...\n方式: ${joinMeetingType.value}\n信息: ${joinMeetingInput.value}`)
+  closeJoinDialog()
+}
+
+// 打开摄像头扫描二维码
+const openCamera = () => {
+  console.log('打开摄像头扫描二维码')
+  // TODO: 实现摄像头扫描二维码功能
+  alert('摄像头功能开发中...')
 }
 
 // 拖拽计数器，用于准确跟踪拖拽状态
@@ -3860,6 +4022,277 @@ onMounted(() => {
               margin: 0;
               letter-spacing: 1px;
             }
+          }
+        }
+      }
+    }
+  }
+}
+
+// 加入会议对话框样式
+.join-dialog-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+  padding: 2rem;
+
+  .join-dialog {
+    width: 100%;
+    max-width: 550px;
+    background: linear-gradient(135deg, rgba(10, 14, 39, 0.98), rgba(26, 31, 58, 0.98));
+    border: 1px solid rgba(139, 92, 246, 0.3);
+    border-radius: 24px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+    overflow: hidden;
+
+    .join-dialog-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1.5rem 2rem;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+
+      h4 {
+        font-size: 1.25rem;
+        font-weight: 600;
+        color: #fff;
+        margin: 0;
+      }
+
+      .close-btn-small {
+        width: 32px;
+        height: 32px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 50%;
+        color: rgba(255, 255, 255, 0.8);
+        font-size: 1.25rem;
+        cursor: pointer;
+        transition: all 0.3s;
+
+        &:hover {
+          background: rgba(239, 68, 68, 0.2);
+          border-color: rgba(239, 68, 68, 0.4);
+          color: #ef4444;
+          transform: rotate(90deg);
+        }
+      }
+    }
+
+    .join-dialog-body {
+      padding: 2rem;
+
+      .join-methods {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 0.75rem;
+        margin-bottom: 2rem;
+
+        .method-btn {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          gap: 0.5rem;
+          padding: 1rem 0.75rem;
+          background: rgba(255, 255, 255, 0.03);
+          border: 1px solid rgba(255, 255, 255, 0.1);
+          border-radius: 12px;
+          color: rgba(255, 255, 255, 0.7);
+          font-size: 0.85rem;
+          cursor: pointer;
+          transition: all 0.3s;
+
+          svg {
+            width: 24px;
+            height: 24px;
+            stroke-width: 2;
+          }
+
+          &:hover {
+            background: rgba(255, 255, 255, 0.05);
+            border-color: rgba(139, 92, 246, 0.3);
+            color: rgba(255, 255, 255, 0.9);
+          }
+
+          &.active {
+            background: rgba(139, 92, 246, 0.2);
+            border-color: rgba(139, 92, 246, 0.5);
+            color: #fff;
+            font-weight: 600;
+
+            svg {
+              color: #a78bfa;
+            }
+          }
+        }
+      }
+
+      .join-input-section {
+        label {
+          display: block;
+          font-size: 0.9rem;
+          font-weight: 600;
+          color: rgba(255, 255, 255, 0.8);
+          margin-bottom: 0.75rem;
+        }
+
+        .join-input {
+          width: 100%;
+          padding: 0.875rem 1.25rem;
+          background: rgba(255, 255, 255, 0.05);
+          border: 1px solid rgba(255, 255, 255, 0.15);
+          border-radius: 12px;
+          color: #fff;
+          font-size: 1rem;
+          outline: none;
+          transition: all 0.3s;
+          font-family: 'Courier New', monospace;
+
+          &::placeholder {
+            color: rgba(255, 255, 255, 0.4);
+          }
+
+          &:focus {
+            background: rgba(255, 255, 255, 0.08);
+            border-color: rgba(139, 92, 246, 0.5);
+            box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.1);
+          }
+        }
+
+        .input-hint {
+          margin-top: 0.5rem;
+          font-size: 0.8rem;
+          color: rgba(255, 255, 255, 0.5);
+        }
+
+        .paste-btn {
+          margin-top: 0.75rem;
+          width: 100%;
+          padding: 0.75rem 1rem;
+          background: rgba(255, 255, 255, 0.05);
+          border: 1px solid rgba(255, 255, 255, 0.15);
+          border-radius: 10px;
+          color: rgba(255, 255, 255, 0.8);
+          font-size: 0.9rem;
+          font-weight: 500;
+          cursor: pointer;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 0.5rem;
+          transition: all 0.3s;
+
+          svg {
+            width: 18px;
+            height: 18px;
+            stroke-width: 2;
+          }
+
+          &:hover {
+            background: rgba(139, 92, 246, 0.2);
+            border-color: rgba(139, 92, 246, 0.5);
+            color: #fff;
+          }
+        }
+
+        &.qr-section {
+          .qr-scanner-placeholder {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 3rem 2rem;
+            background: rgba(255, 255, 255, 0.03);
+            border: 2px dashed rgba(139, 92, 246, 0.3);
+            border-radius: 16px;
+
+            .camera-icon {
+              width: 80px;
+              height: 80px;
+              color: rgba(139, 92, 246, 0.5);
+              margin-bottom: 1rem;
+              stroke-width: 1.5;
+            }
+
+            p {
+              font-size: 0.95rem;
+              color: rgba(255, 255, 255, 0.6);
+              margin: 0 0 1.5rem 0;
+            }
+
+            .open-camera-btn {
+              padding: 0.75rem 1.5rem;
+              background: linear-gradient(135deg, #8b5cf6, #6366f1);
+              border: none;
+              border-radius: 12px;
+              color: #fff;
+              font-size: 0.9rem;
+              font-weight: 600;
+              cursor: pointer;
+              display: flex;
+              align-items: center;
+              gap: 0.5rem;
+              transition: all 0.3s;
+
+              svg {
+                width: 18px;
+                height: 18px;
+                stroke-width: 2;
+              }
+
+              &:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 8px 20px rgba(139, 92, 246, 0.4);
+              }
+            }
+          }
+        }
+      }
+
+      .join-actions {
+        margin-top: 2rem;
+
+        .join-confirm-btn {
+          width: 100%;
+          padding: 1rem 1.5rem;
+          background: linear-gradient(135deg, #8b5cf6, #6366f1);
+          border: none;
+          border-radius: 12px;
+          color: #fff;
+          font-size: 1rem;
+          font-weight: 600;
+          cursor: pointer;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 0.75rem;
+          transition: all 0.3s;
+
+          svg {
+            width: 20px;
+            height: 20px;
+            stroke-width: 2;
+          }
+
+          &:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(139, 92, 246, 0.4);
+          }
+
+          &:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
           }
         }
       }
