@@ -319,17 +319,56 @@
             <!-- 会议信息预览 -->
             <div class="meeting-preview">
               <h4>会议信息</h4>
-              <div class="preview-item">
+              <div class="preview-item editable" @click="quickEditField('time')">
                 <span class="label">时间：</span>
                 <span class="value">{{ templateData.time }}</span>
+                <svg class="edit-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                  <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                  <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                </svg>
               </div>
-              <div class="preview-item">
+              <div class="preview-item editable" @click="quickEditField('participants')">
                 <span class="label">参与者：</span>
                 <span class="value">{{ templateData.participants }}</span>
+                <svg class="edit-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                  <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                  <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                </svg>
               </div>
-              <div class="preview-item">
+              <div class="preview-item editable" @click="quickEditField('topic')">
                 <span class="label">主题：</span>
                 <span class="value">{{ templateData.topic }}</span>
+                <svg class="edit-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                  <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                  <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                </svg>
+              </div>
+            </div>
+
+            <!-- 快速编辑面板 -->
+            <div class="quick-edit-panel" v-if="sidebarEditField">
+              <div class="edit-panel-header">
+                <span>编辑{{ sidebarFieldLabels[sidebarEditField] }}</span>
+                <button @click="closeSidebarEdit">×</button>
+              </div>
+              <div class="edit-panel-body">
+                <input
+                  v-model="editingValue"
+                  type="text"
+                  class="quick-edit-input"
+                  :placeholder="`输入${sidebarFieldLabels[sidebarEditField]}`"
+                  @keyup.enter="confirmQuickEdit"
+                  ref="quickEditInput"
+                />
+                <div class="edit-actions">
+                  <button class="edit-confirm-btn" @click="confirmQuickEdit">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                      <polyline points="20 6 9 17 4 12"></polyline>
+                    </svg>
+                    确认
+                  </button>
+                  <button class="edit-cancel-btn" @click="closeSidebarEdit">取消</button>
+                </div>
               </div>
             </div>
 
@@ -383,6 +422,9 @@ const isDragging = ref(false)
 // 侧边栏相关
 const showSidebar = ref(false)
 const meetingOutline = ref<string[]>([])
+const sidebarEditField = ref<'time' | 'participants' | 'topic' | null>(null)
+const editingValue = ref('')
+const quickEditInput = ref<HTMLInputElement | null>(null)
 
 // 模板数据
 const templateData = ref({
@@ -393,6 +435,13 @@ const templateData = ref({
 
 // 字段标签
 const fieldLabels = {
+  time: '时间',
+  participants: '参与者',
+  topic: '主题'
+}
+
+// 侧边栏字段标签
+const sidebarFieldLabels = {
   time: '时间',
   participants: '参与者',
   topic: '主题'
@@ -524,15 +573,70 @@ const handleInputFocus = () => {
 // AI智能创建
 const quickCreate = () => {
   if (templateMode.value) {
-    // 使用模板创建
-    console.log('使用模板创建会议:', templateData.value)
+    // 使用模板创建 - 生成会议大纲并显示侧边栏
+    generateMeetingOutlineFromTemplate()
   } else if (!meetingInput.value.trim()) {
     showSuggestions.value = true
     return
   } else {
-    // 使用自然语言创建
-    console.log('AI创建会议:', meetingInput.value)
+    // 使用自然语言创建 - AI解析并生成会议大纲
+    generateMeetingOutlineFromInput()
   }
+}
+
+// 从模板生成会议大纲
+const generateMeetingOutlineFromTemplate = () => {
+  // 模拟AI生成会议大纲
+  meetingOutline.value = [
+    '会议开场与目标说明',
+    `关于"${templateData.value.topic}"的背景介绍`,
+    '当前进展与问题讨论',
+    '解决方案与行动计划',
+    '任务分配与时间节点确认',
+    '下一步跟进安排'
+  ]
+
+  // 显示侧边栏
+  showSidebar.value = true
+
+  // 清空输入和建议
+  showSuggestions.value = false
+  console.log('从模板生成会议:', templateData.value)
+}
+
+// 从自然语言输入生成会议大纲
+const generateMeetingOutlineFromInput = () => {
+  const input = meetingInput.value.trim()
+
+  // 模拟AI解析自然语言，提取会议信息
+  // 这里简化处理，实际应该调用AI接口
+  templateData.value = {
+    time: '待确定',
+    participants: '待确定',
+    topic: input.length > 20 ? input.substring(0, 20) + '...' : input
+  }
+
+  // 生成会议大纲
+  meetingOutline.value = [
+    '会议目标与背景说明',
+    '议题讨论与意见收集',
+    '关键问题分析与解决',
+    '决策事项确认',
+    '行动计划与责任分工',
+    '后续跟进安排'
+  ]
+
+  // 切换到模板模式
+  templateMode.value = true
+
+  // 显示侧边栏
+  showSidebar.value = true
+
+  // 清空输入
+  meetingInput.value = ''
+  showSuggestions.value = false
+
+  console.log('从自然语言生成会议:', input)
 }
 
 // 语音输入
@@ -711,6 +815,32 @@ const handleDragLeave = (event: DragEvent) => {
 // 侧边栏操作
 const closeSidebar = () => {
   showSidebar.value = false
+  sidebarEditField.value = null
+}
+
+// 快速编辑字段
+const quickEditField = (field: 'time' | 'participants' | 'topic') => {
+  sidebarEditField.value = field
+  editingValue.value = templateData.value[field]
+  // 自动聚焦输入框
+  setTimeout(() => {
+    quickEditInput.value?.focus()
+    quickEditInput.value?.select()
+  }, 100)
+}
+
+// 确认快速编辑
+const confirmQuickEdit = () => {
+  if (sidebarEditField.value && editingValue.value.trim()) {
+    templateData.value[sidebarEditField.value] = editingValue.value.trim()
+  }
+  closeSidebarEdit()
+}
+
+// 关闭侧边栏编辑
+const closeSidebarEdit = () => {
+  sidebarEditField.value = null
+  editingValue.value = ''
 }
 
 const confirmMeeting = () => {
@@ -720,12 +850,15 @@ const confirmMeeting = () => {
     attachment: uploadFileName.value
   })
   showSidebar.value = false
+  sidebarEditField.value = null
   // TODO: 实际创建会议逻辑
 }
 
 const editMeeting = () => {
+  // 关闭侧边栏，回到主界面进行编辑
   showSidebar.value = false
-  // 保持模板模式，让用户编辑
+  sidebarEditField.value = null
+  // 保持模板模式，让用户在主界面编辑
   console.log('编辑会议信息')
 }
 
@@ -1914,10 +2047,29 @@ onMounted(() => {
   .meeting-preview {
     .preview-item {
       display: flex;
+      align-items: center;
       padding: 0.75rem;
       margin-bottom: 0.5rem;
       background: rgba(255, 255, 255, 0.03);
       border-radius: 8px;
+      position: relative;
+      transition: all 0.3s;
+
+      &.editable {
+        cursor: pointer;
+        padding-right: 3rem;
+
+        &:hover {
+          background: rgba(139, 92, 246, 0.1);
+          border: 1px solid rgba(139, 92, 246, 0.3);
+          transform: translateX(-4px);
+
+          .edit-icon {
+            opacity: 1;
+            transform: translateX(0);
+          }
+        }
+      }
 
       .label {
         color: rgba(255, 255, 255, 0.6);
@@ -1925,8 +2077,135 @@ onMounted(() => {
       }
 
       .value {
+        flex: 1;
         color: #fff;
         font-weight: 500;
+      }
+
+      .edit-icon {
+        position: absolute;
+        right: 1rem;
+        width: 16px;
+        height: 16px;
+        color: rgba(139, 92, 246, 0.8);
+        opacity: 0;
+        transform: translateX(-10px);
+        transition: all 0.3s;
+        stroke-width: 2;
+      }
+    }
+  }
+
+  // 快速编辑面板
+  .quick-edit-panel {
+    margin-top: 1rem;
+    padding: 1rem;
+    background: rgba(139, 92, 246, 0.1);
+    border: 1px solid rgba(139, 92, 246, 0.3);
+    border-radius: 12px;
+    animation: slideDown 0.3s ease-out;
+
+    .edit-panel-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1rem;
+
+      span {
+        color: #fff;
+        font-weight: 600;
+        font-size: 0.95rem;
+      }
+
+      button {
+        width: 24px;
+        height: 24px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: transparent;
+        border: none;
+        color: rgba(255, 255, 255, 0.6);
+        font-size: 1.5rem;
+        cursor: pointer;
+        transition: all 0.3s;
+        line-height: 1;
+
+        &:hover {
+          color: #fff;
+          transform: rotate(90deg);
+        }
+      }
+    }
+
+    .edit-panel-body {
+      .quick-edit-input {
+        width: 100%;
+        padding: 0.75rem 1rem;
+        background: rgba(255, 255, 255, 0.08);
+        border: 1px solid rgba(255, 255, 255, 0.15);
+        border-radius: 8px;
+        color: #fff;
+        font-size: 1rem;
+        outline: none;
+        transition: all 0.3s;
+        margin-bottom: 0.75rem;
+
+        &::placeholder {
+          color: rgba(255, 255, 255, 0.4);
+        }
+
+        &:focus {
+          border-color: rgba(139, 92, 246, 0.6);
+          background: rgba(255, 255, 255, 0.12);
+          box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.1);
+        }
+      }
+
+      .edit-actions {
+        display: flex;
+        gap: 0.5rem;
+
+        button {
+          flex: 1;
+          padding: 0.6rem 1rem;
+          border: none;
+          border-radius: 8px;
+          font-size: 0.9rem;
+          font-weight: 600;
+          cursor: pointer;
+          transition: all 0.3s;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 0.5rem;
+
+          svg {
+            width: 16px;
+            height: 16px;
+            stroke-width: 2.5;
+          }
+        }
+
+        .edit-confirm-btn {
+          background: linear-gradient(135deg, #8b5cf6, #6366f1);
+          color: #fff;
+
+          &:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(139, 92, 246, 0.4);
+          }
+        }
+
+        .edit-cancel-btn {
+          background: rgba(255, 255, 255, 0.05);
+          border: 1px solid rgba(255, 255, 255, 0.15);
+          color: rgba(255, 255, 255, 0.9);
+
+          &:hover {
+            background: rgba(255, 255, 255, 0.1);
+          }
+        }
       }
     }
   }
