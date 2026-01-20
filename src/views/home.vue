@@ -758,23 +758,21 @@ const simulateFileUpload = (file: File) => {
       clearInterval(interval)
       uploadStatusText.value = '解析完成！'
 
-      // 模拟AI解析结果，自动填充模板和大纲
+      // 模拟AI解析结果，根据文件名智能生成会议信息和大纲
       setTimeout(() => {
+        const fileName = file.name.replace(/\.[^/.]+$/, '')
+
+        // 根据文件名智能推断会议主题和类型
+        const meetingInfo = generateMeetingInfoFromFileName(fileName)
+
         templateData.value = {
           time: '明天下午3点',
-          participants: '文档相关人员',
-          topic: `${file.name.replace(/\.[^/.]+$/, '')} 讨论会`
+          participants: meetingInfo.participants,
+          topic: meetingInfo.topic
         }
 
-        // 生成会议大纲
-        meetingOutline.value = [
-          '项目背景介绍与目标说明',
-          '当前进度汇报及问题分析',
-          '技术方案讨论与评审',
-          '资源分配与时间规划',
-          '风险识别与应对策略',
-          '下一步行动计划确定'
-        ]
+        // 根据文件类型和名称生成个性化大纲
+        meetingOutline.value = meetingInfo.outline
 
         templateMode.value = true
         uploadingFile.value = false
@@ -787,6 +785,119 @@ const simulateFileUpload = (file: File) => {
       }, 500)
     }
   }, 200)
+}
+
+// 根据文件名智能生成会议信息
+const generateMeetingInfoFromFileName = (fileName: string) => {
+  const lowerName = fileName.toLowerCase()
+
+  // 检测文件类型和主题
+  if (lowerName.includes('产品') || lowerName.includes('prd') || lowerName.includes('需求')) {
+    return {
+      topic: `${fileName} - 产品需求评审`,
+      participants: '产品团队、技术团队',
+      outline: [
+        '产品需求背景与目标说明',
+        '核心功能点详细介绍',
+        '用户场景与交互流程讨论',
+        '技术可行性评估',
+        '资源投入与排期规划',
+        '风险评估与后续跟进'
+      ]
+    }
+  } else if (lowerName.includes('技术') || lowerName.includes('架构') || lowerName.includes('设计文档')) {
+    return {
+      topic: `${fileName} - 技术方案评审`,
+      participants: '技术团队',
+      outline: [
+        '技术背景与现状分析',
+        '方案设计思路与架构说明',
+        '关键技术点深入讨论',
+        '性能与安全性考量',
+        '实施方案与时间安排',
+        '技术风险与应对策略'
+      ]
+    }
+  } else if (lowerName.includes('周报') || lowerName.includes('月报') || lowerName.includes('汇报')) {
+    return {
+      topic: `${fileName} - 工作汇报会`,
+      participants: '项目组成员',
+      outline: [
+        '上周期工作完成情况回顾',
+        '重点成果与亮点展示',
+        '遇到的问题与解决方案',
+        '本周期工作计划安排',
+        '需要的支持与协作',
+        '下一步行动计划确认'
+      ]
+    }
+  } else if (lowerName.includes('测试') || lowerName.includes('bug') || lowerName.includes('质量')) {
+    return {
+      topic: `${fileName} - 测试与质量评审`,
+      participants: '测试团队、开发团队',
+      outline: [
+        '测试范围与测试用例说明',
+        '发现问题汇总与分析',
+        '关键Bug讨论与优先级确定',
+        '质量指标达成情况',
+        '优化建议与改进方案',
+        '后续测试计划安排'
+      ]
+    }
+  } else if (lowerName.includes('项目') || lowerName.includes('计划') || lowerName.includes('方案')) {
+    return {
+      topic: `${fileName} - 项目讨论会`,
+      participants: '项目相关人员',
+      outline: [
+        '项目背景与目标说明',
+        '当前进度与里程碑回顾',
+        '关键问题分析与讨论',
+        '解决方案与行动计划',
+        '资源协调与任务分配',
+        '风险管控与后续安排'
+      ]
+    }
+  } else if (lowerName.includes('合同') || lowerName.includes('协议') || lowerName.includes('商务')) {
+    return {
+      topic: `${fileName} - 商务合作讨论`,
+      participants: '商务团队、法务团队',
+      outline: [
+        '合作背景与双方介绍',
+        '合同条款逐项解读',
+        '权责利益分配讨论',
+        '关键条款谈判与确认',
+        '风险评估与法律审核',
+        '签约流程与后续安排'
+      ]
+    }
+  } else if (lowerName.includes('培训') || lowerName.includes('学习') || lowerName.includes('教程')) {
+    return {
+      topic: `${fileName} - 培训与分享会`,
+      participants: '相关团队成员',
+      outline: [
+        '培训主题与目标介绍',
+        '核心知识点讲解',
+        '实践案例分析',
+        'Q&A互动讨论',
+        '学习资料分发',
+        '后续实践计划安排'
+      ]
+    }
+  } else {
+    // 默认通用会议大纲
+    return {
+      topic: `${fileName} - 专题讨论会`,
+      participants: '文档相关人员',
+      outline: [
+        '会议背景与目标说明',
+        `"${fileName}"内容要点解读`,
+        '关键问题分析与讨论',
+        '解决方案与建议汇总',
+        '任务分配与时间规划',
+        '后续行动计划确认'
+      ]
+    }
+  }
 }
 
 // 处理文件拖拽
