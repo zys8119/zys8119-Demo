@@ -25,7 +25,18 @@ export default defineConfig({
   },
   plugins: [
     VueDevTools({
-      launchEditor: "code",
+      launchEditor: (function detectEditor() {
+        const envstr = JSON.stringify(process.env);
+        if (envstr.match(/trae/)) {
+          return "./vite/goto.sh";
+        } else if (envstr.match(/cursor/)) {
+          return "code";
+        } else if (envstr.match(/vscode/)) {
+          return "code";
+        } else {
+          return "code";
+        }
+      })(),
     }),
     MarkdownVueDemo(),
     VueSql({
