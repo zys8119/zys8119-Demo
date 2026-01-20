@@ -43,6 +43,10 @@
               我的会议
               <span class="badge" v-if="myMeetingsCount > 0">{{ myMeetingsCount }}</span>
             </button>
+            <button class="nav-btn" @click="togglePendingMeetings">
+              待办会议
+              <span class="badge badge-pending" v-if="pendingMeetingsCount > 0">{{ pendingMeetingsCount }}</span>
+            </button>
             <button class="nav-btn" @click="showHistory">历史记录</button>
             <div class="avatar-btn">
               <div class="avatar"></div>
@@ -750,6 +754,139 @@
         </div>
       </transition>
 
+      <!-- 预约会议对话框 -->
+      <transition name="fade">
+        <div class="schedule-dialog-overlay" v-if="showScheduleDialog" @click="closeScheduleDialog">
+          <div class="schedule-dialog" @click.stop>
+            <div class="schedule-dialog-header">
+              <h4>预约会议</h4>
+              <button class="close-btn-small" @click="closeScheduleDialog">×</button>
+            </div>
+
+            <div class="schedule-dialog-body">
+              <form @submit.prevent="saveScheduledMeeting">
+                <!-- 会议名称 -->
+                <div class="form-group">
+                  <label class="form-label">
+                    <span class="label-icon">📋</span>
+                    会议名称
+                  </label>
+                  <input
+                    type="text"
+                    class="form-input"
+                    v-model="scheduleForm.title"
+                    placeholder="请输入会议名称"
+                    required
+                  />
+                </div>
+
+                <!-- 日期和时间 -->
+                <div class="form-row">
+                  <div class="form-group">
+                    <label class="form-label">
+                      <span class="label-icon">📅</span>
+                      日期
+                    </label>
+                    <input
+                      type="date"
+                      class="form-input"
+                      v-model="scheduleForm.date"
+                      required
+                    />
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label">
+                      <span class="label-icon">🕐</span>
+                      时间
+                    </label>
+                    <input
+                      type="time"
+                      class="form-input"
+                      v-model="scheduleForm.time"
+                      required
+                    />
+                  </div>
+                </div>
+
+                <!-- 时长和地点 -->
+                <div class="form-row">
+                  <div class="form-group">
+                    <label class="form-label">
+                      <span class="label-icon">⏱️</span>
+                      时长（分钟）
+                    </label>
+                    <select class="form-input" v-model="scheduleForm.duration">
+                      <option value="15">15分钟</option>
+                      <option value="30">30分钟</option>
+                      <option value="45">45分钟</option>
+                      <option value="60">60分钟</option>
+                      <option value="90">90分钟</option>
+                      <option value="120">120分钟</option>
+                    </select>
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label">
+                      <span class="label-icon">📍</span>
+                      地点
+                    </label>
+                    <input
+                      type="text"
+                      class="form-input"
+                      v-model="scheduleForm.location"
+                      placeholder="会议地点或链接"
+                      required
+                    />
+                  </div>
+                </div>
+
+                <!-- 提醒时间 -->
+                <div class="form-group">
+                  <label class="form-label">
+                    <span class="label-icon">⏰</span>
+                    提前提醒
+                  </label>
+                  <select class="form-input" v-model="scheduleForm.remindBefore">
+                    <option value="0">准时提醒</option>
+                    <option value="5">提前5分钟</option>
+                    <option value="15">提前15分钟</option>
+                    <option value="30">提前30分钟</option>
+                    <option value="60">提前1小时</option>
+                  </select>
+                </div>
+
+                <!-- 备忘 -->
+                <div class="form-group">
+                  <label class="form-label">
+                    <span class="label-icon">📝</span>
+                    备忘
+                  </label>
+                  <textarea
+                    class="form-textarea"
+                    v-model="scheduleForm.memo"
+                    placeholder="会议备注、准备事项等..."
+                    rows="4"
+                  ></textarea>
+                </div>
+
+                <!-- 操作按钮 -->
+                <div class="form-actions">
+                  <button type="button" class="btn-cancel" @click="closeScheduleDialog">
+                    取消
+                  </button>
+                  <button type="submit" class="btn-submit">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <polyline points="9 11 12 14 22 4"></polyline>
+                      <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path>
+                    </svg>
+                    创建预约
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      </transition>
+
       <!-- 历史记录面板 -->
       <transition name="slide-left">
         <div class="history-panel" v-if="showHistoryPanel">
@@ -793,6 +930,133 @@
             <div class="empty-state" v-if="historyRecords.length === 0">
               <div class="empty-icon">🕐</div>
               <p>暂无历史记录</p>
+            </div>
+          </div>
+        </div>
+      </transition>
+
+      <!-- 待办会议面板 -->
+      <transition name="slide-left">
+        <div class="pending-panel" v-if="showPendingMeetings">
+          <div class="panel-header">
+            <h3>待办会议</h3>
+            <button class="close-btn" @click="closePendingMeetings">×</button>
+          </div>
+
+          <div class="panel-content">
+            <!-- 待办会议列表 -->
+            <div class="meetings-list" v-if="sortedPendingMeetings.length > 0">
+              <div
+                class="meeting-card"
+                v-for="meeting in sortedPendingMeetings"
+                :key="meeting.id"
+              >
+                <!-- 会议状态 -->
+                <div class="meeting-status" :class="getMeetingStatusClass(meeting)">
+                  <span class="status-dot"></span>
+                  <span class="status-text">{{ getMeetingStatusText(meeting) }}</span>
+                </div>
+
+                <!-- 会议标题 -->
+                <h4 class="meeting-title">{{ meeting.title }}</h4>
+
+                <!-- 会议元信息 -->
+                <div class="meeting-meta">
+                  <div class="meta-item">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                      <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                      <line x1="16" y1="2" x2="16" y2="6"></line>
+                      <line x1="8" y1="2" x2="8" y2="6"></line>
+                      <line x1="3" y1="10" x2="21" y2="10"></line>
+                    </svg>
+                    <span>{{ meeting.date }}</span>
+                  </div>
+                  <div class="meta-item">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                      <circle cx="12" cy="12" r="10"></circle>
+                      <polyline points="12 6 12 12 16 14"></polyline>
+                    </svg>
+                    <span>{{ meeting.time }}</span>
+                  </div>
+                </div>
+
+                <div class="meeting-meta">
+                  <div class="meta-item">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                      <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                      <circle cx="12" cy="10" r="3"></circle>
+                    </svg>
+                    <span>{{ meeting.location }}</span>
+                  </div>
+                  <div class="meta-item">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                      <circle cx="12" cy="12" r="10"></circle>
+                      <polyline points="12 6 12 12 16 14"></polyline>
+                    </svg>
+                    <span>{{ meeting.duration }}分钟</span>
+                  </div>
+                </div>
+
+                <!-- 备忘 -->
+                <div class="meeting-memo-box" v-if="meeting.memo">
+                  <div class="memo-header">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" class="memo-icon">
+                      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                      <polyline points="14 2 14 8 20 8"></polyline>
+                      <line x1="16" y1="13" x2="8" y2="13"></line>
+                      <line x1="16" y1="17" x2="8" y2="17"></line>
+                    </svg>
+                    <span class="memo-label">备忘</span>
+                  </div>
+                  <p class="memo-content">{{ meeting.memo }}</p>
+                </div>
+
+                <!-- 提醒时间 -->
+                <div class="meeting-reminder-box">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" class="reminder-icon">
+                    <circle cx="12" cy="13" r="8"></circle>
+                    <path d="M12 9v4l2 2"></path>
+                    <path d="M16.51 17.35l-.35 3.83a2 2 0 0 1-2 1.82H9.83a2 2 0 0 1-2-1.82l-.35-3.83m.01-10.7l.35-3.83A2 2 0 0 1 9.83 1h4.35a2 2 0 0 1 2 1.82l.35 3.83"></path>
+                  </svg>
+                  <span class="reminder-text">
+                    {{ meeting.remindBefore === '0' ? '准时提醒' : `提前${meeting.remindBefore}分钟` }}
+                  </span>
+                </div>
+
+                <!-- 操作按钮 -->
+                <div class="meeting-actions-bar">
+                  <button
+                    class="action-btn-new primary"
+                    @click.stop="completeMeeting(meeting.id)"
+                    v-if="meeting.status !== 'completed'"
+                  >
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <polyline points="9 11 12 14 22 4"></polyline>
+                      <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path>
+                    </svg>
+                    完成
+                  </button>
+                  <button
+                    class="action-btn-new danger"
+                    @click.stop="deleteMeeting(meeting.id)"
+                  >
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <polyline points="3 6 5 6 21 6"></polyline>
+                      <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                    </svg>
+                    删除
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <!-- 空状态 -->
+            <div class="empty-state" v-if="pendingMeetings.length === 0">
+              <div class="empty-icon">📋</div>
+              <p>暂无待办会议</p>
+              <button class="empty-action-btn" @click="openScheduleDialog">
+                创建预约
+              </button>
             </div>
           </div>
         </div>
@@ -887,6 +1151,35 @@ const commandOptions = [
   { command: '/create', icon: '✨', description: 'AI智能创建会议', category: '创建' }
 ]
 const selectedCommands = ref<string[]>([])
+
+// 预约会议相关
+const showScheduleDialog = ref(false)
+const scheduleForm = ref({
+  title: '',
+  date: '',
+  time: '',
+  location: '',
+  duration: '60',
+  memo: '',
+  remindBefore: '15' // 提前多少分钟提醒
+})
+
+// 待办会议列表
+interface PendingMeeting {
+  id: string
+  title: string
+  date: string
+  time: string
+  location: string
+  duration: string
+  memo: string
+  remindBefore: string
+  status: 'pending' | 'reminded' | 'completed'
+  createdAt: number
+}
+
+const pendingMeetings = ref<PendingMeeting[]>([])
+const showPendingMeetings = ref(false)
 
 // 我的会议数据
 interface Meeting {
@@ -1304,11 +1597,6 @@ const startVoiceInput = () => {
 // 即时会议
 const instantMeeting = () => {
   console.log('创建即时会议')
-}
-
-// 预约会议
-const scheduleMeeting = () => {
-  console.log('预约会议')
 }
 
 // 触发文件上传
@@ -1790,6 +2078,193 @@ const selectTemplate = (template: any) => {
   // 显示成功提示
   console.log('已选择模板:', template.name)
 }
+
+// 预约会议相关函数
+// 修改scheduleMeeting函数打开预约对话框
+const scheduleMeeting = () => {
+  openScheduleDialog()
+}
+
+// 打开预约对话框
+const openScheduleDialog = () => {
+  showScheduleDialog.value = true
+  // 重置表单
+  scheduleForm.value = {
+    title: '',
+    date: '',
+    time: '',
+    location: '',
+    duration: '60',
+    memo: '',
+    remindBefore: '15'
+  }
+}
+
+// 关闭预约对话框
+const closeScheduleDialog = () => {
+  showScheduleDialog.value = false
+}
+
+// 保存预约会议
+const saveScheduledMeeting = () => {
+  const newMeeting: PendingMeeting = {
+    id: Date.now().toString(),
+    title: scheduleForm.value.title,
+    date: scheduleForm.value.date,
+    time: scheduleForm.value.time,
+    location: scheduleForm.value.location,
+    duration: scheduleForm.value.duration,
+    memo: scheduleForm.value.memo,
+    remindBefore: scheduleForm.value.remindBefore,
+    status: 'pending',
+    createdAt: Date.now()
+  }
+
+  pendingMeetings.value.push(newMeeting)
+
+  // 设置提醒
+  setupMeetingReminder(newMeeting)
+
+  // 关闭对话框
+  closeScheduleDialog()
+
+  // 显示成功提示
+  alert(`会议预约成功！\n${newMeeting.title}\n${newMeeting.date} ${newMeeting.time}`)
+
+  console.log('创建预约会议:', newMeeting)
+}
+
+// 待办会议相关
+// 计算待办会议数量
+const pendingMeetingsCount = computed(() => {
+  return pendingMeetings.value.filter(m => m.status !== 'completed').length
+})
+
+// 排序后的待办会议（按日期时间排序）
+const sortedPendingMeetings = computed(() => {
+  return [...pendingMeetings.value].sort((a, b) => {
+    const dateTimeA = new Date(`${a.date} ${a.time}`).getTime()
+    const dateTimeB = new Date(`${b.date} ${b.time}`).getTime()
+    return dateTimeA - dateTimeB
+  })
+})
+
+// 切换待办会议面板
+const togglePendingMeetings = () => {
+  showPendingMeetings.value = !showPendingMeetings.value
+  if (showPendingMeetings.value) {
+    showMyMeetingsPanel.value = false
+    showHistoryPanel.value = false
+  }
+}
+
+// 关闭待办会议面板
+const closePendingMeetings = () => {
+  showPendingMeetings.value = false
+}
+
+// 完成会议
+const completeMeeting = (id: string) => {
+  const meeting = pendingMeetings.value.find(m => m.id === id)
+  if (meeting) {
+    meeting.status = 'completed'
+    console.log('会议已完成:', meeting.title)
+  }
+}
+
+// 删除会议
+const deleteMeeting = (id: string) => {
+  const index = pendingMeetings.value.findIndex(m => m.id === id)
+  if (index > -1) {
+    const meeting = pendingMeetings.value[index]
+    if (confirm(`确定要删除会议"${meeting.title}"吗？`)) {
+      pendingMeetings.value.splice(index, 1)
+      console.log('会议已删除:', meeting.title)
+    }
+  }
+}
+
+// 获取会议状态样式类
+const getMeetingStatusClass = (meeting: PendingMeeting) => {
+  if (meeting.status === 'completed') {
+    return 'completed'
+  } else if (meeting.status === 'reminded') {
+    return 'ongoing'
+  } else {
+    return 'upcoming'
+  }
+}
+
+// 获取会议状态文本
+const getMeetingStatusText = (meeting: PendingMeeting) => {
+  if (meeting.status === 'completed') {
+    return '已完成'
+  } else if (meeting.status === 'reminded') {
+    return '已提醒'
+  } else {
+    return '待办'
+  }
+}
+
+// 会议提醒功能
+const setupMeetingReminder = (meeting: PendingMeeting) => {
+  // 计算提醒时间
+  const meetingDateTime = new Date(`${meeting.date} ${meeting.time}`)
+  const remindMinutes = parseInt(meeting.remindBefore)
+  const remindTime = new Date(meetingDateTime.getTime() - remindMinutes * 60 * 1000)
+  const now = new Date()
+
+  const timeUntilRemind = remindTime.getTime() - now.getTime()
+
+  if (timeUntilRemind > 0) {
+    // 设置定时器
+    setTimeout(() => {
+      showMeetingNotification(meeting)
+    }, timeUntilRemind)
+
+    console.log(`会议提醒已设置: ${meeting.title}，将在${remindTime.toLocaleString()}提醒`)
+  }
+}
+
+// 显示会议通知
+const showMeetingNotification = (meeting: PendingMeeting) => {
+  // 更新会议状态为已提醒
+  meeting.status = 'reminded'
+
+  // 浏览器通知
+  if ('Notification' in window && Notification.permission === 'granted') {
+    new Notification('会议提醒', {
+      body: `${meeting.title}\n时间: ${meeting.date} ${meeting.time}\n地点: ${meeting.location}`,
+      icon: '/favicon.ico',
+      tag: meeting.id
+    })
+  } else {
+    // 降级为alert
+    alert(`会议提醒\n\n${meeting.title}\n时间: ${meeting.date} ${meeting.time}\n地点: ${meeting.location}`)
+  }
+
+  // 播放提示音（如果需要）
+  playNotificationSound()
+}
+
+// 播放提示音
+const playNotificationSound = () => {
+  try {
+    const audio = new Audio('data:audio/wav;base64,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 SOMGMJHx8tWCMwgfb7z w41pRDgxTquburF8ZDD2R1/rGdCcEK37I8tiGOggVZ7vq2ZJOCgtPqN7utmAeC jqR0fHSfi4EH3e/7N6RQAYTVbHo66pZFwtHnN7ww24iBjCR0fLVgjIIH2+88OBaUQ4MU6rm76xfGAs9kdf5xXQoBCp+yPLYhjoIFWe76tiSTgsKT6je7bZgHgs6kdHx0X4vBB94v+3ekT8GFFSE')
+    audio.play().catch(() => {
+      // 忽略播放失败
+    })
+  } catch (e) {
+    // 忽略错误
+  }
+}
+
+// 请求通知权限
+onMounted(() => {
+  if ('Notification' in window && Notification.permission === 'default') {
+    Notification.requestPermission()
+  }
+})
 
 // 拖拽计数器，用于准确跟踪拖拽状态
 let dragCounter = 0
@@ -4744,6 +5219,360 @@ onMounted(() => {
       }
     }
   }
+}
+
+// 预约会议对话框样式
+.schedule-dialog-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+  padding: 2rem;
+
+  .schedule-dialog {
+    width: 100%;
+    max-width: 600px;
+    max-height: 90vh;
+    background: linear-gradient(135deg, rgba(10, 14, 39, 0.98), rgba(26, 31, 58, 0.98));
+    border: 1px solid rgba(139, 92, 246, 0.3);
+    border-radius: 24px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+
+    .schedule-dialog-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 2rem 2rem 1.5rem 2rem;
+      border-bottom: 1px solid rgba(139, 92, 246, 0.2);
+      background: rgba(139, 92, 246, 0.05);
+
+      h4 {
+        margin: 0;
+        font-size: 1.5rem;
+        font-weight: 700;
+        background: linear-gradient(135deg, #a78bfa, #8b5cf6);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+      }
+    }
+
+    .schedule-dialog-body {
+      flex: 1;
+      padding: 2rem;
+      overflow-y: auto;
+      scrollbar-width: none;
+
+      &::-webkit-scrollbar {
+        display: none;
+      }
+
+      form {
+        display: flex;
+        flex-direction: column;
+        gap: 1.5rem;
+
+        .form-group {
+          display: flex;
+          flex-direction: column;
+          gap: 0.5rem;
+
+          .form-label {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: rgba(255, 255, 255, 0.9);
+
+            .label-icon {
+              font-size: 1.1rem;
+            }
+          }
+
+          .form-input,
+          .form-textarea {
+            padding: 0.75rem 1rem;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(139, 92, 246, 0.3);
+            border-radius: 12px;
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 0.95rem;
+            transition: all 0.3s;
+
+            &:focus {
+              outline: none;
+              border-color: rgba(139, 92, 246, 0.6);
+              background: rgba(255, 255, 255, 0.08);
+              box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.1);
+            }
+
+            &::placeholder {
+              color: rgba(255, 255, 255, 0.4);
+            }
+          }
+
+          .form-textarea {
+            resize: vertical;
+            min-height: 100px;
+            font-family: inherit;
+          }
+        }
+
+        .form-row {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 1rem;
+        }
+
+        .form-actions {
+          display: flex;
+          gap: 1rem;
+          margin-top: 1rem;
+
+          button {
+            flex: 1;
+            padding: 0.875rem 1.5rem;
+            border: none;
+            border-radius: 12px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+
+            svg {
+              width: 18px;
+              height: 18px;
+              stroke-width: 2;
+            }
+          }
+
+          .btn-cancel {
+            background: rgba(255, 255, 255, 0.1);
+            color: rgba(255, 255, 255, 0.8);
+
+            &:hover {
+              background: rgba(255, 255, 255, 0.15);
+            }
+          }
+
+          .btn-submit {
+            background: linear-gradient(135deg, #8b5cf6, #6366f1);
+            color: #fff;
+
+            &:hover {
+              transform: translateY(-2px);
+              box-shadow: 0 8px 20px rgba(139, 92, 246, 0.4);
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
+// 待办会议面板样式
+.pending-panel {
+  position: fixed;
+  top: 0;
+  right: 0;
+  width: 450px;
+  height: 100vh;
+  background: linear-gradient(135deg, rgba(10, 14, 39, 0.98), rgba(26, 31, 58, 0.98));
+  border-left: 1px solid rgba(139, 92, 246, 0.3);
+  box-shadow: -10px 0 50px rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(20px);
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+
+  .panel-content {
+    flex: 1;
+    overflow-y: auto;
+    padding: 1.5rem;
+    scrollbar-width: none;
+
+    &::-webkit-scrollbar {
+      display: none;
+    }
+  }
+
+  // 使用与"我的会议"相同的卡片样式
+  .meetings-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+  }
+
+  .meeting-card {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(139, 92, 246, 0.2);
+    border-radius: 16px;
+    padding: 1.5rem;
+    transition: all 0.3s;
+    cursor: default;
+
+    &:hover {
+      background: rgba(255, 255, 255, 0.05);
+      border-color: rgba(139, 92, 246, 0.4);
+      transform: translateY(-2px);
+      box-shadow: 0 8px 24px rgba(139, 92, 246, 0.15);
+    }
+  }
+
+  // 备忘框样式
+  .meeting-memo-box {
+    margin-top: 1rem;
+    padding: 0.875rem;
+    background: rgba(139, 92, 246, 0.05);
+    border-left: 3px solid rgba(139, 92, 246, 0.5);
+    border-radius: 8px;
+
+    .memo-header {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      margin-bottom: 0.5rem;
+
+      .memo-icon {
+        width: 16px;
+        height: 16px;
+        color: rgba(139, 92, 246, 0.8);
+        stroke-width: 2;
+      }
+
+      .memo-label {
+        font-size: 0.8rem;
+        font-weight: 600;
+        color: rgba(139, 92, 246, 0.9);
+      }
+    }
+
+    .memo-content {
+      margin: 0;
+      font-size: 0.85rem;
+      line-height: 1.6;
+      color: rgba(255, 255, 255, 0.7);
+    }
+  }
+
+  // 提醒框样式
+  .meeting-reminder-box {
+    margin-top: 0.75rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.625rem 0.875rem;
+    background: rgba(250, 204, 21, 0.08);
+    border-radius: 8px;
+
+    .reminder-icon {
+      width: 16px;
+      height: 16px;
+      color: rgba(250, 204, 21, 0.9);
+      stroke-width: 2;
+      flex-shrink: 0;
+    }
+
+    .reminder-text {
+      font-size: 0.85rem;
+      color: rgba(250, 204, 21, 0.95);
+      font-weight: 500;
+    }
+  }
+
+  // 操作按钮栏
+  .meeting-actions-bar {
+    display: flex;
+    gap: 0.75rem;
+    margin-top: 1.25rem;
+    padding-top: 1rem;
+    border-top: 1px solid rgba(139, 92, 246, 0.1);
+
+    .action-btn-new {
+      flex: 1;
+      padding: 0.625rem 1rem;
+      border: none;
+      border-radius: 10px;
+      font-size: 0.875rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+
+      svg {
+        width: 16px;
+        height: 16px;
+      }
+
+      &.primary {
+        background: linear-gradient(135deg, rgba(139, 92, 246, 0.25), rgba(99, 102, 241, 0.25));
+        color: rgba(139, 92, 246, 0.95);
+        border: 1px solid rgba(139, 92, 246, 0.3);
+
+        &:hover {
+          background: linear-gradient(135deg, rgba(139, 92, 246, 0.35), rgba(99, 102, 241, 0.35));
+          border-color: rgba(139, 92, 246, 0.5);
+          transform: translateY(-1px);
+          box-shadow: 0 4px 12px rgba(139, 92, 246, 0.25);
+        }
+      }
+
+      &.danger {
+        background: rgba(239, 68, 68, 0.15);
+        color: rgba(239, 68, 68, 0.95);
+        border: 1px solid rgba(239, 68, 68, 0.25);
+
+        &:hover {
+          background: rgba(239, 68, 68, 0.25);
+          border-color: rgba(239, 68, 68, 0.4);
+          transform: translateY(-1px);
+          box-shadow: 0 4px 12px rgba(239, 68, 68, 0.2);
+        }
+      }
+    }
+  }
+
+  .empty-state {
+    .empty-action-btn {
+      margin-top: 1rem;
+      padding: 0.75rem 1.5rem;
+      background: linear-gradient(135deg, #8b5cf6, #6366f1);
+      border: none;
+      border-radius: 12px;
+      color: #fff;
+      font-size: 0.9rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s;
+
+      &:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(139, 92, 246, 0.4);
+      }
+    }
+  }
+}
+
+// 导航栏徽章样式
+.badge-pending {
+  background: linear-gradient(135deg, #facc15, #f59e0b);
 }
 
 // 淡入淡出动画
