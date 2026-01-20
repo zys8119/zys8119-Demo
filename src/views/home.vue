@@ -5762,6 +5762,83 @@ onMounted(() => {
       transform: translateY(-2px);
       box-shadow: 0 8px 24px rgba(139, 92, 246, 0.15);
     }
+
+    // 会议状态徽章
+    .meeting-status {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.4rem 1rem;
+      border-radius: 20px;
+      margin-bottom: 1rem;
+      font-size: 0.85rem;
+      font-weight: 600;
+
+      &.upcoming {
+        background: rgba(139, 92, 246, 0.2);
+        color: #a78bfa;
+
+        .status-dot {
+          background: #a78bfa;
+        }
+      }
+
+      &.ongoing {
+        background: rgba(16, 185, 129, 0.2);
+        color: #34d399;
+
+        .status-dot {
+          background: #34d399;
+          animation: pulse-dot 1.5s ease-in-out infinite;
+        }
+      }
+
+      &.completed {
+        background: rgba(107, 114, 128, 0.2);
+        color: #9ca3af;
+
+        .status-dot {
+          background: #9ca3af;
+        }
+      }
+
+      .status-dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+      }
+    }
+
+    // 会议标题
+    .meeting-title {
+      font-size: 1.2rem;
+      font-weight: 600;
+      color: #fff;
+      margin: 0 0 1rem 0;
+    }
+
+    // 会议元信息
+    .meeting-meta {
+      display: flex;
+      gap: 1rem;
+      margin-bottom: 0.75rem;
+
+      .meta-item {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        color: rgba(255, 255, 255, 0.7);
+        font-size: 0.875rem;
+
+        svg {
+          width: 16px;
+          height: 16px;
+          stroke-width: 2;
+          color: rgba(139, 92, 246, 0.8);
+          flex-shrink: 0;
+        }
+      }
+    }
   }
 
   // 备忘框样式
