@@ -1,11 +1,6 @@
 <template>
-  <div
-    class="meeting-hub abs-content! of-auto"
-    @drop.prevent="handleFileDrop"
-    @dragover.prevent="handleDragOver"
-    @dragleave.prevent="handleDragLeave"
-    @dragenter.prevent="handleDragEnter"
-  >
+  <div class="meeting-hub abs-content! of-auto" @drop.prevent="handleFileDrop" @dragover.prevent="handleDragOver"
+    @dragleave.prevent="handleDragLeave" @dragenter.prevent="handleDragEnter">
     <!-- 全局拖拽蒙层 -->
     <div class="drag-overlay" v-if="isDragging">
       <div class="drag-content">
@@ -95,8 +90,9 @@
               </div>
 
               <!-- 自由输入模式 -->
-              <input v-else type="text" class="smart-input" placeholder="「周三下午两点，和产品团队讨论新功能」或「开个早会」或输入指令 /meeting /history /join"
-                v-model="meetingInput" @keyup.enter="quickCreate" @input="handleInputChange" @focus="handleInputFocus" />
+              <input v-else type="text" class="smart-input"
+                placeholder="「周三下午两点，和产品团队讨论新功能」或「开个早会」或输入指令 /meeting /history /join" v-model="meetingInput"
+                @keyup.enter="quickCreate" @input="handleInputChange" @focus="handleInputFocus" />
 
               <div class="voice-btn" @click="startVoiceInput">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -145,16 +141,47 @@
               </div>
             </div>
 
-            <!-- AI智能建议 -->
-            <div class="ai-suggestions" v-if="showSuggestions && !templateMode">
-              <div class="suggestion-item" v-for="(sug, idx) in suggestions" :key="idx" @click="applySuggestion(sug)">
-                <span class="sug-icon">🤖</span>
-                <span class="sug-text">{{ sug.text }}</span>
+            <!-- 指令下拉菜单 -->
+            <transition name="slide-up">
+              <div class="command-dropdown" v-if="showCommandDropdown" @click.stop>
+                <div class="command-dropdown-header">
+                  <span class="header-title">可用指令</span>
+                  <span class="header-hint">支持多选</span>
+                </div>
+                <div class="command-list">
+                  <div class="command-item" v-for="cmd in filteredCommands" :key="cmd.command"
+                    :class="{ selected: selectedCommands.includes(cmd.command) }" @click="toggleCommand(cmd.command)">
+                    <div class="command-checkbox">
+                      <div class="checkbox-inner" v-if="selectedCommands.includes(cmd.command)">✓</div>
+                    </div>
+                    <span class="command-icon">{{ cmd.icon }}</span>
+                    <div class="command-info">
+                      <div class="command-text">{{ cmd.command }}</div>
+                      <div class="command-desc">{{ cmd.description }}</div>
+                    </div>
+                    <span class="command-category">{{ cmd.category }}</span>
+                  </div>
+                </div>
+                <div class="command-actions" v-if="selectedCommands.length > 0">
+                  <button class="execute-commands-btn" @click="executeSelectedCommands">
+                    执行选中的指令 ({{ selectedCommands.length }})
+                  </button>
+                </div>
               </div>
-            </div>
+            </transition>
+
+            <!-- AI智能建议 -->
+            <transition name="slide-up">
+              <div class="ai-suggestions" v-if="showSuggestions && !templateMode && !showCommandDropdown">
+                <div class="suggestion-item" v-for="(sug, idx) in suggestions" :key="idx" @click="applySuggestion(sug)">
+                  <span class="sug-icon">🤖</span>
+                  <span class="sug-text">{{ sug.text }}</span>
+                </div>
+              </div>
+            </transition>
 
             <!-- 模板建议 -->
-            <div class="template-suggestions" v-if="!templateMode && meetingInput.length === 0">
+            <div class="template-suggestions" v-if="!templateMode && meetingInput.length === 0 && !showCommandDropdown">
               <div class="template-tip">💡 试试快速模板：</div>
               <div class="template-quick-btns">
                 <button class="quick-template-btn" @click="useTemplate('standup')">
@@ -165,6 +192,9 @@
                 </button>
                 <button class="quick-template-btn" @click="useTemplate('brainstorm')">
                   头脑风暴
+                </button>
+                <button class="quick-template-btn" @click="openTemplateMarket">
+                  更多模板...
                 </button>
               </div>
             </div>
@@ -210,10 +240,7 @@
               <p>智能日程安排</p>
             </div>
 
-            <div
-              class="action-card file-upload-area"
-              @click="triggerFileUpload"
-            >
+            <div class="action-card file-upload-area" @click="triggerFileUpload">
               <div class="card-icon file">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
                   <path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"></path>
@@ -313,53 +340,30 @@
                 </button>
               </div>
               <ul class="outline-list">
-                <li
-                  v-for="(item, index) in meetingOutline"
-                  :key="index"
-                  class="outline-item"
-                  :class="{ editing: editingOutlineIndex === index }"
-                >
+                <li v-for="(item, index) in meetingOutline" :key="index" class="outline-item"
+                  :class="{ editing: editingOutlineIndex === index }">
                   <span class="outline-number">{{ index + 1 }}</span>
 
                   <!-- 显示模式 -->
-                  <span
-                    v-if="editingOutlineIndex !== index"
-                    class="outline-text"
-                    @click="startEditOutline(index)"
-                  >
+                  <span v-if="editingOutlineIndex !== index" class="outline-text" @click="startEditOutline(index)">
                     {{ item }}
                   </span>
 
                   <!-- 编辑模式 -->
-                  <input
-                    v-else
-                    v-model="editingOutlineValue"
-                    type="text"
-                    class="outline-edit-input"
-                    @keyup.enter="confirmOutlineEdit"
-                    @keyup.esc="cancelOutlineEdit"
-                    @blur="confirmOutlineEdit"
-                    ref="outlineEditInput"
-                  />
+                  <input v-else v-model="editingOutlineValue" type="text" class="outline-edit-input"
+                    @keyup.enter="confirmOutlineEdit" @keyup.esc="cancelOutlineEdit" @blur="confirmOutlineEdit"
+                    ref="outlineEditInput" />
 
                   <!-- 操作按钮 -->
                   <div class="outline-actions" v-if="editingOutlineIndex !== index">
-                    <button
-                      class="outline-action-btn edit-btn"
-                      @click.stop="startEditOutline(index)"
-                      title="编辑"
-                    >
+                    <button class="outline-action-btn edit-btn" @click.stop="startEditOutline(index)" title="编辑">
                       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
                         <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
                         <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
                       </svg>
                     </button>
-                    <button
-                      class="outline-action-btn delete-btn"
-                      @click.stop="deleteOutlineItem(index)"
-                      title="删除"
-                      v-if="meetingOutline.length > 1"
-                    >
+                    <button class="outline-action-btn delete-btn" @click.stop="deleteOutlineItem(index)" title="删除"
+                      v-if="meetingOutline.length > 1">
                       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
                         <polyline points="3 6 5 6 21 6"></polyline>
                         <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
@@ -406,14 +410,9 @@
                 <button @click="closeSidebarEdit">×</button>
               </div>
               <div class="edit-panel-body">
-                <input
-                  v-model="editingValue"
-                  type="text"
-                  class="quick-edit-input"
-                  :placeholder="`输入${sidebarFieldLabels[sidebarEditField]}`"
-                  @keyup.enter="confirmQuickEdit"
-                  ref="quickEditInput"
-                />
+                <input v-model="editingValue" type="text" class="quick-edit-input"
+                  :placeholder="`输入${sidebarFieldLabels[sidebarEditField]}`" @keyup.enter="confirmQuickEdit"
+                  ref="quickEditInput" />
                 <div class="edit-actions">
                   <button class="edit-confirm-btn" @click="confirmQuickEdit">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
@@ -462,12 +461,7 @@
                 <circle cx="11" cy="11" r="8"></circle>
                 <path d="m21 21-4.35-4.35"></path>
               </svg>
-              <input
-                v-model="meetingSearchQuery"
-                type="text"
-                placeholder="搜索会议主题或参与人..."
-                class="search-input"
-              />
+              <input v-model="meetingSearchQuery" type="text" placeholder="搜索会议主题或参与人..." class="search-input" />
               <button v-if="meetingSearchQuery" class="clear-search" @click="meetingSearchQuery = ''">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
                   <line x1="18" y1="6" x2="6" y2="18"></line>
@@ -478,13 +472,8 @@
 
             <!-- 时间筛选 -->
             <div class="time-filters">
-              <button
-                v-for="filter in timeFilters"
-                :key="filter.value"
-                class="time-filter-btn"
-                :class="{ active: selectedTimeFilter === filter.value }"
-                @click="selectedTimeFilter = filter.value"
-              >
+              <button v-for="filter in timeFilters" :key="filter.value" class="time-filter-btn"
+                :class="{ active: selectedTimeFilter === filter.value }" @click="selectedTimeFilter = filter.value">
                 {{ filter.label }}
               </button>
             </div>
@@ -493,12 +482,8 @@
           <div class="panel-content">
             <!-- 会议列表 -->
             <div class="meetings-list">
-              <div
-                v-for="(meeting, index) in filteredMeetings"
-                :key="index"
-                class="meeting-card"
-                @click="viewMeetingDetail(meeting)"
-              >
+              <div v-for="(meeting, index) in filteredMeetings" :key="index" class="meeting-card"
+                @click="viewMeetingDetail(meeting)">
                 <div class="meeting-status" :class="meeting.status">
                   <span class="status-dot"></span>
                   <span class="status-text">{{ meeting.statusText }}</span>
@@ -576,12 +561,7 @@
               <div class="share-item">
                 <label>会议链接</label>
                 <div class="share-link-box">
-                  <input
-                    :value="shareMeetingLink"
-                    readonly
-                    class="share-link-input"
-                    ref="shareLinkInput"
-                  />
+                  <input :value="shareMeetingLink" readonly class="share-link-input" ref="shareLinkInput" />
                   <button class="copy-btn" @click="copyShareLink">
                     <svg v-if="!linkCopied" viewBox="0 0 24 24" fill="none" stroke="currentColor">
                       <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
@@ -647,33 +627,24 @@
             <div class="join-dialog-body">
               <!-- 入会方式切换 -->
               <div class="join-methods">
-                <button
-                  class="method-btn"
-                  :class="{ active: joinMeetingType === 'code' }"
-                  @click="joinMeetingType = 'code'"
-                >
+                <button class="method-btn" :class="{ active: joinMeetingType === 'code' }"
+                  @click="joinMeetingType = 'code'">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
                     <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
                     <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
                   </svg>
                   会议号
                 </button>
-                <button
-                  class="method-btn"
-                  :class="{ active: joinMeetingType === 'link' }"
-                  @click="joinMeetingType = 'link'"
-                >
+                <button class="method-btn" :class="{ active: joinMeetingType === 'link' }"
+                  @click="joinMeetingType = 'link'">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
                     <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
                     <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
                   </svg>
                   会议链接
                 </button>
-                <button
-                  class="method-btn"
-                  :class="{ active: joinMeetingType === 'qr' }"
-                  @click="joinMeetingType = 'qr'"
-                >
+                <button class="method-btn" :class="{ active: joinMeetingType === 'qr' }"
+                  @click="joinMeetingType = 'qr'">
                   <svg viewBox="0 0 24 24" fill="currentColor">
                     <rect x="3" y="3" width="7" height="7" rx="1"></rect>
                     <rect x="14" y="3" width="7" height="7" rx="1"></rect>
@@ -690,26 +661,16 @@
               <!-- 会议号输入 -->
               <div class="join-input-section" v-if="joinMeetingType === 'code'">
                 <label>输入会议号</label>
-                <input
-                  v-model="joinMeetingInput"
-                  type="text"
-                  placeholder="例如: 001-ABC-XYZ"
-                  class="join-input"
-                  @keyup.enter="confirmJoinMeeting"
-                />
+                <input v-model="joinMeetingInput" type="text" placeholder="例如: 001-ABC-XYZ" class="join-input"
+                  @keyup.enter="confirmJoinMeeting" />
                 <p class="input-hint">支持格式: 001-ABC-XYZ 或 001ABCXYZ</p>
               </div>
 
               <!-- 会议链接输入 -->
               <div class="join-input-section" v-if="joinMeetingType === 'link'">
                 <label>输入或粘贴会议链接</label>
-                <input
-                  v-model="joinMeetingInput"
-                  type="text"
-                  placeholder="https://smartmeet.app/join/..."
-                  class="join-input"
-                  @keyup.enter="confirmJoinMeeting"
-                />
+                <input v-model="joinMeetingInput" type="text" placeholder="https://smartmeet.app/join/..."
+                  class="join-input" @keyup.enter="confirmJoinMeeting" />
                 <button class="paste-btn" @click="pasteFromClipboard">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
                     <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path>
@@ -739,7 +700,8 @@
 
               <!-- 加入按钮 -->
               <div class="join-actions">
-                <button class="join-confirm-btn" @click="confirmJoinMeeting" :disabled="!joinMeetingInput && joinMeetingType !== 'qr'">
+                <button class="join-confirm-btn" @click="confirmJoinMeeting"
+                  :disabled="!joinMeetingInput && joinMeetingType !== 'qr'">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
                     <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"></path>
                     <polyline points="10 17 15 12 10 7"></polyline>
@@ -747,6 +709,41 @@
                   </svg>
                   立即加入
                 </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </transition>
+
+      <!-- 模板市场对话框 -->
+      <transition name="fade">
+        <div class="template-market-overlay" v-if="showTemplateMarket" @click="closeTemplateMarket">
+          <div class="template-market" @click.stop>
+            <div class="template-market-header">
+              <h4>会议模板市场</h4>
+              <button class="close-btn-small" @click="closeTemplateMarket">×</button>
+            </div>
+
+            <div class="template-market-body">
+              <div class="template-category" v-for="category in templateCategories" :key="category.name">
+                <h5 class="category-name">{{ category.name }}</h5>
+                <div class="template-cards">
+                  <div class="template-card" v-for="template in category.templates" :key="template.id"
+                    @click="selectTemplate(template)">
+                    <div class="template-icon">{{ template.icon }}</div>
+                    <div class="template-info">
+                      <h6 class="template-name">{{ template.name }}</h6>
+                      <p class="template-detail">{{ template.time }}</p>
+                      <p class="template-detail">{{ template.participants }}</p>
+                    </div>
+                    <div class="template-select-btn">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polyline points="9 11 12 14 22 4"></polyline>
+                        <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path>
+                      </svg>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -764,11 +761,7 @@
           <div class="panel-content">
             <!-- 时间轴列表 -->
             <div class="timeline-list">
-              <div
-                v-for="(item, index) in historyRecords"
-                :key="index"
-                class="timeline-item"
-              >
+              <div v-for="(item, index) in historyRecords" :key="index" class="timeline-item">
                 <div class="timeline-dot"></div>
                 <div class="timeline-content">
                   <div class="timeline-time">{{ item.time }}</div>
@@ -846,6 +839,54 @@ const shareLinkInput = ref<HTMLInputElement | null>(null)
 const showJoinMeetingDialog = ref(false)
 const joinMeetingInput = ref('')
 const joinMeetingType = ref<'code' | 'link' | 'qr'>('code')
+
+// 模板市场相关
+const showTemplateMarket = ref(false)
+const templateCategories = [
+  {
+    name: '日常会议',
+    templates: [
+      { id: 'standup', name: '每日站会', icon: '☀️', time: '明天上午9点', participants: '开发团队', topic: '每日站会' },
+      { id: 'weekly', name: '周例会', icon: '📅', time: '本周五下午3点', participants: '全体成员', topic: '周例会' },
+      { id: 'retrospective', name: 'Sprint复盘', icon: '🔄', time: '明天下午4点', participants: '项目团队', topic: 'Sprint复盘会议' }
+    ]
+  },
+  {
+    name: '评审会议',
+    templates: [
+      { id: 'review', name: '项目评审', icon: '📋', time: '本周五下午3点', participants: '项目组全员', topic: '项目评审会' },
+      { id: 'code-review', name: '代码评审', icon: '💻', time: '明天上午10点', participants: '技术团队', topic: '代码评审会议' },
+      { id: 'design-review', name: '设计评审', icon: '🎨', time: '后天下午2点', participants: '设计团队、产品团队', topic: '设计方案评审' }
+    ]
+  },
+  {
+    name: '创意讨论',
+    templates: [
+      { id: 'brainstorm', name: '头脑风暴', icon: '💡', time: '明天下午2点', participants: '产品+设计', topic: '头脑风暴' },
+      { id: 'planning', name: '规划会议', icon: '🎯', time: '下周一上午10点', participants: '管理层', topic: '季度规划会议' },
+      { id: 'workshop', name: '工作坊', icon: '🛠️', time: '下周三全天', participants: '相关团队', topic: '技术工作坊' }
+    ]
+  },
+  {
+    name: '汇报会议',
+    templates: [
+      { id: 'progress', name: '进度汇报', icon: '📊', time: '今天下午5点', participants: '项目经理、团队', topic: '项目进度汇报' },
+      { id: 'quarterly', name: '季度总结', icon: '📈', time: '月底下午2点', participants: '全体员工', topic: '季度总结会议' },
+      { id: 'oneonone', name: '一对一', icon: '👥', time: '明天上午11点', participants: '经理+员工', topic: '一对一沟通' }
+    ]
+  }
+]
+
+// 指令下拉菜单相关
+const showCommandDropdown = ref(false)
+const commandOptions = [
+  { command: '/meeting', icon: '📅', description: '快速查找我的会议', category: '查找' },
+  { command: '/history', icon: '🕐', description: '快速查找历史记录', category: '查找' },
+  { command: '/join', icon: '🚪', description: '快速加入会议', category: '操作' },
+  { command: '/template', icon: '📝', description: '打开模板市场', category: '创建' },
+  { command: '/create', icon: '✨', description: 'AI智能创建会议', category: '创建' }
+]
+const selectedCommands = ref<string[]>([])
 
 // 我的会议数据
 interface Meeting {
@@ -1110,6 +1151,12 @@ const handleInputChange = () => {
   if (input.startsWith('/')) {
     const command = input.toLowerCase()
 
+    // 显示指令下拉菜单
+    if (input === '/' || input.length > 1) {
+      showCommandDropdown.value = true
+      showSuggestions.value = false
+    }
+
     if (command === '/meeting' || command.startsWith('/meeting ')) {
       // 打开我的会议面板
       showMyMeetings()
@@ -1119,6 +1166,7 @@ const handleInputChange = () => {
       }
       meetingInput.value = ''
       showSuggestions.value = false
+      showCommandDropdown.value = false
       return
     }
 
@@ -1127,6 +1175,7 @@ const handleInputChange = () => {
       showHistory()
       meetingInput.value = ''
       showSuggestions.value = false
+      showCommandDropdown.value = false
       return
     }
 
@@ -1142,8 +1191,26 @@ const handleInputChange = () => {
       showJoinMeetingDialog.value = true
       meetingInput.value = ''
       showSuggestions.value = false
+      showCommandDropdown.value = false
       return
     }
+
+    if (command === '/template' || command.startsWith('/template')) {
+      // 打开模板市场
+      openTemplateMarket()
+      meetingInput.value = ''
+      showSuggestions.value = false
+      showCommandDropdown.value = false
+      return
+    }
+
+    if (command === '/create' || command.startsWith('/create ')) {
+      // 直接AI创建
+      quickCreate()
+      return
+    }
+  } else {
+    showCommandDropdown.value = false
   }
 }
 
@@ -1648,6 +1715,82 @@ const openCamera = () => {
   alert('摄像头功能开发中...')
 }
 
+// 指令下拉菜单相关函数
+// 过滤指令
+const filteredCommands = computed(() => {
+  const input = meetingInput.value.toLowerCase().trim()
+  if (!input.startsWith('/')) return commandOptions
+
+  const searchTerm = input.slice(1)
+  if (!searchTerm) return commandOptions
+
+  return commandOptions.filter(cmd =>
+    cmd.command.toLowerCase().includes(searchTerm) ||
+    cmd.description.includes(searchTerm)
+  )
+})
+
+// 切换指令选择
+const toggleCommand = (command: string) => {
+  const index = selectedCommands.value.indexOf(command)
+  if (index > -1) {
+    selectedCommands.value.splice(index, 1)
+  } else {
+    selectedCommands.value.push(command)
+  }
+}
+
+// 执行选中的指令
+const executeSelectedCommands = () => {
+  selectedCommands.value.forEach(command => {
+    if (command === '/meeting') {
+      showMyMeetings()
+    } else if (command === '/history') {
+      showHistory()
+    } else if (command === '/join') {
+      showJoinMeetingDialog.value = true
+      tryPasteFromClipboard()
+    } else if (command === '/template') {
+      openTemplateMarket()
+    } else if (command === '/create') {
+      quickCreate()
+    }
+  })
+
+  // 重置状态
+  selectedCommands.value = []
+  showCommandDropdown.value = false
+  meetingInput.value = ''
+}
+
+// 模板市场相关函数
+// 打开模板市场
+const openTemplateMarket = () => {
+  showTemplateMarket.value = true
+}
+
+// 关闭模板市场
+const closeTemplateMarket = () => {
+  showTemplateMarket.value = false
+}
+
+// 选择模板
+const selectTemplate = (template: any) => {
+  // 应用模板到输入框
+  templateMode.value = true
+  templateData.value = {
+    time: template.time,
+    participants: template.participants,
+    topic: template.topic
+  }
+
+  // 关闭模板市场
+  closeTemplateMarket()
+
+  // 显示成功提示
+  console.log('已选择模板:', template.name)
+}
+
 // 拖拽计数器，用于准确跟踪拖拽状态
 let dragCounter = 0
 
@@ -1836,15 +1979,19 @@ onMounted(() => {
   from {
     opacity: 0;
   }
+
   to {
     opacity: 1;
   }
 }
 
 @keyframes pulse-scale {
-  0%, 100% {
+
+  0%,
+  100% {
     transform: scale(1);
   }
+
   50% {
     transform: scale(1.1);
   }
@@ -3546,12 +3693,10 @@ onMounted(() => {
       top: 0;
       bottom: 0;
       width: 2px;
-      background: linear-gradient(
-        to bottom,
-        rgba(139, 92, 246, 0.5),
-        rgba(139, 92, 246, 0.2),
-        transparent
-      );
+      background: linear-gradient(to bottom,
+          rgba(139, 92, 246, 0.5),
+          rgba(139, 92, 246, 0.2),
+          transparent);
     }
 
     .timeline-item {
@@ -3658,6 +3803,7 @@ onMounted(() => {
 }
 
 @keyframes pulse-dot {
+
   0%,
   100% {
     opacity: 1;
@@ -4300,6 +4446,306 @@ onMounted(() => {
   }
 }
 
+// 指令下拉菜单样式
+.command-dropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  margin-top: 0.5rem;
+  background: linear-gradient(135deg, rgba(10, 14, 39, 0.98), rgba(26, 31, 58, 0.98));
+  border: 1px solid rgba(139, 92, 246, 0.3);
+  border-radius: 16px;
+  padding: 0.75rem;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(20px);
+  z-index: 100;
+  max-height: 400px;
+  overflow: hidden;
+
+  .command-dropdown-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.5rem 0.75rem;
+    margin-bottom: 0.5rem;
+    border-bottom: 1px solid rgba(139, 92, 246, 0.2);
+
+    .header-title {
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: rgba(255, 255, 255, 0.9);
+    }
+
+    .header-hint {
+      font-size: 0.75rem;
+      color: rgba(139, 92, 246, 0.7);
+    }
+  }
+
+  .command-list {
+    max-height: 280px;
+    overflow-y: auto;
+    scrollbar-width: none;
+
+    &::-webkit-scrollbar {
+      display: none;
+    }
+
+    .command-item {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      padding: 0.75rem;
+      border-radius: 12px;
+      cursor: pointer;
+      transition: all 0.3s;
+      background: rgba(255, 255, 255, 0.02);
+      margin-bottom: 0.5rem;
+
+      &:hover {
+        background: rgba(139, 92, 246, 0.1);
+        transform: translateX(4px);
+      }
+
+      &.selected {
+        background: rgba(139, 92, 246, 0.2);
+        border: 1px solid rgba(139, 92, 246, 0.4);
+
+        .command-checkbox {
+          background: linear-gradient(135deg, #8b5cf6, #6366f1);
+          border-color: transparent;
+        }
+      }
+
+      .command-checkbox {
+        width: 20px;
+        height: 20px;
+        border: 2px solid rgba(139, 92, 246, 0.5);
+        border-radius: 6px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        transition: all 0.3s;
+
+        .checkbox-inner {
+          color: #fff;
+          font-size: 12px;
+          font-weight: bold;
+        }
+      }
+
+      .command-icon {
+        font-size: 1.5rem;
+        flex-shrink: 0;
+      }
+
+      .command-info {
+        flex: 1;
+        min-width: 0;
+
+        .command-text {
+          font-size: 0.9rem;
+          font-weight: 600;
+          color: rgba(255, 255, 255, 0.9);
+          font-family: 'Monaco', 'Menlo', monospace;
+        }
+
+        .command-desc {
+          font-size: 0.8rem;
+          color: rgba(255, 255, 255, 0.5);
+          margin-top: 0.25rem;
+        }
+      }
+
+      .command-category {
+        font-size: 0.75rem;
+        padding: 0.25rem 0.5rem;
+        background: rgba(139, 92, 246, 0.2);
+        border-radius: 6px;
+        color: rgba(139, 92, 246, 0.9);
+        flex-shrink: 0;
+      }
+    }
+  }
+
+  .command-actions {
+    margin-top: 0.75rem;
+    padding-top: 0.75rem;
+    border-top: 1px solid rgba(139, 92, 246, 0.2);
+
+    .execute-commands-btn {
+      width: 100%;
+      padding: 0.75rem 1rem;
+      background: linear-gradient(135deg, #8b5cf6, #6366f1);
+      border: none;
+      border-radius: 10px;
+      color: #fff;
+      font-size: 0.9rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s;
+
+      &:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(139, 92, 246, 0.4);
+      }
+    }
+  }
+}
+
+// 模板市场样式
+.template-market-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+  padding: 2rem;
+
+  .template-market {
+    width: 100%;
+    max-width: 900px;
+    max-height: 85vh;
+    background: linear-gradient(135deg, rgba(10, 14, 39, 0.98), rgba(26, 31, 58, 0.98));
+    border: 1px solid rgba(139, 92, 246, 0.3);
+    border-radius: 24px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+
+    .template-market-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 2rem 2rem 1.5rem 2rem;
+      border-bottom: 1px solid rgba(139, 92, 246, 0.2);
+      background: rgba(139, 92, 246, 0.05);
+
+      h4 {
+        margin: 0;
+        font-size: 1.5rem;
+        font-weight: 700;
+        background: linear-gradient(135deg, #a78bfa, #8b5cf6);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+      }
+    }
+
+    .template-market-body {
+      flex: 1;
+      padding: 1.5rem 2rem;
+      overflow-y: auto;
+      scrollbar-width: none;
+
+      &::-webkit-scrollbar {
+        display: none;
+      }
+
+      .template-category {
+        margin-bottom: 2rem;
+
+        &:last-child {
+          margin-bottom: 0;
+        }
+
+        .category-name {
+          font-size: 1rem;
+          font-weight: 600;
+          color: rgba(255, 255, 255, 0.9);
+          margin: 0 0 1rem 0;
+          padding-left: 0.5rem;
+          border-left: 3px solid rgba(139, 92, 246, 0.7);
+        }
+
+        .template-cards {
+          display: grid;
+          grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+          gap: 1rem;
+
+          .template-card {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 1.25rem;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(139, 92, 246, 0.2);
+            border-radius: 16px;
+            cursor: pointer;
+            transition: all 0.3s;
+
+            &:hover {
+              background: rgba(139, 92, 246, 0.1);
+              border-color: rgba(139, 92, 246, 0.4);
+              transform: translateY(-2px);
+              box-shadow: 0 8px 20px rgba(139, 92, 246, 0.2);
+
+              .template-select-btn {
+                opacity: 1;
+                transform: scale(1);
+              }
+            }
+
+            .template-icon {
+              font-size: 2.5rem;
+              flex-shrink: 0;
+            }
+
+            .template-info {
+              flex: 1;
+              min-width: 0;
+
+              .template-name {
+                font-size: 1rem;
+                font-weight: 600;
+                color: rgba(255, 255, 255, 0.9);
+                margin: 0 0 0.5rem 0;
+              }
+
+              .template-detail {
+                font-size: 0.8rem;
+                color: rgba(255, 255, 255, 0.5);
+                margin: 0.25rem 0;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                white-space: nowrap;
+              }
+            }
+
+            .template-select-btn {
+              width: 32px;
+              height: 32px;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              background: linear-gradient(135deg, #8b5cf6, #6366f1);
+              border-radius: 50%;
+              opacity: 0;
+              transform: scale(0.8);
+              transition: all 0.3s;
+
+              svg {
+                width: 16px;
+                height: 16px;
+                color: #fff;
+                stroke-width: 2.5;
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
 // 淡入淡出动画
 .fade-enter-active,
 .fade-leave-active {
@@ -4323,6 +4769,34 @@ onMounted(() => {
 
 .slide-left-leave-to {
   transform: translateX(100%);
+}
+
+// 上滑动画（用于下拉菜单）
+.slide-up-enter-active,
+.slide-up-leave-active {
+  transition: all 0.3s ease;
+}
+
+.slide-up-enter-from {
+  opacity: 0;
+  transform: translateY(-10px);
+}
+
+.slide-up-leave-to {
+  opacity: 0;
+  transform: translateY(-10px);
+}
+
+// 隐藏所有滚动条
+.panel-content,
+.meetings-list,
+.timeline-list,
+.history-list {
+  scrollbar-width: none;
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
 }
 
 // 响应式设计
