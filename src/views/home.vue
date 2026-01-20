@@ -1067,6 +1067,16 @@
                 <!-- 操作按钮 -->
                 <div class="meeting-actions-bar">
                   <button
+                    class="action-btn-new success"
+                    @click.stop="startPendingMeeting(meeting)"
+                    v-if="meeting.status !== 'completed'"
+                  >
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <polygon points="5 3 19 12 5 21 5 3"></polygon>
+                    </svg>
+                    开始
+                  </button>
+                  <button
                     class="action-btn-new primary"
                     @click.stop="completeMeeting(meeting.id)"
                     v-if="meeting.status !== 'completed'"
@@ -1108,6 +1118,10 @@
 
 <script setup lang="ts" path="/">
 import { ref, computed, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
+
+// 初始化路由
+const router = useRouter()
 
 // 基础状态
 const meetingInput = ref('')
@@ -1683,34 +1697,21 @@ const startInstantMeeting = () => {
 
   // 生成会议号
   const meetingId = generateMeetingId()
-
-  // 显示进入会议的信息
-  const message = `
-会议创建成功！
-
-会议名称：${instantMeetingName.value}
-会议号：${meetingId}
-开始时间：${new Date().toLocaleString('zh-CN')}
-
-正在进入会议...
-  `
-
-  alert(message)
+  const meetingName = instantMeetingName.value
 
   // 关闭对话框
   closeInstantMeetingDialog()
 
-  // 这里可以跳转到会议室页面
-  console.log('进入即时会议:', {
-    name: instantMeetingName.value,
-    id: meetingId,
-    startTime: new Date().toISOString()
+  // 跳转到会议室页面
+  router.push({
+    path: '/meeting',
+    query: {
+      id: meetingId,
+      name: meetingName,
+      type: 'instant',
+      startTime: new Date().toISOString()
+    }
   })
-
-  // 模拟进入会议
-  setTimeout(() => {
-    alert(`已进入会议"${instantMeetingName.value}"`)
-  }, 500)
 }
 
 // 生成会议号
@@ -1977,8 +1978,16 @@ const viewMeetingDetail = (meeting: Meeting) => {
 }
 
 const joinMeetingNow = (meeting: Meeting) => {
-  console.log('立即加入会议:', meeting)
-  // TODO: 加入会议逻辑
+  // 跳转到会议室页面
+  router.push({
+    path: '/meeting',
+    query: {
+      id: meeting.id,
+      name: meeting.topic,
+      type: 'my-meeting',
+      participants: meeting.participants
+    }
+  })
 }
 
 const editMeetingDetail = (meeting: Meeting) => {
@@ -2113,14 +2122,21 @@ const confirmJoinMeeting = () => {
     return
   }
 
-  console.log('加入会议:', {
-    type: joinMeetingType.value,
-    input: joinMeetingInput.value
-  })
+  const meetingInfo = joinMeetingInput.value
+  const joinType = joinMeetingType.value
 
-  // TODO: 实现实际的加入会议逻辑
-  alert(`正在加入会议...\n方式: ${joinMeetingType.value}\n信息: ${joinMeetingInput.value}`)
+  // 关闭对话框
   closeJoinDialog()
+
+  // 跳转到会议室页面
+  router.push({
+    path: '/meeting',
+    query: {
+      id: meetingInfo,
+      type: 'join',
+      joinMethod: joinType
+    }
+  })
 }
 
 // 打开摄像头扫描二维码
@@ -2264,6 +2280,23 @@ const completeMeeting = (id: string) => {
     meeting.status = 'completed'
     console.log('会议已完成:', meeting.title)
   }
+}
+
+// 开始待办会议
+const startPendingMeeting = (meeting: PendingMeeting) => {
+  // 跳转到会议室页面
+  router.push({
+    path: '/meeting',
+    query: {
+      id: meeting.id,
+      name: meeting.title,
+      type: 'scheduled',
+      date: meeting.date,
+      time: meeting.time,
+      location: meeting.location,
+      duration: meeting.duration
+    }
+  })
 }
 
 // 删除会议
@@ -5817,6 +5850,19 @@ onMounted(() => {
       svg {
         width: 16px;
         height: 16px;
+      }
+
+      &.success {
+        background: linear-gradient(135deg, rgba(34, 197, 94, 0.25), rgba(16, 185, 129, 0.25));
+        color: rgba(34, 197, 94, 0.95);
+        border: 1px solid rgba(34, 197, 94, 0.3);
+
+        &:hover {
+          background: linear-gradient(135deg, rgba(34, 197, 94, 0.35), rgba(16, 185, 129, 0.35));
+          border-color: rgba(34, 197, 94, 0.5);
+          transform: translateY(-1px);
+          box-shadow: 0 4px 12px rgba(34, 197, 94, 0.25);
+        }
       }
 
       &.primary {
