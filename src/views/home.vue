@@ -153,12 +153,8 @@
                   <span class="header-hint">点击或按回车执行</span>
                 </div>
                 <div class="command-list">
-                  <div
-                    class="command-item"
-                    v-for="cmd in filteredCommands"
-                    :key="cmd.command"
-                    @click="selectCommandSuggestion(cmd.command)"
-                  >
+                  <div class="command-item" v-for="cmd in filteredCommands" :key="cmd.command"
+                    @click="selectCommandSuggestion(cmd.command)">
                     <span class="command-icon">{{ cmd.icon }}</span>
                     <div class="command-info">
                       <div class="command-text">{{ cmd.command }}</div>
@@ -767,13 +763,7 @@
                     <span class="label-icon">📋</span>
                     会议名称
                   </label>
-                  <input
-                    type="text"
-                    class="form-input"
-                    v-model="scheduleForm.title"
-                    placeholder="请输入会议名称"
-                    required
-                  />
+                  <input type="text" class="form-input" v-model="scheduleForm.title" placeholder="请输入会议名称" required />
                 </div>
 
                 <!-- 日期和时间 -->
@@ -783,24 +773,14 @@
                       <span class="label-icon">📅</span>
                       日期
                     </label>
-                    <input
-                      type="date"
-                      class="form-input"
-                      v-model="scheduleForm.date"
-                      required
-                    />
+                    <input type="date" class="form-input" v-model="scheduleForm.date" required />
                   </div>
                   <div class="form-group">
                     <label class="form-label">
                       <span class="label-icon">🕐</span>
                       时间
                     </label>
-                    <input
-                      type="time"
-                      class="form-input"
-                      v-model="scheduleForm.time"
-                      required
-                    />
+                    <input type="time" class="form-input" v-model="scheduleForm.time" required />
                   </div>
                 </div>
 
@@ -825,13 +805,8 @@
                       <span class="label-icon">📍</span>
                       地点
                     </label>
-                    <input
-                      type="text"
-                      class="form-input"
-                      v-model="scheduleForm.location"
-                      placeholder="会议地点或链接"
-                      required
-                    />
+                    <input type="text" class="form-input" v-model="scheduleForm.location" placeholder="会议地点或链接"
+                      required />
                   </div>
                 </div>
 
@@ -856,12 +831,8 @@
                     <span class="label-icon">📝</span>
                     备忘
                   </label>
-                  <textarea
-                    class="form-textarea"
-                    v-model="scheduleForm.memo"
-                    placeholder="会议备注、准备事项等..."
-                    rows="4"
-                  ></textarea>
+                  <textarea class="form-textarea" v-model="scheduleForm.memo" placeholder="会议备注、准备事项等..."
+                    rows="4"></textarea>
                 </div>
 
                 <!-- 操作按钮 -->
@@ -900,14 +871,8 @@
                     <span class="label-icon">📋</span>
                     会议名称
                   </label>
-                  <input
-                    type="text"
-                    class="form-input"
-                    v-model="instantMeetingName"
-                    placeholder="例如：产品讨论会"
-                    required
-                    autofocus
-                  />
+                  <input type="text" class="form-input" v-model="instantMeetingName" placeholder="例如：产品讨论会" required
+                    autofocus />
                   <p class="form-hint">输入会议名称后即可开始，其他参与者可通过会议号加入</p>
                 </div>
 
@@ -987,11 +952,7 @@
           <div class="panel-content">
             <!-- 待办会议列表 -->
             <div class="meetings-list" v-if="sortedPendingMeetings.length > 0">
-              <div
-                class="meeting-card"
-                v-for="meeting in sortedPendingMeetings"
-                :key="meeting.id"
-              >
+              <div class="meeting-card" v-for="meeting in sortedPendingMeetings" :key="meeting.id">
                 <!-- 会议状态 -->
                 <div class="meeting-status" :class="getMeetingStatusClass(meeting)">
                   <span class="status-dot"></span>
@@ -1057,7 +1018,9 @@
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" class="reminder-icon">
                     <circle cx="12" cy="13" r="8"></circle>
                     <path d="M12 9v4l2 2"></path>
-                    <path d="M16.51 17.35l-.35 3.83a2 2 0 0 1-2 1.82H9.83a2 2 0 0 1-2-1.82l-.35-3.83m.01-10.7l.35-3.83A2 2 0 0 1 9.83 1h4.35a2 2 0 0 1 2 1.82l.35 3.83"></path>
+                    <path
+                      d="M16.51 17.35l-.35 3.83a2 2 0 0 1-2 1.82H9.83a2 2 0 0 1-2-1.82l-.35-3.83m.01-10.7l.35-3.83A2 2 0 0 1 9.83 1h4.35a2 2 0 0 1 2 1.82l.35 3.83">
+                    </path>
                   </svg>
                   <span class="reminder-text">
                     {{ meeting.remindBefore === '0' ? '准时提醒' : `提前${meeting.remindBefore}分钟` }}
@@ -1066,31 +1029,22 @@
 
                 <!-- 操作按钮 -->
                 <div class="meeting-actions-bar">
-                  <button
-                    class="action-btn-new success"
-                    @click.stop="startPendingMeeting(meeting)"
-                    v-if="meeting.status !== 'completed'"
-                  >
+                  <button class="action-btn-new success" @click.stop="startPendingMeeting(meeting)"
+                    v-if="meeting.status !== 'completed'">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                       <polygon points="5 3 19 12 5 21 5 3"></polygon>
                     </svg>
                     开始
                   </button>
-                  <button
-                    class="action-btn-new primary"
-                    @click.stop="completeMeeting(meeting.id)"
-                    v-if="meeting.status !== 'completed'"
-                  >
+                  <button class="action-btn-new primary" @click.stop="completeMeeting(meeting.id)"
+                    v-if="meeting.status !== 'completed'">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                       <polyline points="9 11 12 14 22 4"></polyline>
                       <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path>
                     </svg>
                     完成
                   </button>
-                  <button
-                    class="action-btn-new danger"
-                    @click.stop="deleteMeeting(meeting.id)"
-                  >
+                  <button class="action-btn-new danger" @click.stop="deleteMeeting(meeting.id)">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                       <polyline points="3 6 5 6 21 6"></polyline>
                       <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
@@ -2496,6 +2450,7 @@ const confirmMeeting = () => {
   showSidebar.value = false
   sidebarEditField.value = null
   // TODO: 实际创建会议逻辑
+
 }
 
 const editMeeting = () => {
@@ -5696,10 +5651,13 @@ onMounted(() => {
 }
 
 @keyframes pulse {
-  0%, 100% {
+
+  0%,
+  100% {
     transform: scale(1);
     opacity: 1;
   }
+
   50% {
     transform: scale(1.1);
     opacity: 0.8;
@@ -5707,9 +5665,12 @@ onMounted(() => {
 }
 
 @keyframes playPulse {
-  0%, 100% {
+
+  0%,
+  100% {
     transform: scale(1);
   }
+
   50% {
     transform: scale(1.15);
   }
