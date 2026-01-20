@@ -144,6 +144,7 @@
     "video.js": "^8.21.0",
     "vite-plugin-enhance-log": "^0.5.2",
     "vitejs-plugin-api-auto-import": "^0.0.3",
+    "vitejs-plugin-console-releases": "^0.0.2",
     "vitejs-plugin-vue-route-auto-import": "^0.0.24",
     "vitejs-plugin-vue-sql": "^0.0.10",
     "vitest": "^2.1.6",

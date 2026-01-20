@@ -14,3 +14,7 @@ huawei
 *.pdf
 cypress.config.js
 cypress/
+test/
+.claude/
+.gemini/
+.shared/
