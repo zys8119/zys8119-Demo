@@ -2,9 +2,9 @@
   <div
     class="meeting-hub abs-content! of-auto"
     @drop.prevent="handleFileDrop"
-    @dragover.prevent="isDragging = true"
+    @dragover.prevent="handleDragOver"
     @dragleave.prevent="handleDragLeave"
-    @dragenter.prevent="isDragging = true"
+    @dragenter.prevent="handleDragEnter"
   >
     <!-- 全局拖拽蒙层 -->
     <div class="drag-overlay" v-if="isDragging">
@@ -213,10 +213,6 @@
             <div
               class="action-card file-upload-area"
               @click="triggerFileUpload"
-              @drop.prevent="handleFileDrop"
-              @dragover.prevent="isDragging = true"
-              @dragleave.prevent="isDragging = false"
-              :class="{ dragging: isDragging }"
             >
               <div class="card-icon file">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
@@ -227,7 +223,7 @@
                 </svg>
               </div>
               <h3>文件创会</h3>
-              <p>{{ isDragging ? '释放文件上传' : '拖拽或点击上传' }}</p>
+              <p>拖拽或点击上传</p>
               <input ref="fileInput" type="file" accept=".pdf,.doc,.docx,.txt,.md" style="display: none"
                 @change="handleFileUpload" />
             </div>
@@ -632,7 +628,10 @@ const simulateFileUpload = (file: File) => {
 
 // 处理文件拖拽
 const handleFileDrop = (event: DragEvent) => {
+  event.preventDefault()
   isDragging.value = false
+  dragCounter = 0 // 重置计数器
+
   const file = event.dataTransfer?.files[0]
 
   if (!file) return
@@ -683,6 +682,32 @@ const joinMeeting = () => {
   // TODO: 实现加入会议对话框
 }
 
+// 拖拽计数器，用于准确跟踪拖拽状态
+let dragCounter = 0
+
+// 处理拖拽进入事件
+const handleDragEnter = (event: DragEvent) => {
+  event.preventDefault()
+  dragCounter++
+  isDragging.value = true
+}
+
+// 处理拖拽悬停事件
+const handleDragOver = (event: DragEvent) => {
+  event.preventDefault()
+  isDragging.value = true
+}
+
+// 处理拖拽离开事件
+const handleDragLeave = (event: DragEvent) => {
+  event.preventDefault()
+  dragCounter--
+  // 当计数器归零时，说明真正离开了拖拽区域
+  if (dragCounter === 0) {
+    isDragging.value = false
+  }
+}
+
 // 侧边栏操作
 const closeSidebar = () => {
   showSidebar.value = false
@@ -717,6 +742,80 @@ onMounted(() => {
   background: linear-gradient(135deg, #0a0e27 0%, #1a1f3a 50%, #0f1420 100%);
   overflow: hidden;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+
+// 全局拖拽蒙层
+.drag-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(236, 72, 153, 0.1);
+  backdrop-filter: blur(10px);
+  z-index: 999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: fadeIn 0.2s ease-out;
+
+  .drag-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+    padding: 3rem;
+    background: rgba(10, 14, 39, 0.9);
+    border: 2px dashed rgba(236, 72, 153, 0.6);
+    border-radius: 24px;
+    backdrop-filter: blur(20px);
+
+    .drag-icon {
+      width: 80px;
+      height: 80px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: linear-gradient(135deg, #ec4899, #d946ef);
+      border-radius: 50%;
+      animation: pulse-scale 1.5s ease-in-out infinite;
+
+      svg {
+        width: 48px;
+        height: 48px;
+        color: #fff;
+        stroke-width: 2;
+      }
+    }
+
+    .drag-text {
+      font-size: 1.5rem;
+      font-weight: 600;
+      color: #fff;
+      margin: 0;
+    }
+
+    .drag-hint {
+      font-size: 1rem;
+      color: rgba(255, 255, 255, 0.7);
+      margin: 0;
+    }
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes pulse-scale {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.1);
+  }
 }
 
 // 背景网格
@@ -1422,21 +1521,6 @@ onMounted(() => {
 
       .card-icon {
         transform: scale(1.1) rotate(5deg);
-      }
-    }
-
-    // 文件拖拽区域
-    &.file-upload-area {
-      position: relative;
-
-      &.dragging {
-        background: rgba(236, 72, 153, 0.1);
-        border-color: rgba(236, 72, 153, 0.6);
-        border-style: dashed;
-
-        .card-icon {
-          transform: scale(1.2);
-        }
       }
     }
 
