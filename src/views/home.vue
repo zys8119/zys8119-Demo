@@ -1,5 +1,27 @@
 <template>
-  <div class="meeting-hub abs-content! of-auto">
+  <div
+    class="meeting-hub abs-content! of-auto"
+    @drop.prevent="handleFileDrop"
+    @dragover.prevent="isDragging = true"
+    @dragleave.prevent="handleDragLeave"
+    @dragenter.prevent="isDragging = true"
+  >
+    <!-- 全局拖拽蒙层 -->
+    <div class="drag-overlay" v-if="isDragging">
+      <div class="drag-content">
+        <div class="drag-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+            <path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"></path>
+            <polyline points="13 2 13 9 20 9"></polyline>
+            <line x1="12" y1="18" x2="12" y2="12"></line>
+            <polyline points="9 15 12 12 15 15"></polyline>
+          </svg>
+        </div>
+        <p class="drag-text">释放文件以上传</p>
+        <p class="drag-hint">支持 PDF、Word、TXT、Markdown 文件</p>
+      </div>
+    </div>
+
     <!-- 动态背景网格 -->
     <div class="bg-grid"></div>
 
@@ -12,7 +34,7 @@
     <div class="p-15px flex-center flex-col abs-content! h-[calc(100vh-30px)]! w-[calc(100vw-30px)]!">
       <div class="main-container h-100% w-100% flex-center-start flex-col">
         <!-- 顶部导航 -->
-        <nav class="top-nav w-100%">
+        <nav class="top-nav w-100%!">
           <div class="logo-area">
             <div class="ai-icon">
               <div class="pulse-ring"></div>
@@ -22,8 +44,11 @@
           </div>
 
           <div class="nav-actions">
-            <button class="nav-btn">我的会议</button>
-            <button class="nav-btn">历史记录</button>
+            <button class="nav-btn" @click="showMyMeetings">
+              我的会议
+              <span class="badge" v-if="myMeetingsCount > 0">{{ myMeetingsCount }}</span>
+            </button>
+            <button class="nav-btn" @click="showHistory">历史记录</button>
             <div class="avatar-btn">
               <div class="avatar"></div>
             </div>
@@ -31,7 +56,7 @@
         </nav>
 
         <!-- 中心创建区域 -->
-        <div class="create-zone flex-1">
+        <div class="create-zone flex-1 w-100%">
           <!-- AI智能提示 -->
           <div class="ai-greeting">
             <div class="ai-avatar">
@@ -185,6 +210,28 @@
               <p>智能日程安排</p>
             </div>
 
+            <div
+              class="action-card file-upload-area"
+              @click="triggerFileUpload"
+              @drop.prevent="handleFileDrop"
+              @dragover.prevent="isDragging = true"
+              @dragleave.prevent="isDragging = false"
+              :class="{ dragging: isDragging }"
+            >
+              <div class="card-icon file">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                  <path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"></path>
+                  <polyline points="13 2 13 9 20 9"></polyline>
+                  <line x1="12" y1="18" x2="12" y2="12"></line>
+                  <polyline points="9 15 12 12 15 15"></polyline>
+                </svg>
+              </div>
+              <h3>文件创会</h3>
+              <p>{{ isDragging ? '释放文件上传' : '拖拽或点击上传' }}</p>
+              <input ref="fileInput" type="file" accept=".pdf,.doc,.docx,.txt,.md" style="display: none"
+                @change="handleFileUpload" />
+            </div>
+
             <div class="action-card" @click="joinMeeting">
               <div class="card-icon join">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
@@ -196,6 +243,27 @@
               <h3>加入会议</h3>
               <p>输入会议号快速加入</p>
             </div>
+          </div>
+
+          <!-- 文件上传进度 -->
+          <div class="file-upload-progress" v-if="uploadingFile">
+            <div class="progress-header">
+              <div class="file-info">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" class="file-icon">
+                  <path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"></path>
+                  <polyline points="13 2 13 9 20 9"></polyline>
+                </svg>
+                <div class="file-details">
+                  <span class="file-name">{{ uploadFileName }}</span>
+                  <span class="file-size">{{ uploadFileSize }}</span>
+                </div>
+              </div>
+              <button class="cancel-btn" @click="cancelUpload">×</button>
+            </div>
+            <div class="progress-bar">
+              <div class="progress-fill" :style="{ width: uploadProgress + '%' }"></div>
+            </div>
+            <p class="progress-text">{{ uploadStatusText }}</p>
           </div>
         </div>
 
@@ -213,6 +281,81 @@
           </div>
         </div>
       </div>
+
+      <!-- 会议大纲侧边栏 -->
+      <transition name="slide-left">
+        <div class="meeting-sidebar" v-if="showSidebar">
+          <div class="sidebar-header">
+            <h3>会议大纲</h3>
+            <button class="close-btn" @click="closeSidebar">×</button>
+          </div>
+
+          <div class="sidebar-content">
+            <!-- 附件信息 -->
+            <div class="attachment-info">
+              <div class="attachment-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                  <path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"></path>
+                  <polyline points="13 2 13 9 20 9"></polyline>
+                </svg>
+              </div>
+              <div class="attachment-details">
+                <p class="attachment-name">{{ uploadFileName }}</p>
+                <p class="attachment-size">{{ uploadFileSize }}</p>
+              </div>
+            </div>
+
+            <!-- AI生成的会议大纲 -->
+            <div class="outline-section">
+              <h4>AI智能生成大纲</h4>
+              <ul class="outline-list">
+                <li
+                  v-for="(item, index) in meetingOutline"
+                  :key="index"
+                  class="outline-item"
+                >
+                  <span class="outline-number">{{ index + 1 }}</span>
+                  <span class="outline-text">{{ item }}</span>
+                </li>
+              </ul>
+            </div>
+
+            <!-- 会议信息预览 -->
+            <div class="meeting-preview">
+              <h4>会议信息</h4>
+              <div class="preview-item">
+                <span class="label">时间：</span>
+                <span class="value">{{ templateData.time }}</span>
+              </div>
+              <div class="preview-item">
+                <span class="label">参与者：</span>
+                <span class="value">{{ templateData.participants }}</span>
+              </div>
+              <div class="preview-item">
+                <span class="label">主题：</span>
+                <span class="value">{{ templateData.topic }}</span>
+              </div>
+            </div>
+
+            <!-- 操作按钮 -->
+            <div class="sidebar-actions">
+              <button class="action-btn primary" @click="confirmMeeting">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                  <polyline points="20 6 9 17 4 12"></polyline>
+                </svg>
+                确认创建
+              </button>
+              <button class="action-btn secondary" @click="editMeeting">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                  <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                  <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                </svg>
+                编辑调整
+              </button>
+            </div>
+          </div>
+        </div>
+      </transition>
     </div>
   </div>
 </template>
@@ -225,9 +368,25 @@ const meetingInput = ref('')
 const showSuggestions = ref(false)
 const todayMeetings = ref(12)
 
+// 导航相关
+const myMeetingsCount = ref(3)
+
 // 模板模式相关
 const templateMode = ref(false)
 const activeField = ref<'time' | 'participants' | 'topic' | null>(null)
+
+// 文件上传相关
+const fileInput = ref<HTMLInputElement | null>(null)
+const uploadingFile = ref(false)
+const uploadFileName = ref('')
+const uploadFileSize = ref('')
+const uploadProgress = ref(0)
+const uploadStatusText = ref('')
+const isDragging = ref(false)
+
+// 侧边栏相关
+const showSidebar = ref(false)
+const meetingOutline = ref<string[]>([])
 
 // 模板数据
 const templateData = ref({
@@ -396,9 +555,153 @@ const scheduleMeeting = () => {
   console.log('预约会议')
 }
 
+// 触发文件上传
+const triggerFileUpload = () => {
+  fileInput.value?.click()
+}
+
+// 处理文件上传
+const handleFileUpload = (event: Event) => {
+  const target = event.target as HTMLInputElement
+  const file = target.files?.[0]
+
+  if (!file) return
+
+  uploadingFile.value = true
+  uploadFileName.value = file.name
+  uploadFileSize.value = formatFileSize(file.size)
+  uploadProgress.value = 0
+  uploadStatusText.value = '正在分析文件...'
+
+  // 模拟文件上传和AI分析过程
+  simulateFileUpload(file)
+}
+
+// 格式化文件大小
+const formatFileSize = (bytes: number): string => {
+  if (bytes < 1024) return bytes + ' B'
+  if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB'
+  return (bytes / (1024 * 1024)).toFixed(1) + ' MB'
+}
+
+// 模拟文件上传
+const simulateFileUpload = (file: File) => {
+  const interval = setInterval(() => {
+    uploadProgress.value += 10
+
+    if (uploadProgress.value === 30) {
+      uploadStatusText.value = '正在上传文件...'
+    } else if (uploadProgress.value === 60) {
+      uploadStatusText.value = 'AI正在解析文档内容...'
+    } else if (uploadProgress.value === 90) {
+      uploadStatusText.value = '正在生成会议信息...'
+    } else if (uploadProgress.value >= 100) {
+      clearInterval(interval)
+      uploadStatusText.value = '解析完成！'
+
+      // 模拟AI解析结果，自动填充模板和大纲
+      setTimeout(() => {
+        templateData.value = {
+          time: '明天下午3点',
+          participants: '文档相关人员',
+          topic: `${file.name.replace(/\.[^/.]+$/, '')} 讨论会`
+        }
+
+        // 生成会议大纲
+        meetingOutline.value = [
+          '项目背景介绍与目标说明',
+          '当前进度汇报及问题分析',
+          '技术方案讨论与评审',
+          '资源分配与时间规划',
+          '风险识别与应对策略',
+          '下一步行动计划确定'
+        ]
+
+        templateMode.value = true
+        uploadingFile.value = false
+        showSidebar.value = true // 显示侧边栏
+
+        // 重置文件输入
+        if (fileInput.value) {
+          fileInput.value.value = ''
+        }
+      }, 500)
+    }
+  }, 200)
+}
+
+// 处理文件拖拽
+const handleFileDrop = (event: DragEvent) => {
+  isDragging.value = false
+  const file = event.dataTransfer?.files[0]
+
+  if (!file) return
+
+  // 检查文件类型
+  const validTypes = ['.pdf', '.doc', '.docx', '.txt', '.md']
+  const fileExt = '.' + file.name.split('.').pop()?.toLowerCase()
+
+  if (!validTypes.includes(fileExt)) {
+    alert('请上传 PDF、Word、TXT 或 Markdown 文件')
+    return
+  }
+
+  uploadingFile.value = true
+  uploadFileName.value = file.name
+  uploadFileSize.value = formatFileSize(file.size)
+  uploadProgress.value = 0
+  uploadStatusText.value = '正在分析文件...'
+
+  simulateFileUpload(file)
+}
+
+// 取消上传
+const cancelUpload = () => {
+  uploadingFile.value = false
+  uploadProgress.value = 0
+
+  // 重置文件输入
+  if (fileInput.value) {
+    fileInput.value.value = ''
+  }
+}
+
+// 导航功能
+const showMyMeetings = () => {
+  console.log('显示我的会议')
+  // TODO: 实现我的会议列表
+}
+
+const showHistory = () => {
+  console.log('显示历史记录')
+  // TODO: 实现历史记录列表
+}
+
 // 加入会议
 const joinMeeting = () => {
   console.log('加入会议')
+  // TODO: 实现加入会议对话框
+}
+
+// 侧边栏操作
+const closeSidebar = () => {
+  showSidebar.value = false
+}
+
+const confirmMeeting = () => {
+  console.log('确认创建会议:', {
+    ...templateData.value,
+    outline: meetingOutline.value,
+    attachment: uploadFileName.value
+  })
+  showSidebar.value = false
+  // TODO: 实际创建会议逻辑
+}
+
+const editMeeting = () => {
+  showSidebar.value = false
+  // 保持模板模式，让用户编辑
+  console.log('编辑会议信息')
 }
 
 onMounted(() => {
@@ -1098,7 +1401,7 @@ onMounted(() => {
 // 快捷操作卡片
 .quick-actions {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(4, 1fr);
   gap: 1rem;
   width: 100%;
   flex-shrink: 0;
@@ -1119,6 +1422,21 @@ onMounted(() => {
 
       .card-icon {
         transform: scale(1.1) rotate(5deg);
+      }
+    }
+
+    // 文件拖拽区域
+    &.file-upload-area {
+      position: relative;
+
+      &.dragging {
+        background: rgba(236, 72, 153, 0.1);
+        border-color: rgba(236, 72, 153, 0.6);
+        border-style: dashed;
+
+        .card-icon {
+          transform: scale(1.2);
+        }
       }
     }
 
@@ -1148,8 +1466,8 @@ onMounted(() => {
         color: #fff;
       }
 
-      &.join {
-        background: linear-gradient(135deg, #f59e0b, #d97706);
+      &.file {
+        background: linear-gradient(135deg, #ec4899, #d946ef);
         color: #fff;
       }
     }
@@ -1165,6 +1483,111 @@ onMounted(() => {
       color: rgba(255, 255, 255, 0.6);
       font-size: 0.9rem;
     }
+  }
+}
+
+// 文件上传进度
+.file-upload-progress {
+  width: 100%;
+  margin-top: 1.5rem;
+  padding: 1.5rem;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(139, 92, 246, 0.3);
+  border-radius: 16px;
+  backdrop-filter: blur(20px);
+  animation: slideDown 0.3s ease-out;
+
+  .progress-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+
+    .file-info {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+
+      .file-icon {
+        width: 40px;
+        height: 40px;
+        color: #ec4899;
+      }
+
+      .file-details {
+        display: flex;
+        flex-direction: column;
+        gap: 0.25rem;
+
+        .file-name {
+          color: #fff;
+          font-weight: 600;
+          font-size: 1rem;
+        }
+
+        .file-size {
+          color: rgba(255, 255, 255, 0.6);
+          font-size: 0.85rem;
+        }
+      }
+    }
+
+    .cancel-btn {
+      width: 32px;
+      height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(239, 68, 68, 0.2);
+      border: 1px solid rgba(239, 68, 68, 0.4);
+      border-radius: 50%;
+      color: #ef4444;
+      font-size: 1.5rem;
+      cursor: pointer;
+      transition: all 0.3s;
+
+      &:hover {
+        background: rgba(239, 68, 68, 0.3);
+        transform: rotate(90deg);
+      }
+    }
+  }
+
+  .progress-bar {
+    width: 100%;
+    height: 8px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 4px;
+    overflow: hidden;
+    margin-bottom: 0.75rem;
+
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #ec4899, #d946ef);
+      border-radius: 4px;
+      transition: width 0.3s ease;
+      animation: shimmer 2s infinite;
+    }
+  }
+
+  .progress-text {
+    color: rgba(255, 255, 255, 0.8);
+    font-size: 0.9rem;
+    text-align: center;
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    box-shadow: 0 0 10px rgba(236, 72, 153, 0.3);
+  }
+
+  50% {
+    box-shadow: 0 0 20px rgba(236, 72, 153, 0.6);
+  }
+
+  100% {
+    box-shadow: 0 0 10px rgba(236, 72, 153, 0.3);
   }
 }
 
@@ -1197,6 +1620,296 @@ onMounted(() => {
   }
 }
 
+// 导航badge
+.nav-btn {
+  position: relative;
+
+  .badge {
+    position: absolute;
+    top: -8px;
+    right: -8px;
+    min-width: 18px;
+    height: 18px;
+    padding: 0 5px;
+    background: linear-gradient(135deg, #ef4444, #dc2626);
+    border-radius: 9px;
+    color: #fff;
+    font-size: 0.7rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    box-shadow: 0 2px 8px rgba(239, 68, 68, 0.4);
+  }
+}
+
+// 会议大纲侧边栏
+.meeting-sidebar {
+  position: fixed;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  width: 400px;
+  background: linear-gradient(135deg, rgba(10, 14, 39, 0.98), rgba(26, 31, 58, 0.98));
+  backdrop-filter: blur(20px);
+  border-left: 1px solid rgba(139, 92, 246, 0.3);
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  box-shadow: -10px 0 40px rgba(0, 0, 0, 0.3);
+
+  .sidebar-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 2rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+
+    h3 {
+      font-size: 1.5rem;
+      font-weight: 600;
+      color: #fff;
+    }
+
+    .close-btn {
+      width: 36px;
+      height: 36px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 50%;
+      color: rgba(255, 255, 255, 0.8);
+      font-size: 1.5rem;
+      cursor: pointer;
+      transition: all 0.3s;
+
+      &:hover {
+        background: rgba(239, 68, 68, 0.2);
+        border-color: rgba(239, 68, 68, 0.4);
+        color: #ef4444;
+        transform: rotate(90deg);
+      }
+    }
+  }
+
+  .sidebar-content {
+    flex: 1;
+    overflow-y: auto;
+    padding: 2rem;
+
+    &::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    &::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    &::-webkit-scrollbar-thumb {
+      background: rgba(139, 92, 246, 0.3);
+      border-radius: 3px;
+
+      &:hover {
+        background: rgba(139, 92, 246, 0.5);
+      }
+    }
+  }
+
+  .attachment-info {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(139, 92, 246, 0.2);
+    border-radius: 12px;
+    margin-bottom: 2rem;
+
+    .attachment-icon {
+      width: 48px;
+      height: 48px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: linear-gradient(135deg, #ec4899, #d946ef);
+      border-radius: 12px;
+
+      svg {
+        width: 24px;
+        height: 24px;
+        color: #fff;
+      }
+    }
+
+    .attachment-details {
+      flex: 1;
+
+      .attachment-name {
+        color: #fff;
+        font-weight: 600;
+        margin-bottom: 0.25rem;
+        word-break: break-all;
+      }
+
+      .attachment-size {
+        color: rgba(255, 255, 255, 0.6);
+        font-size: 0.85rem;
+      }
+    }
+  }
+
+  .outline-section,
+  .meeting-preview {
+    margin-bottom: 2rem;
+
+    h4 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: #fff;
+      margin-bottom: 1rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+
+      &::before {
+        content: '';
+        width: 4px;
+        height: 1.1rem;
+        background: linear-gradient(135deg, #8b5cf6, #6366f1);
+        border-radius: 2px;
+      }
+    }
+  }
+
+  .outline-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+
+    .outline-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 1rem;
+      padding: 0.75rem;
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 8px;
+      margin-bottom: 0.5rem;
+      transition: all 0.3s;
+
+      &:hover {
+        background: rgba(139, 92, 246, 0.1);
+        border-color: rgba(139, 92, 246, 0.3);
+        transform: translateX(-4px);
+      }
+
+      .outline-number {
+        flex-shrink: 0;
+        width: 24px;
+        height: 24px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: linear-gradient(135deg, #8b5cf6, #6366f1);
+        border-radius: 50%;
+        color: #fff;
+        font-size: 0.85rem;
+        font-weight: 600;
+      }
+
+      .outline-text {
+        flex: 1;
+        color: rgba(255, 255, 255, 0.9);
+        line-height: 1.5;
+      }
+    }
+  }
+
+  .meeting-preview {
+    .preview-item {
+      display: flex;
+      padding: 0.75rem;
+      margin-bottom: 0.5rem;
+      background: rgba(255, 255, 255, 0.03);
+      border-radius: 8px;
+
+      .label {
+        color: rgba(255, 255, 255, 0.6);
+        min-width: 80px;
+      }
+
+      .value {
+        color: #fff;
+        font-weight: 500;
+      }
+    }
+  }
+
+  .sidebar-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    padding-top: 1rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+
+    .action-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      padding: 1rem;
+      border: none;
+      border-radius: 12px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s;
+
+      svg {
+        width: 18px;
+        height: 18px;
+      }
+
+      &.primary {
+        background: linear-gradient(135deg, #8b5cf6, #6366f1);
+        color: #fff;
+
+        &:hover {
+          transform: translateY(-2px);
+          box-shadow: 0 8px 20px rgba(139, 92, 246, 0.4);
+        }
+      }
+
+      &.secondary {
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.15);
+        color: rgba(255, 255, 255, 0.9);
+
+        &:hover {
+          background: rgba(255, 255, 255, 0.1);
+          border-color: rgba(139, 92, 246, 0.5);
+        }
+      }
+    }
+  }
+}
+
+// 侧边栏滑入动画
+.slide-left-enter-active,
+.slide-left-leave-active {
+  transition: transform 0.3s ease-out;
+}
+
+.slide-left-enter-from {
+  transform: translateX(100%);
+}
+
+.slide-left-leave-to {
+  transform: translateX(100%);
+}
+
 // 响应式设计
 @media (max-width: 768px) {
   .quick-actions {
@@ -1211,6 +1924,10 @@ onMounted(() => {
   .top-nav {
     flex-direction: column;
     gap: 1rem;
+  }
+
+  .meeting-sidebar {
+    width: 100%;
   }
 }
 </style>
