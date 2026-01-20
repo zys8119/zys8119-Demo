@@ -96,7 +96,7 @@
               <!-- 自由输入模式 -->
               <input v-else type="text" class="smart-input"
                 placeholder="「周三下午两点，和产品团队讨论新功能」或「开个早会」或输入指令 /meeting /history /join" v-model="meetingInput"
-                @keyup.enter="quickCreate" @input="handleInputChange" @focus="handleInputFocus" />
+                @keyup.enter="executeCommand" @input="handleInputChange" @focus="handleInputFocus" />
 
               <div class="voice-btn" @click="startVoiceInput">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -150,14 +150,15 @@
               <div class="command-dropdown" v-if="showCommandDropdown" @click.stop>
                 <div class="command-dropdown-header">
                   <span class="header-title">可用指令</span>
-                  <span class="header-hint">支持多选</span>
+                  <span class="header-hint">点击或按回车执行</span>
                 </div>
                 <div class="command-list">
-                  <div class="command-item" v-for="cmd in filteredCommands" :key="cmd.command"
-                    :class="{ selected: selectedCommands.includes(cmd.command) }" @click="toggleCommand(cmd.command)">
-                    <div class="command-checkbox">
-                      <div class="checkbox-inner" v-if="selectedCommands.includes(cmd.command)">✓</div>
-                    </div>
+                  <div
+                    class="command-item"
+                    v-for="cmd in filteredCommands"
+                    :key="cmd.command"
+                    @click="selectCommandSuggestion(cmd.command)"
+                  >
                     <span class="command-icon">{{ cmd.icon }}</span>
                     <div class="command-info">
                       <div class="command-text">{{ cmd.command }}</div>
@@ -165,11 +166,6 @@
                     </div>
                     <span class="command-category">{{ cmd.category }}</span>
                   </div>
-                </div>
-                <div class="command-actions" v-if="selectedCommands.length > 0">
-                  <button class="execute-commands-btn" @click="executeSelectedCommands">
-                    执行选中的指令 ({{ selectedCommands.length }})
-                  </button>
                 </div>
               </div>
             </transition>
@@ -887,6 +883,51 @@
         </div>
       </transition>
 
+      <!-- 即时会议对话框 -->
+      <transition name="fade">
+        <div class="instant-meeting-overlay" v-if="showInstantMeetingDialog" @click="closeInstantMeetingDialog">
+          <div class="instant-meeting-dialog" @click.stop>
+            <div class="instant-meeting-header">
+              <div class="header-icon">⚡</div>
+              <h4>即时会议</h4>
+              <button class="close-btn-small" @click="closeInstantMeetingDialog">×</button>
+            </div>
+
+            <div class="instant-meeting-body">
+              <form @submit.prevent="startInstantMeeting">
+                <div class="form-group">
+                  <label class="form-label">
+                    <span class="label-icon">📋</span>
+                    会议名称
+                  </label>
+                  <input
+                    type="text"
+                    class="form-input"
+                    v-model="instantMeetingName"
+                    placeholder="例如：产品讨论会"
+                    required
+                    autofocus
+                  />
+                  <p class="form-hint">输入会议名称后即可开始，其他参与者可通过会议号加入</p>
+                </div>
+
+                <div class="form-actions">
+                  <button type="button" class="btn-cancel" @click="closeInstantMeetingDialog">
+                    取消
+                  </button>
+                  <button type="submit" class="btn-submit instant">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <polygon points="5 3 19 12 5 21 5 3"></polygon>
+                    </svg>
+                    立即开始
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      </transition>
+
       <!-- 历史记录面板 -->
       <transition name="slide-left">
         <div class="history-panel" v-if="showHistoryPanel">
@@ -1150,7 +1191,6 @@ const commandOptions = [
   { command: '/template', icon: '📝', description: '打开模板市场', category: '创建' },
   { command: '/create', icon: '✨', description: 'AI智能创建会议', category: '创建' }
 ]
-const selectedCommands = ref<string[]>([])
 
 // 预约会议相关
 const showScheduleDialog = ref(false)
@@ -1163,6 +1203,10 @@ const scheduleForm = ref({
   memo: '',
   remindBefore: '15' // 提前多少分钟提醒
 })
+
+// 即时会议相关
+const showInstantMeetingDialog = ref(false)
+const instantMeetingName = ref('')
 
 // 待办会议列表
 interface PendingMeeting {
@@ -1442,69 +1486,93 @@ const handleInputChange = () => {
 
   // 检测指令
   if (input.startsWith('/')) {
-    const command = input.toLowerCase()
-
-    // 显示指令下拉菜单
-    if (input === '/' || input.length > 1) {
-      showCommandDropdown.value = true
-      showSuggestions.value = false
-    }
-
-    if (command === '/meeting' || command.startsWith('/meeting ')) {
-      // 打开我的会议面板
-      showMyMeetings()
-      const searchTerm = input.slice(8).trim()
-      if (searchTerm) {
-        meetingSearchQuery.value = searchTerm
-      }
-      meetingInput.value = ''
-      showSuggestions.value = false
-      showCommandDropdown.value = false
-      return
-    }
-
-    if (command === '/history' || command.startsWith('/history ')) {
-      // 打开历史记录面板
-      showHistory()
-      meetingInput.value = ''
-      showSuggestions.value = false
-      showCommandDropdown.value = false
-      return
-    }
-
-    if (command === '/join' || command.startsWith('/join ')) {
-      // 打开加入会议对话框
-      const meetingInfo = input.slice(5).trim()
-      if (meetingInfo) {
-        joinMeetingInput.value = meetingInfo
-      } else {
-        // 尝试从剪贴板读取
-        tryPasteFromClipboard()
-      }
-      showJoinMeetingDialog.value = true
-      meetingInput.value = ''
-      showSuggestions.value = false
-      showCommandDropdown.value = false
-      return
-    }
-
-    if (command === '/template' || command.startsWith('/template')) {
-      // 打开模板市场
-      openTemplateMarket()
-      meetingInput.value = ''
-      showSuggestions.value = false
-      showCommandDropdown.value = false
-      return
-    }
-
-    if (command === '/create' || command.startsWith('/create ')) {
-      // 直接AI创建
-      quickCreate()
-      return
-    }
+    // 显示指令自动填充下拉菜单
+    showCommandDropdown.value = true
+    showSuggestions.value = false
   } else {
+    // 不是指令，隐藏指令下拉菜单
     showCommandDropdown.value = false
   }
+}
+
+// 选择指令自动填充
+const selectCommandSuggestion = (command: string) => {
+  meetingInput.value = command
+  showCommandDropdown.value = false
+
+  // 聚焦到输入框，等待用户继续输入或按回车执行
+  const inputElement = document.querySelector('.smart-input') as HTMLInputElement
+  if (inputElement) {
+    inputElement.focus()
+  }
+}
+
+// 执行指令（按回车时调用）
+const executeCommand = () => {
+  const input = meetingInput.value.trim().toLowerCase()
+
+  if (!input.startsWith('/')) {
+    // 不是指令，执行普通创建
+    quickCreate()
+    return
+  }
+
+  // 隐藏下拉菜单
+  showCommandDropdown.value = false
+
+  if (input === '/meeting' || input.startsWith('/meeting ')) {
+    // 打开我的会议面板
+    showMyMeetings()
+    const searchTerm = meetingInput.value.slice(8).trim()
+    if (searchTerm) {
+      meetingSearchQuery.value = searchTerm
+    }
+    meetingInput.value = ''
+    showSuggestions.value = false
+    return
+  }
+
+  if (input === '/history' || input.startsWith('/history ')) {
+    // 打开历史记录面板
+    showHistory()
+    meetingInput.value = ''
+    showSuggestions.value = false
+    return
+  }
+
+  if (input === '/join' || input.startsWith('/join ')) {
+    // 打开加入会议对话框
+    const meetingInfo = meetingInput.value.slice(5).trim()
+    if (meetingInfo) {
+      joinMeetingInput.value = meetingInfo
+    } else {
+      // 尝试从剪贴板读取
+      tryPasteFromClipboard()
+    }
+    showJoinMeetingDialog.value = true
+    meetingInput.value = ''
+    showSuggestions.value = false
+    return
+  }
+
+  if (input === '/template' || input.startsWith('/template')) {
+    // 打开模板市场
+    openTemplateMarket()
+    meetingInput.value = ''
+    showSuggestions.value = false
+    return
+  }
+
+  if (input === '/create' || input.startsWith('/create ')) {
+    // 直接AI创建
+    meetingInput.value = ''
+    quickCreate()
+    return
+  }
+
+  // 未知指令
+  alert('未知指令，请从下拉菜单中选择')
+  meetingInput.value = ''
 }
 
 // 尝试从剪贴板粘贴
@@ -1596,7 +1664,66 @@ const startVoiceInput = () => {
 
 // 即时会议
 const instantMeeting = () => {
-  console.log('创建即时会议')
+  showInstantMeetingDialog.value = true
+  instantMeetingName.value = ''
+}
+
+// 关闭即时会议对话框
+const closeInstantMeetingDialog = () => {
+  showInstantMeetingDialog.value = false
+  instantMeetingName.value = ''
+}
+
+// 开始即时会议
+const startInstantMeeting = () => {
+  if (!instantMeetingName.value.trim()) {
+    alert('请输入会议名称')
+    return
+  }
+
+  // 生成会议号
+  const meetingId = generateMeetingId()
+
+  // 显示进入会议的信息
+  const message = `
+会议创建成功！
+
+会议名称：${instantMeetingName.value}
+会议号：${meetingId}
+开始时间：${new Date().toLocaleString('zh-CN')}
+
+正在进入会议...
+  `
+
+  alert(message)
+
+  // 关闭对话框
+  closeInstantMeetingDialog()
+
+  // 这里可以跳转到会议室页面
+  console.log('进入即时会议:', {
+    name: instantMeetingName.value,
+    id: meetingId,
+    startTime: new Date().toISOString()
+  })
+
+  // 模拟进入会议
+  setTimeout(() => {
+    alert(`已进入会议"${instantMeetingName.value}"`)
+  }, 500)
+}
+
+// 生成会议号
+const generateMeetingId = () => {
+  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'
+  let result = ''
+  for (let i = 0; i < 3; i++) {
+    if (i > 0) result += '-'
+    for (let j = 0; j < 3; j++) {
+      result += chars.charAt(Math.floor(Math.random() * chars.length))
+    }
+  }
+  return result
 }
 
 // 触发文件上传
@@ -2017,39 +2144,6 @@ const filteredCommands = computed(() => {
     cmd.description.includes(searchTerm)
   )
 })
-
-// 切换指令选择
-const toggleCommand = (command: string) => {
-  const index = selectedCommands.value.indexOf(command)
-  if (index > -1) {
-    selectedCommands.value.splice(index, 1)
-  } else {
-    selectedCommands.value.push(command)
-  }
-}
-
-// 执行选中的指令
-const executeSelectedCommands = () => {
-  selectedCommands.value.forEach(command => {
-    if (command === '/meeting') {
-      showMyMeetings()
-    } else if (command === '/history') {
-      showHistory()
-    } else if (command === '/join') {
-      showJoinMeetingDialog.value = true
-      tryPasteFromClipboard()
-    } else if (command === '/template') {
-      openTemplateMarket()
-    } else if (command === '/create') {
-      quickCreate()
-    }
-  })
-
-  // 重置状态
-  selectedCommands.value = []
-  showCommandDropdown.value = false
-  meetingInput.value = ''
-}
 
 // 模板市场相关函数
 // 打开模板市场
@@ -4921,7 +5015,7 @@ onMounted(() => {
   }
 }
 
-// 指令下拉菜单样式
+// 指令下拉菜单样式（自动填充模式）
 .command-dropdown {
   position: absolute;
   top: 100%;
@@ -4935,7 +5029,7 @@ onMounted(() => {
   box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
   backdrop-filter: blur(20px);
   z-index: 100;
-  max-height: 400px;
+  max-height: 450px;
   overflow: hidden;
 
   .command-dropdown-header {
@@ -4943,23 +5037,34 @@ onMounted(() => {
     justify-content: space-between;
     align-items: center;
     padding: 0.5rem 0.75rem;
-    margin-bottom: 0.5rem;
+    margin-bottom: 0.75rem;
     border-bottom: 1px solid rgba(139, 92, 246, 0.2);
 
     .header-title {
-      font-size: 0.85rem;
+      font-size: 0.9rem;
       font-weight: 600;
-      color: rgba(255, 255, 255, 0.9);
+      color: rgba(255, 255, 255, 0.95);
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+
+      &::before {
+        content: '⚡';
+        font-size: 1rem;
+      }
     }
 
     .header-hint {
       font-size: 0.75rem;
-      color: rgba(139, 92, 246, 0.7);
+      color: rgba(139, 92, 246, 0.8);
+      padding: 0.25rem 0.5rem;
+      background: rgba(139, 92, 246, 0.15);
+      border-radius: 6px;
     }
   }
 
   .command-list {
-    max-height: 280px;
+    max-height: 350px;
     overflow-y: auto;
     scrollbar-width: none;
 
@@ -4970,50 +5075,42 @@ onMounted(() => {
     .command-item {
       display: flex;
       align-items: center;
-      gap: 0.75rem;
-      padding: 0.75rem;
+      gap: 0.875rem;
+      padding: 0.875rem 1rem;
       border-radius: 12px;
       cursor: pointer;
-      transition: all 0.3s;
+      transition: all 0.25s ease;
       background: rgba(255, 255, 255, 0.02);
       margin-bottom: 0.5rem;
+      border: 1px solid transparent;
+
+      &:last-child {
+        margin-bottom: 0;
+      }
 
       &:hover {
-        background: rgba(139, 92, 246, 0.1);
-        transform: translateX(4px);
-      }
+        background: linear-gradient(135deg, rgba(139, 92, 246, 0.15), rgba(99, 102, 241, 0.15));
+        border-color: rgba(139, 92, 246, 0.4);
+        transform: translateX(6px);
+        box-shadow: 0 4px 12px rgba(139, 92, 246, 0.2);
 
-      &.selected {
-        background: rgba(139, 92, 246, 0.2);
-        border: 1px solid rgba(139, 92, 246, 0.4);
+        .command-icon {
+          transform: scale(1.15);
+        }
 
-        .command-checkbox {
-          background: linear-gradient(135deg, #8b5cf6, #6366f1);
-          border-color: transparent;
+        .command-text {
+          color: rgba(139, 92, 246, 0.95);
         }
       }
 
-      .command-checkbox {
-        width: 20px;
-        height: 20px;
-        border: 2px solid rgba(139, 92, 246, 0.5);
-        border-radius: 6px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        flex-shrink: 0;
-        transition: all 0.3s;
-
-        .checkbox-inner {
-          color: #fff;
-          font-size: 12px;
-          font-weight: bold;
-        }
+      &:active {
+        transform: translateX(6px) scale(0.98);
       }
 
       .command-icon {
         font-size: 1.5rem;
         flex-shrink: 0;
+        transition: transform 0.25s ease;
       }
 
       .command-info {
@@ -5021,50 +5118,30 @@ onMounted(() => {
         min-width: 0;
 
         .command-text {
-          font-size: 0.9rem;
+          font-size: 0.95rem;
           font-weight: 600;
-          color: rgba(255, 255, 255, 0.9);
-          font-family: 'Monaco', 'Menlo', monospace;
+          color: rgba(255, 255, 255, 0.95);
+          font-family: 'Monaco', 'Menlo', 'Courier New', monospace;
+          transition: color 0.25s ease;
+          margin-bottom: 0.25rem;
         }
 
         .command-desc {
           font-size: 0.8rem;
-          color: rgba(255, 255, 255, 0.5);
-          margin-top: 0.25rem;
+          color: rgba(255, 255, 255, 0.55);
+          line-height: 1.4;
         }
       }
 
       .command-category {
-        font-size: 0.75rem;
-        padding: 0.25rem 0.5rem;
+        font-size: 0.7rem;
+        padding: 0.3rem 0.6rem;
         background: rgba(139, 92, 246, 0.2);
-        border-radius: 6px;
-        color: rgba(139, 92, 246, 0.9);
+        border-radius: 8px;
+        color: rgba(139, 92, 246, 0.95);
         flex-shrink: 0;
-      }
-    }
-  }
-
-  .command-actions {
-    margin-top: 0.75rem;
-    padding-top: 0.75rem;
-    border-top: 1px solid rgba(139, 92, 246, 0.2);
-
-    .execute-commands-btn {
-      width: 100%;
-      padding: 0.75rem 1rem;
-      background: linear-gradient(135deg, #8b5cf6, #6366f1);
-      border: none;
-      border-radius: 10px;
-      color: #fff;
-      font-size: 0.9rem;
-      font-weight: 600;
-      cursor: pointer;
-      transition: all 0.3s;
-
-      &:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 6px 20px rgba(139, 92, 246, 0.4);
+        font-weight: 600;
+        border: 1px solid rgba(139, 92, 246, 0.3);
       }
     }
   }
@@ -5381,6 +5458,227 @@ onMounted(() => {
         }
       }
     }
+  }
+}
+
+// 即时会议对话框样式
+.instant-meeting-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(10px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+
+  .instant-meeting-dialog {
+    width: 500px;
+    max-width: 90vw;
+    background: linear-gradient(135deg, rgba(10, 14, 39, 0.98), rgba(26, 31, 58, 0.98));
+    border: 1px solid rgba(139, 92, 246, 0.3);
+    border-radius: 24px;
+    overflow: hidden;
+    box-shadow: 0 20px 60px rgba(139, 92, 246, 0.3);
+
+    .instant-meeting-header {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      padding: 2rem 2rem 1.5rem 2rem;
+      border-bottom: 1px solid rgba(139, 92, 246, 0.2);
+      background: rgba(139, 92, 246, 0.05);
+      position: relative;
+
+      .header-icon {
+        font-size: 2rem;
+        animation: pulse 2s ease-in-out infinite;
+      }
+
+      h4 {
+        flex: 1;
+        margin: 0;
+        font-size: 1.5rem;
+        font-weight: 700;
+        background: linear-gradient(135deg, #a78bfa, #8b5cf6);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+      }
+
+      .close-btn-small {
+        position: absolute;
+        top: 1.5rem;
+        right: 1.5rem;
+        width: 32px;
+        height: 32px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: rgba(255, 255, 255, 0.1);
+        border: 1px solid rgba(139, 92, 246, 0.3);
+        border-radius: 8px;
+        color: rgba(255, 255, 255, 0.7);
+        font-size: 1.5rem;
+        cursor: pointer;
+        transition: all 0.3s;
+
+        &:hover {
+          background: rgba(255, 255, 255, 0.15);
+          border-color: rgba(139, 92, 246, 0.5);
+          color: #fff;
+          transform: rotate(90deg);
+        }
+      }
+    }
+
+    .instant-meeting-body {
+      padding: 2rem;
+
+      form {
+        display: flex;
+        flex-direction: column;
+        gap: 1.5rem;
+
+        .form-group {
+          display: flex;
+          flex-direction: column;
+          gap: 0.75rem;
+
+          .form-label {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.95rem;
+            font-weight: 600;
+            color: rgba(255, 255, 255, 0.9);
+
+            .label-icon {
+              font-size: 1.2rem;
+            }
+          }
+
+          .form-input {
+            padding: 1rem 1.25rem;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(139, 92, 246, 0.3);
+            border-radius: 12px;
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 1rem;
+            transition: all 0.3s;
+
+            &:focus {
+              outline: none;
+              border-color: rgba(139, 92, 246, 0.6);
+              background: rgba(255, 255, 255, 0.08);
+              box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.1);
+            }
+
+            &::placeholder {
+              color: rgba(255, 255, 255, 0.4);
+            }
+          }
+
+          .form-hint {
+            margin: 0;
+            font-size: 0.85rem;
+            color: rgba(255, 255, 255, 0.5);
+            line-height: 1.5;
+          }
+        }
+
+        .form-actions {
+          display: flex;
+          gap: 1rem;
+          margin-top: 0.5rem;
+
+          button {
+            flex: 1;
+            padding: 1rem 1.5rem;
+            border: none;
+            border-radius: 12px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+
+            svg {
+              width: 18px;
+              height: 18px;
+              stroke-width: 2;
+            }
+          }
+
+          .btn-cancel {
+            background: rgba(255, 255, 255, 0.1);
+            color: rgba(255, 255, 255, 0.8);
+
+            &:hover {
+              background: rgba(255, 255, 255, 0.15);
+              transform: translateY(-1px);
+            }
+          }
+
+          .btn-submit.instant {
+            background: linear-gradient(135deg, #8b5cf6, #6366f1);
+            color: #fff;
+            position: relative;
+            overflow: hidden;
+
+            &::before {
+              content: '';
+              position: absolute;
+              top: 0;
+              left: -100%;
+              width: 100%;
+              height: 100%;
+              background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+              transition: left 0.5s;
+            }
+
+            &:hover {
+              transform: translateY(-2px);
+              box-shadow: 0 8px 20px rgba(139, 92, 246, 0.4);
+
+              &::before {
+                left: 100%;
+              }
+            }
+
+            svg {
+              animation: playPulse 1.5s ease-in-out infinite;
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
+@keyframes pulse {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.1);
+    opacity: 0.8;
+  }
+}
+
+@keyframes playPulse {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.15);
   }
 }
 

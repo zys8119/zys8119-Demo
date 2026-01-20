@@ -1,5 +1,7 @@
 <template>
-    <div class='meeting'></div>
+    <div class='meeting'>
+        会议室
+    </div>
 </template>
 <script setup lang="ts">
 

@@ -25,9 +25,7 @@ export default defineConfig({
   },
   plugins: [
     VueDevTools({
-      componentInspector: {
-        enabled: false,
-      },
+      launchEditor: "code",
     }),
     MarkdownVueDemo(),
     VueSql({
