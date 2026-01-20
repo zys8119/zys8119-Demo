@@ -95,8 +95,8 @@
               </div>
 
               <!-- 自由输入模式 -->
-              <input v-else type="text" class="smart-input" placeholder="「周三下午两点，和产品团队讨论新功能」或「开个早会」"
-                v-model="meetingInput" @keyup.enter="quickCreate" @focus="handleInputFocus" />
+              <input v-else type="text" class="smart-input" placeholder="「周三下午两点，和产品团队讨论新功能」或「开个早会」或输入指令 /meeting /history /join"
+                v-model="meetingInput" @keyup.enter="quickCreate" @input="handleInputChange" @focus="handleInputFocus" />
 
               <div class="voice-btn" @click="startVoiceInput">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -445,12 +445,253 @@
           </div>
         </div>
       </transition>
+
+      <!-- 我的会议面板 -->
+      <transition name="slide-left">
+        <div class="my-meetings-panel" v-if="showMyMeetingsPanel">
+          <div class="panel-header">
+            <h3>我的会议</h3>
+            <button class="close-btn" @click="closeMyMeetings">×</button>
+          </div>
+
+          <!-- 搜索和筛选区 -->
+          <div class="panel-filters">
+            <!-- 搜索框 -->
+            <div class="search-box">
+              <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                <circle cx="11" cy="11" r="8"></circle>
+                <path d="m21 21-4.35-4.35"></path>
+              </svg>
+              <input
+                v-model="meetingSearchQuery"
+                type="text"
+                placeholder="搜索会议主题或参与人..."
+                class="search-input"
+              />
+              <button v-if="meetingSearchQuery" class="clear-search" @click="meetingSearchQuery = ''">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                  <line x1="18" y1="6" x2="6" y2="18"></line>
+                  <line x1="6" y1="6" x2="18" y2="18"></line>
+                </svg>
+              </button>
+            </div>
+
+            <!-- 时间筛选 -->
+            <div class="time-filters">
+              <button
+                v-for="filter in timeFilters"
+                :key="filter.value"
+                class="time-filter-btn"
+                :class="{ active: selectedTimeFilter === filter.value }"
+                @click="selectedTimeFilter = filter.value"
+              >
+                {{ filter.label }}
+              </button>
+            </div>
+          </div>
+
+          <div class="panel-content">
+            <!-- 会议列表 -->
+            <div class="meetings-list">
+              <div
+                v-for="(meeting, index) in filteredMeetings"
+                :key="index"
+                class="meeting-card"
+                @click="viewMeetingDetail(meeting)"
+              >
+                <div class="meeting-status" :class="meeting.status">
+                  <span class="status-dot"></span>
+                  <span class="status-text">{{ meeting.statusText }}</span>
+                </div>
+
+                <h4 class="meeting-title">{{ meeting.topic }}</h4>
+
+                <div class="meeting-meta">
+                  <div class="meta-item">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                      <circle cx="12" cy="12" r="10"></circle>
+                      <polyline points="12 6 12 12 16 14"></polyline>
+                    </svg>
+                    <span>{{ meeting.time }}</span>
+                  </div>
+
+                  <div class="meta-item">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                      <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                      <circle cx="9" cy="7" r="4"></circle>
+                      <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                      <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                    </svg>
+                    <span>{{ meeting.participants }}</span>
+                  </div>
+                </div>
+
+                <div class="meeting-actions">
+                  <button class="action-btn-small primary" @click.stop="joinMeetingNow(meeting)">
+                    立即加入
+                  </button>
+                  <button class="action-btn-small secondary" @click.stop="editMeetingDetail(meeting)">
+                    编辑
+                  </button>
+                  <button class="action-btn-small share" @click.stop="showShareDialog(meeting)">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                      <circle cx="18" cy="5" r="3"></circle>
+                      <circle cx="6" cy="12" r="3"></circle>
+                      <circle cx="18" cy="19" r="3"></circle>
+                      <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line>
+                      <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line>
+                    </svg>
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <!-- 空状态 -->
+            <div class="empty-state" v-if="filteredMeetings.length === 0">
+              <div class="empty-icon">📅</div>
+              <p>{{ meetingSearchQuery ? '未找到相关会议' : '暂无会议' }}</p>
+              <span v-if="!meetingSearchQuery">点击上方快捷操作创建新会议</span>
+            </div>
+          </div>
+        </div>
+      </transition>
+
+      <!-- 分享对话框 -->
+      <transition name="fade">
+        <div class="share-dialog-overlay" v-if="shareDialogVisible" @click="closeShareDialog">
+          <div class="share-dialog" @click.stop>
+            <div class="share-dialog-header">
+              <h4>分享会议</h4>
+              <button class="close-btn-small" @click="closeShareDialog">×</button>
+            </div>
+
+            <div class="share-dialog-body">
+              <!-- 会议信息 -->
+              <div class="share-meeting-info">
+                <h5>{{ shareMeetingData?.topic }}</h5>
+                <p>{{ shareMeetingData?.time }} · {{ shareMeetingData?.participants }}</p>
+              </div>
+
+              <!-- 分享链接 -->
+              <div class="share-item">
+                <label>会议链接</label>
+                <div class="share-link-box">
+                  <input
+                    :value="shareMeetingLink"
+                    readonly
+                    class="share-link-input"
+                    ref="shareLinkInput"
+                  />
+                  <button class="copy-btn" @click="copyShareLink">
+                    <svg v-if="!linkCopied" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                      <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                      <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                    </svg>
+                    <svg v-else viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                      <polyline points="20 6 9 17 4 12"></polyline>
+                    </svg>
+                    {{ linkCopied ? '已复制' : '复制' }}
+                  </button>
+                </div>
+              </div>
+
+              <!-- 会议号 -->
+              <div class="share-item">
+                <label>会议号</label>
+                <div class="share-code-box">
+                  <span class="meeting-code">{{ shareMeetingCode }}</span>
+                  <button class="copy-btn-small" @click="copyMeetingCode">
+                    <svg v-if="!codeCopied" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                      <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                      <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                    </svg>
+                    <svg v-else viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                      <polyline points="20 6 9 17 4 12"></polyline>
+                    </svg>
+                  </button>
+                </div>
+              </div>
+
+              <!-- 二维码 -->
+              <div class="share-item">
+                <label>扫码加入</label>
+                <div class="qrcode-box">
+                  <div class="qrcode-placeholder">
+                    <svg class="qr-icon" viewBox="0 0 24 24" fill="currentColor">
+                      <rect x="3" y="3" width="7" height="7" rx="1"></rect>
+                      <rect x="14" y="3" width="7" height="7" rx="1"></rect>
+                      <rect x="3" y="14" width="7" height="7" rx="1"></rect>
+                      <rect x="14" y="14" width="3" height="3"></rect>
+                      <rect x="18" y="14" width="3" height="3"></rect>
+                      <rect x="14" y="18" width="3" height="3"></rect>
+                      <rect x="18" y="18" width="3" height="3"></rect>
+                    </svg>
+                    <p>{{ shareMeetingCode }}</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </transition>
+
+      <!-- 历史记录面板 -->
+      <transition name="slide-left">
+        <div class="history-panel" v-if="showHistoryPanel">
+          <div class="panel-header">
+            <h3>历史记录</h3>
+            <button class="close-btn" @click="closeHistory">×</button>
+          </div>
+
+          <div class="panel-content">
+            <!-- 时间轴列表 -->
+            <div class="timeline-list">
+              <div
+                v-for="(item, index) in historyRecords"
+                :key="index"
+                class="timeline-item"
+              >
+                <div class="timeline-dot"></div>
+                <div class="timeline-content">
+                  <div class="timeline-time">{{ item.time }}</div>
+                  <div class="timeline-card">
+                    <div class="card-header">
+                      <div class="card-icon" :class="item.type">
+                        <svg v-if="item.type === 'created'" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                          <path d="M12 5v14M5 12h14"></path>
+                        </svg>
+                        <svg v-else-if="item.type === 'joined'" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                          <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"></path>
+                          <polyline points="10 17 15 12 10 7"></polyline>
+                          <line x1="15" y1="12" x2="3" y2="12"></line>
+                        </svg>
+                        <svg v-else viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                          <polyline points="20 6 9 17 4 12"></polyline>
+                        </svg>
+                      </div>
+                      <span class="card-type">{{ item.typeText }}</span>
+                    </div>
+                    <h4 class="card-title">{{ item.title }}</h4>
+                    <p class="card-desc" v-if="item.desc">{{ item.desc }}</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- 空状态 -->
+            <div class="empty-state" v-if="historyRecords.length === 0">
+              <div class="empty-icon">🕐</div>
+              <p>暂无历史记录</p>
+            </div>
+          </div>
+        </div>
+      </transition>
     </div>
   </div>
 </template>
 
 <script setup lang="ts" path="/">
-import { ref, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 
 // 基础状态
 const meetingInput = ref('')
@@ -459,6 +700,120 @@ const todayMeetings = ref(12)
 
 // 导航相关
 const myMeetingsCount = ref(3)
+const showMyMeetingsPanel = ref(false)
+const showHistoryPanel = ref(false)
+
+// 搜索和筛选相关
+const meetingSearchQuery = ref('')
+const selectedTimeFilter = ref('all')
+const timeFilters = [
+  { label: '全部', value: 'all' },
+  { label: '今天', value: 'today' },
+  { label: '上午', value: 'morning' },
+  { label: '下午', value: 'afternoon' },
+  { label: '明天', value: 'tomorrow' },
+  { label: '一周内', value: 'week' }
+]
+
+// 分享对话框相关
+const shareDialogVisible = ref(false)
+const shareMeetingData = ref<Meeting | null>(null)
+const shareMeetingLink = ref('')
+const shareMeetingCode = ref('')
+const linkCopied = ref(false)
+const codeCopied = ref(false)
+const shareLinkInput = ref<HTMLInputElement | null>(null)
+
+// 加入会议面板相关
+const showJoinMeetingDialog = ref(false)
+const joinMeetingInput = ref('')
+const joinMeetingType = ref<'code' | 'link' | 'qr'>('code')
+
+// 我的会议数据
+interface Meeting {
+  id: string
+  topic: string
+  time: string
+  participants: string
+  status: 'upcoming' | 'ongoing' | 'completed'
+  statusText: string
+  outline?: string[]
+}
+
+const myMeetings = ref<Meeting[]>([
+  {
+    id: '1',
+    topic: '产品需求评审会',
+    time: '今天 14:00',
+    participants: '产品团队、技术团队',
+    status: 'ongoing',
+    statusText: '进行中'
+  },
+  {
+    id: '2',
+    topic: '技术方案讨论',
+    time: '明天 10:00',
+    participants: '技术团队',
+    status: 'upcoming',
+    statusText: '即将开始'
+  },
+  {
+    id: '3',
+    topic: '周例会',
+    time: '本周五 15:00',
+    participants: '全体成员',
+    status: 'upcoming',
+    statusText: '未开始'
+  },
+  {
+    id: '4',
+    topic: 'Sprint复盘会',
+    time: '昨天 16:00',
+    participants: '开发团队',
+    status: 'completed',
+    statusText: '已完成'
+  }
+])
+
+// 历史记录数据
+interface HistoryRecord {
+  time: string
+  type: 'created' | 'joined' | 'completed'
+  typeText: string
+  title: string
+  desc?: string
+}
+
+const historyRecords = ref<HistoryRecord[]>([
+  {
+    time: '2小时前',
+    type: 'completed',
+    typeText: '已完成',
+    title: '完成会议：Sprint规划会',
+    desc: '与开发团队讨论下一迭代计划'
+  },
+  {
+    time: '昨天 16:30',
+    type: 'created',
+    typeText: '创建会议',
+    title: '创建：产品需求评审会',
+    desc: '通过文件"产品需求文档v2.1.pdf"创建'
+  },
+  {
+    time: '昨天 10:00',
+    type: 'joined',
+    typeText: '加入会议',
+    title: '参加：技术分享会',
+    desc: '学习新技术架构设计'
+  },
+  {
+    time: '3天前',
+    type: 'completed',
+    typeText: '已完成',
+    title: '完成会议：季度总结会',
+    desc: 'Q4季度工作总结与复盘'
+  }
+])
 
 // 模板模式相关
 const templateMode = ref(false)
@@ -627,6 +982,63 @@ const clearTemplate = () => {
 // 输入框获得焦点
 const handleInputFocus = () => {
   showSuggestions.value = true
+}
+
+// 处理输入变化，检测指令
+const handleInputChange = () => {
+  const input = meetingInput.value.trim()
+
+  // 检测指令
+  if (input.startsWith('/')) {
+    const command = input.toLowerCase()
+
+    if (command === '/meeting' || command.startsWith('/meeting ')) {
+      // 打开我的会议面板
+      showMyMeetings()
+      const searchTerm = input.slice(8).trim()
+      if (searchTerm) {
+        meetingSearchQuery.value = searchTerm
+      }
+      meetingInput.value = ''
+      showSuggestions.value = false
+      return
+    }
+
+    if (command === '/history' || command.startsWith('/history ')) {
+      // 打开历史记录面板
+      showHistory()
+      meetingInput.value = ''
+      showSuggestions.value = false
+      return
+    }
+
+    if (command === '/join' || command.startsWith('/join ')) {
+      // 打开加入会议对话框
+      const meetingInfo = input.slice(5).trim()
+      if (meetingInfo) {
+        joinMeetingInput.value = meetingInfo
+      } else {
+        // 尝试从剪贴板读取
+        tryPasteFromClipboard()
+      }
+      showJoinMeetingDialog.value = true
+      meetingInput.value = ''
+      showSuggestions.value = false
+      return
+    }
+  }
+}
+
+// 尝试从剪贴板粘贴
+const tryPasteFromClipboard = async () => {
+  try {
+    const text = await navigator.clipboard.readText()
+    if (text && (text.includes('http') || text.match(/\d{3}-[A-Z0-9]{3}-[A-Z0-9]{3}/))) {
+      joinMeetingInput.value = text
+    }
+  } catch (err) {
+    console.log('无法访问剪贴板:', err)
+  }
 }
 
 // AI智能创建
@@ -941,13 +1353,131 @@ const cancelUpload = () => {
 
 // 导航功能
 const showMyMeetings = () => {
-  console.log('显示我的会议')
-  // TODO: 实现我的会议列表
+  showMyMeetingsPanel.value = true
+  showHistoryPanel.value = false
+}
+
+const closeMyMeetings = () => {
+  showMyMeetingsPanel.value = false
 }
 
 const showHistory = () => {
-  console.log('显示历史记录')
-  // TODO: 实现历史记录列表
+  showHistoryPanel.value = true
+  showMyMeetingsPanel.value = false
+}
+
+const closeHistory = () => {
+  showHistoryPanel.value = false
+}
+
+// 会议操作
+const viewMeetingDetail = (meeting: Meeting) => {
+  console.log('查看会议详情:', meeting)
+  // TODO: 显示会议详情
+}
+
+const joinMeetingNow = (meeting: Meeting) => {
+  console.log('立即加入会议:', meeting)
+  // TODO: 加入会议逻辑
+}
+
+const editMeetingDetail = (meeting: Meeting) => {
+  console.log('编辑会议:', meeting)
+  // TODO: 编辑会议逻辑
+}
+
+// 计算属性：筛选后的会议列表
+const filteredMeetings = computed(() => {
+  let filtered = myMeetings.value
+
+  // 搜索筛选
+  if (meetingSearchQuery.value.trim()) {
+    const query = meetingSearchQuery.value.toLowerCase()
+    filtered = filtered.filter(
+      (meeting) =>
+        meeting.topic.toLowerCase().includes(query) ||
+        meeting.participants.toLowerCase().includes(query)
+    )
+  }
+
+  // 时间筛选
+  if (selectedTimeFilter.value !== 'all') {
+    filtered = filtered.filter((meeting) => {
+      const timeStr = meeting.time.toLowerCase()
+      switch (selectedTimeFilter.value) {
+        case 'today':
+          return timeStr.includes('今天')
+        case 'morning':
+          return timeStr.includes('上午') || timeStr.includes('am')
+        case 'afternoon':
+          return timeStr.includes('下午') || timeStr.includes('pm')
+        case 'tomorrow':
+          return timeStr.includes('明天')
+        case 'week':
+          return (
+            timeStr.includes('今天') ||
+            timeStr.includes('明天') ||
+            timeStr.includes('本周') ||
+            timeStr.includes('周一') ||
+            timeStr.includes('周二') ||
+            timeStr.includes('周三') ||
+            timeStr.includes('周四') ||
+            timeStr.includes('周五')
+          )
+        default:
+          return true
+      }
+    })
+  }
+
+  return filtered
+})
+
+// 分享功能
+const showShareDialog = (meeting: Meeting) => {
+  shareMeetingData.value = meeting
+  // 生成分享链接
+  shareMeetingLink.value = `https://smartmeet.app/join/${meeting.id}`
+  // 生成会议号
+  shareMeetingCode.value = `${meeting.id.padStart(3, '0')}-${Math.random().toString(36).substring(2, 5).toUpperCase()}-${Math.random().toString(36).substring(2, 5).toUpperCase()}`
+  shareDialogVisible.value = true
+  linkCopied.value = false
+  codeCopied.value = false
+
+  // 自动复制链接到剪贴板
+  setTimeout(() => {
+    copyShareLink()
+  }, 300)
+}
+
+const closeShareDialog = () => {
+  shareDialogVisible.value = false
+  linkCopied.value = false
+  codeCopied.value = false
+}
+
+const copyShareLink = async () => {
+  try {
+    await navigator.clipboard.writeText(shareMeetingLink.value)
+    linkCopied.value = true
+    setTimeout(() => {
+      linkCopied.value = false
+    }, 2000)
+  } catch (err) {
+    console.error('复制失败:', err)
+  }
+}
+
+const copyMeetingCode = async () => {
+  try {
+    await navigator.clipboard.writeText(shareMeetingCode.value)
+    codeCopied.value = true
+    setTimeout(() => {
+      codeCopied.value = false
+    }, 2000)
+  } catch (err) {
+    console.error('复制失败:', err)
+  }
 }
 
 // 加入会议
@@ -2601,6 +3131,751 @@ onMounted(() => {
       }
     }
   }
+}
+
+// 我的会议面板和历史记录面板的通用样式
+.my-meetings-panel,
+.history-panel {
+  position: fixed;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  width: 450px;
+  background: linear-gradient(135deg, rgba(10, 14, 39, 0.98), rgba(26, 31, 58, 0.98));
+  backdrop-filter: blur(20px);
+  border-left: 1px solid rgba(139, 92, 246, 0.3);
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  box-shadow: -10px 0 40px rgba(0, 0, 0, 0.3);
+
+  .panel-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 2rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    flex-shrink: 0;
+
+    h3 {
+      font-size: 1.5rem;
+      font-weight: 600;
+      color: #fff;
+      margin: 0;
+    }
+
+    .close-btn {
+      width: 36px;
+      height: 36px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 50%;
+      color: rgba(255, 255, 255, 0.8);
+      font-size: 1.5rem;
+      cursor: pointer;
+      transition: all 0.3s;
+
+      &:hover {
+        background: rgba(239, 68, 68, 0.2);
+        border-color: rgba(239, 68, 68, 0.4);
+        color: #ef4444;
+        transform: rotate(90deg);
+      }
+    }
+  }
+
+  .panel-content {
+    flex: 1;
+    overflow-y: auto;
+    padding: 2rem;
+
+    &::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    &::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    &::-webkit-scrollbar-thumb {
+      background: rgba(139, 92, 246, 0.3);
+      border-radius: 3px;
+
+      &:hover {
+        background: rgba(139, 92, 246, 0.5);
+      }
+    }
+  }
+
+  .empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 4rem 2rem;
+    text-align: center;
+
+    .empty-icon {
+      font-size: 4rem;
+      margin-bottom: 1rem;
+      opacity: 0.5;
+    }
+
+    p {
+      color: rgba(255, 255, 255, 0.8);
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin: 0 0 0.5rem 0;
+    }
+
+    span {
+      color: rgba(255, 255, 255, 0.5);
+      font-size: 0.9rem;
+    }
+  }
+}
+
+// 我的会议面板特有样式
+.my-meetings-panel {
+  .meetings-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+
+    .meeting-card {
+      padding: 1.5rem;
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 16px;
+      cursor: pointer;
+      transition: all 0.3s;
+
+      &:hover {
+        background: rgba(255, 255, 255, 0.05);
+        border-color: rgba(139, 92, 246, 0.5);
+        transform: translateX(-8px);
+      }
+
+      .meeting-status {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.4rem 1rem;
+        border-radius: 20px;
+        margin-bottom: 1rem;
+        font-size: 0.85rem;
+        font-weight: 600;
+
+        &.upcoming {
+          background: rgba(139, 92, 246, 0.2);
+          color: #a78bfa;
+
+          .status-dot {
+            background: #a78bfa;
+          }
+        }
+
+        &.ongoing {
+          background: rgba(16, 185, 129, 0.2);
+          color: #34d399;
+
+          .status-dot {
+            background: #34d399;
+            animation: pulse-dot 1.5s ease-in-out infinite;
+          }
+        }
+
+        &.completed {
+          background: rgba(107, 114, 128, 0.2);
+          color: #9ca3af;
+
+          .status-dot {
+            background: #9ca3af;
+          }
+        }
+
+        .status-dot {
+          width: 8px;
+          height: 8px;
+          border-radius: 50%;
+        }
+      }
+
+      .meeting-title {
+        font-size: 1.2rem;
+        font-weight: 600;
+        color: #fff;
+        margin: 0 0 1rem 0;
+      }
+
+      .meeting-meta {
+        display: flex;
+        flex-direction: column;
+        gap: 0.75rem;
+        margin-bottom: 1.5rem;
+
+        .meta-item {
+          display: flex;
+          align-items: center;
+          gap: 0.75rem;
+          color: rgba(255, 255, 255, 0.7);
+          font-size: 0.9rem;
+
+          svg {
+            width: 16px;
+            height: 16px;
+            stroke-width: 2;
+            color: rgba(139, 92, 246, 0.8);
+          }
+        }
+      }
+
+      .meeting-actions {
+        display: flex;
+        gap: 0.75rem;
+
+        .action-btn-small {
+          flex: 1;
+          padding: 0.6rem 1rem;
+          border: none;
+          border-radius: 8px;
+          font-size: 0.9rem;
+          font-weight: 600;
+          cursor: pointer;
+          transition: all 0.3s;
+
+          &.primary {
+            background: linear-gradient(135deg, #8b5cf6, #6366f1);
+            color: #fff;
+
+            &:hover {
+              transform: translateY(-2px);
+              box-shadow: 0 4px 12px rgba(139, 92, 246, 0.4);
+            }
+          }
+
+          &.secondary {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            color: rgba(255, 255, 255, 0.9);
+
+            &:hover {
+              background: rgba(255, 255, 255, 0.1);
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
+// 历史记录面板特有样式
+.history-panel {
+  .timeline-list {
+    position: relative;
+
+    &::before {
+      content: '';
+      position: absolute;
+      left: 1.5rem;
+      top: 0;
+      bottom: 0;
+      width: 2px;
+      background: linear-gradient(
+        to bottom,
+        rgba(139, 92, 246, 0.5),
+        rgba(139, 92, 246, 0.2),
+        transparent
+      );
+    }
+
+    .timeline-item {
+      position: relative;
+      padding-left: 4rem;
+      margin-bottom: 2rem;
+
+      &:last-child {
+        margin-bottom: 0;
+      }
+
+      .timeline-dot {
+        position: absolute;
+        left: 1.1rem;
+        top: 0.5rem;
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #8b5cf6, #6366f1);
+        box-shadow: 0 0 0 4px rgba(139, 92, 246, 0.2);
+        z-index: 1;
+      }
+
+      .timeline-content {
+        .timeline-time {
+          color: rgba(255, 255, 255, 0.5);
+          font-size: 0.85rem;
+          margin-bottom: 0.5rem;
+        }
+
+        .timeline-card {
+          padding: 1.25rem;
+          background: rgba(255, 255, 255, 0.03);
+          border: 1px solid rgba(255, 255, 255, 0.1);
+          border-radius: 12px;
+          transition: all 0.3s;
+
+          &:hover {
+            background: rgba(255, 255, 255, 0.05);
+            border-color: rgba(139, 92, 246, 0.3);
+            transform: translateX(-4px);
+          }
+
+          .card-header {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            margin-bottom: 0.75rem;
+
+            .card-icon {
+              width: 32px;
+              height: 32px;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              border-radius: 8px;
+
+              svg {
+                width: 16px;
+                height: 16px;
+                stroke-width: 2.5;
+              }
+
+              &.created {
+                background: rgba(139, 92, 246, 0.2);
+                color: #a78bfa;
+              }
+
+              &.joined {
+                background: rgba(99, 102, 241, 0.2);
+                color: #818cf8;
+              }
+
+              &.completed {
+                background: rgba(16, 185, 129, 0.2);
+                color: #34d399;
+              }
+            }
+
+            .card-type {
+              color: rgba(255, 255, 255, 0.6);
+              font-size: 0.85rem;
+              font-weight: 600;
+            }
+          }
+
+          .card-title {
+            color: #fff;
+            font-size: 1rem;
+            font-weight: 600;
+            margin: 0 0 0.5rem 0;
+          }
+
+          .card-desc {
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 0.9rem;
+            margin: 0;
+            line-height: 1.5;
+          }
+        }
+      }
+    }
+  }
+}
+
+@keyframes pulse-dot {
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+
+  50% {
+    opacity: 0.7;
+    transform: scale(1.2);
+  }
+}
+
+// 搜索和筛选区域样式
+.panel-filters {
+  padding: 1.5rem 2rem 0 2rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  flex-shrink: 0;
+
+  .search-box {
+    position: relative;
+    margin-bottom: 1rem;
+
+    .search-icon {
+      position: absolute;
+      left: 1rem;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 18px;
+      height: 18px;
+      color: rgba(255, 255, 255, 0.5);
+      stroke-width: 2;
+      pointer-events: none;
+    }
+
+    .search-input {
+      width: 100%;
+      padding: 0.75rem 2.5rem 0.75rem 3rem;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 12px;
+      color: #fff;
+      font-size: 0.9rem;
+      outline: none;
+      transition: all 0.3s;
+
+      &::placeholder {
+        color: rgba(255, 255, 255, 0.4);
+      }
+
+      &:focus {
+        background: rgba(255, 255, 255, 0.08);
+        border-color: rgba(139, 92, 246, 0.5);
+        box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.1);
+      }
+    }
+
+    .clear-search {
+      position: absolute;
+      right: 0.75rem;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 24px;
+      height: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(255, 255, 255, 0.1);
+      border: none;
+      border-radius: 6px;
+      color: rgba(255, 255, 255, 0.6);
+      cursor: pointer;
+      transition: all 0.3s;
+
+      svg {
+        width: 14px;
+        height: 14px;
+        stroke-width: 2;
+      }
+
+      &:hover {
+        background: rgba(239, 68, 68, 0.2);
+        color: #ef4444;
+      }
+    }
+  }
+
+  .time-filters {
+    display: flex;
+    gap: 0.5rem;
+    overflow-x: auto;
+    padding-bottom: 1.5rem;
+
+    &::-webkit-scrollbar {
+      height: 0;
+    }
+
+    .time-filter-btn {
+      padding: 0.5rem 1rem;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 20px;
+      color: rgba(255, 255, 255, 0.7);
+      font-size: 0.85rem;
+      font-weight: 500;
+      white-space: nowrap;
+      cursor: pointer;
+      transition: all 0.3s;
+
+      &:hover {
+        background: rgba(255, 255, 255, 0.08);
+        border-color: rgba(139, 92, 246, 0.3);
+      }
+
+      &.active {
+        background: linear-gradient(135deg, rgba(139, 92, 246, 0.3), rgba(99, 102, 241, 0.3));
+        border-color: rgba(139, 92, 246, 0.5);
+        color: #fff;
+        font-weight: 600;
+      }
+    }
+  }
+}
+
+// 分享按钮样式
+.action-btn-small.share {
+  flex: 0 0 auto;
+  width: 36px;
+  padding: 0;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  svg {
+    width: 16px;
+    height: 16px;
+    stroke-width: 2;
+    color: rgba(139, 92, 246, 0.8);
+  }
+
+  &:hover {
+    background: rgba(139, 92, 246, 0.2);
+    border-color: rgba(139, 92, 246, 0.5);
+
+    svg {
+      color: #a78bfa;
+    }
+  }
+}
+
+// 分享对话框样式
+.share-dialog-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+  padding: 2rem;
+
+  .share-dialog {
+    width: 100%;
+    max-width: 500px;
+    background: linear-gradient(135deg, rgba(10, 14, 39, 0.98), rgba(26, 31, 58, 0.98));
+    border: 1px solid rgba(139, 92, 246, 0.3);
+    border-radius: 24px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+    overflow: hidden;
+
+    .share-dialog-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1.5rem 2rem;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+
+      h4 {
+        font-size: 1.25rem;
+        font-weight: 600;
+        color: #fff;
+        margin: 0;
+      }
+
+      .close-btn-small {
+        width: 32px;
+        height: 32px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 50%;
+        color: rgba(255, 255, 255, 0.8);
+        font-size: 1.25rem;
+        cursor: pointer;
+        transition: all 0.3s;
+
+        &:hover {
+          background: rgba(239, 68, 68, 0.2);
+          border-color: rgba(239, 68, 68, 0.4);
+          color: #ef4444;
+          transform: rotate(90deg);
+        }
+      }
+    }
+
+    .share-dialog-body {
+      padding: 2rem;
+
+      .share-meeting-info {
+        text-align: center;
+        padding: 1.5rem;
+        background: rgba(139, 92, 246, 0.1);
+        border: 1px solid rgba(139, 92, 246, 0.2);
+        border-radius: 16px;
+        margin-bottom: 2rem;
+
+        h5 {
+          font-size: 1.1rem;
+          font-weight: 600;
+          color: #fff;
+          margin: 0 0 0.5rem 0;
+        }
+
+        p {
+          font-size: 0.9rem;
+          color: rgba(255, 255, 255, 0.6);
+          margin: 0;
+        }
+      }
+
+      .share-item {
+        margin-bottom: 1.5rem;
+
+        &:last-child {
+          margin-bottom: 0;
+        }
+
+        label {
+          display: block;
+          font-size: 0.85rem;
+          font-weight: 600;
+          color: rgba(255, 255, 255, 0.7);
+          margin-bottom: 0.75rem;
+        }
+
+        .share-link-box {
+          display: flex;
+          gap: 0.75rem;
+
+          .share-link-input {
+            flex: 1;
+            padding: 0.75rem 1rem;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 0.85rem;
+            font-family: 'Courier New', monospace;
+          }
+
+          .copy-btn {
+            padding: 0.75rem 1.25rem;
+            background: linear-gradient(135deg, #8b5cf6, #6366f1);
+            border: none;
+            border-radius: 10px;
+            color: #fff;
+            font-size: 0.85rem;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: all 0.3s;
+            white-space: nowrap;
+
+            svg {
+              width: 16px;
+              height: 16px;
+              stroke-width: 2;
+            }
+
+            &:hover {
+              transform: translateY(-2px);
+              box-shadow: 0 8px 20px rgba(139, 92, 246, 0.4);
+            }
+          }
+        }
+
+        .share-code-box {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          padding: 1rem 1.25rem;
+          background: rgba(255, 255, 255, 0.05);
+          border: 1px solid rgba(255, 255, 255, 0.1);
+          border-radius: 12px;
+
+          .meeting-code {
+            font-size: 1.1rem;
+            font-weight: 700;
+            font-family: 'Courier New', monospace;
+            color: #a78bfa;
+            letter-spacing: 2px;
+          }
+
+          .copy-btn-small {
+            width: 36px;
+            height: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(139, 92, 246, 0.2);
+            border: 1px solid rgba(139, 92, 246, 0.3);
+            border-radius: 8px;
+            color: #a78bfa;
+            cursor: pointer;
+            transition: all 0.3s;
+
+            svg {
+              width: 16px;
+              height: 16px;
+              stroke-width: 2;
+            }
+
+            &:hover {
+              background: rgba(139, 92, 246, 0.3);
+              transform: scale(1.05);
+            }
+          }
+        }
+
+        .qrcode-box {
+          .qrcode-placeholder {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+            background: rgba(255, 255, 255, 0.05);
+            border: 2px dashed rgba(139, 92, 246, 0.3);
+            border-radius: 16px;
+
+            .qr-icon {
+              width: 120px;
+              height: 120px;
+              color: rgba(139, 92, 246, 0.4);
+              margin-bottom: 1rem;
+            }
+
+            p {
+              font-size: 0.9rem;
+              font-weight: 600;
+              font-family: 'Courier New', monospace;
+              color: rgba(255, 255, 255, 0.5);
+              margin: 0;
+              letter-spacing: 1px;
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
+// 淡入淡出动画
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.3s ease;
+}
+
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
 }
 
 // 侧边栏滑入动画
