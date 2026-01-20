@@ -303,15 +303,69 @@
 
             <!-- AI生成的会议大纲 -->
             <div class="outline-section">
-              <h4>AI智能生成大纲</h4>
+              <div class="outline-header">
+                <h4>AI智能生成大纲</h4>
+                <button class="add-outline-btn" @click="addOutlineItem" title="添加议程">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                    <line x1="12" y1="5" x2="12" y2="19"></line>
+                    <line x1="5" y1="12" x2="19" y2="12"></line>
+                  </svg>
+                </button>
+              </div>
               <ul class="outline-list">
                 <li
                   v-for="(item, index) in meetingOutline"
                   :key="index"
                   class="outline-item"
+                  :class="{ editing: editingOutlineIndex === index }"
                 >
                   <span class="outline-number">{{ index + 1 }}</span>
-                  <span class="outline-text">{{ item }}</span>
+
+                  <!-- 显示模式 -->
+                  <span
+                    v-if="editingOutlineIndex !== index"
+                    class="outline-text"
+                    @click="startEditOutline(index)"
+                  >
+                    {{ item }}
+                  </span>
+
+                  <!-- 编辑模式 -->
+                  <input
+                    v-else
+                    v-model="editingOutlineValue"
+                    type="text"
+                    class="outline-edit-input"
+                    @keyup.enter="confirmOutlineEdit"
+                    @keyup.esc="cancelOutlineEdit"
+                    @blur="confirmOutlineEdit"
+                    ref="outlineEditInput"
+                  />
+
+                  <!-- 操作按钮 -->
+                  <div class="outline-actions" v-if="editingOutlineIndex !== index">
+                    <button
+                      class="outline-action-btn edit-btn"
+                      @click.stop="startEditOutline(index)"
+                      title="编辑"
+                    >
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                      </svg>
+                    </button>
+                    <button
+                      class="outline-action-btn delete-btn"
+                      @click.stop="deleteOutlineItem(index)"
+                      title="删除"
+                      v-if="meetingOutline.length > 1"
+                    >
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                        <polyline points="3 6 5 6 21 6"></polyline>
+                        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                      </svg>
+                    </button>
+                  </div>
                 </li>
               </ul>
             </div>
@@ -425,6 +479,11 @@ const meetingOutline = ref<string[]>([])
 const sidebarEditField = ref<'time' | 'participants' | 'topic' | null>(null)
 const editingValue = ref('')
 const quickEditInput = ref<HTMLInputElement | null>(null)
+
+// 大纲编辑相关
+const editingOutlineIndex = ref<number | null>(null)
+const editingOutlineValue = ref('')
+const outlineEditInput = ref<HTMLInputElement | null>(null)
 
 // 模板数据
 const templateData = ref({
@@ -841,6 +900,43 @@ const confirmQuickEdit = () => {
 const closeSidebarEdit = () => {
   sidebarEditField.value = null
   editingValue.value = ''
+}
+
+// 大纲编辑操作
+const startEditOutline = (index: number) => {
+  editingOutlineIndex.value = index
+  editingOutlineValue.value = meetingOutline.value[index]
+  // 自动聚焦输入框
+  setTimeout(() => {
+    outlineEditInput.value?.focus()
+    outlineEditInput.value?.select()
+  }, 50)
+}
+
+const confirmOutlineEdit = () => {
+  if (editingOutlineIndex.value !== null && editingOutlineValue.value.trim()) {
+    meetingOutline.value[editingOutlineIndex.value] = editingOutlineValue.value.trim()
+  }
+  cancelOutlineEdit()
+}
+
+const cancelOutlineEdit = () => {
+  editingOutlineIndex.value = null
+  editingOutlineValue.value = ''
+}
+
+const deleteOutlineItem = (index: number) => {
+  if (meetingOutline.value.length > 1) {
+    meetingOutline.value.splice(index, 1)
+  }
+}
+
+const addOutlineItem = () => {
+  meetingOutline.value.push('新增议程项')
+  // 立即编辑新增的项
+  setTimeout(() => {
+    startEditOutline(meetingOutline.value.length - 1)
+  }, 50)
 }
 
 const confirmMeeting = () => {
@@ -1981,6 +2077,60 @@ onMounted(() => {
   .meeting-preview {
     margin-bottom: 2rem;
 
+    .outline-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1rem;
+
+      h4 {
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: #fff;
+        margin: 0;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+
+        &::before {
+          content: '';
+          width: 4px;
+          height: 1.1rem;
+          background: linear-gradient(135deg, #8b5cf6, #6366f1);
+          border-radius: 2px;
+        }
+      }
+
+      .add-outline-btn {
+        width: 32px;
+        height: 32px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: linear-gradient(135deg, #8b5cf6, #6366f1);
+        border: none;
+        border-radius: 50%;
+        color: #fff;
+        cursor: pointer;
+        transition: all 0.3s;
+
+        svg {
+          width: 18px;
+          height: 18px;
+          stroke-width: 2.5;
+        }
+
+        &:hover {
+          transform: scale(1.1);
+          box-shadow: 0 4px 12px rgba(139, 92, 246, 0.4);
+        }
+
+        &:active {
+          transform: scale(0.95);
+        }
+      }
+    }
+
     h4 {
       font-size: 1.1rem;
       font-weight: 600;
@@ -2007,7 +2157,7 @@ onMounted(() => {
 
     .outline-item {
       display: flex;
-      align-items: flex-start;
+      align-items: center;
       gap: 1rem;
       padding: 0.75rem;
       background: rgba(255, 255, 255, 0.03);
@@ -2015,11 +2165,21 @@ onMounted(() => {
       border-radius: 8px;
       margin-bottom: 0.5rem;
       transition: all 0.3s;
+      position: relative;
 
       &:hover {
         background: rgba(139, 92, 246, 0.1);
         border-color: rgba(139, 92, 246, 0.3);
-        transform: translateX(-4px);
+
+        .outline-actions {
+          opacity: 1;
+          transform: translateX(0);
+        }
+      }
+
+      &.editing {
+        background: rgba(139, 92, 246, 0.15);
+        border-color: rgba(139, 92, 246, 0.5);
       }
 
       .outline-number {
@@ -2040,6 +2200,79 @@ onMounted(() => {
         flex: 1;
         color: rgba(255, 255, 255, 0.9);
         line-height: 1.5;
+        cursor: pointer;
+        padding: 0.25rem 0.5rem;
+        border-radius: 4px;
+        transition: all 0.2s;
+
+        &:hover {
+          background: rgba(255, 255, 255, 0.05);
+        }
+      }
+
+      .outline-edit-input {
+        flex: 1;
+        background: rgba(255, 255, 255, 0.1);
+        border: 1px solid rgba(139, 92, 246, 0.5);
+        border-radius: 6px;
+        padding: 0.5rem 0.75rem;
+        color: #fff;
+        font-size: 0.95rem;
+        outline: none;
+        transition: all 0.3s;
+
+        &:focus {
+          border-color: rgba(139, 92, 246, 0.8);
+          background: rgba(255, 255, 255, 0.15);
+          box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.2);
+        }
+      }
+
+      .outline-actions {
+        display: flex;
+        gap: 0.5rem;
+        opacity: 0;
+        transform: translateX(-10px);
+        transition: all 0.3s;
+
+        .outline-action-btn {
+          width: 28px;
+          height: 28px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          background: rgba(255, 255, 255, 0.05);
+          border: 1px solid rgba(255, 255, 255, 0.15);
+          border-radius: 6px;
+          cursor: pointer;
+          transition: all 0.3s;
+
+          svg {
+            width: 14px;
+            height: 14px;
+            stroke-width: 2;
+          }
+
+          &.edit-btn {
+            color: rgba(139, 92, 246, 0.9);
+
+            &:hover {
+              background: rgba(139, 92, 246, 0.2);
+              border-color: rgba(139, 92, 246, 0.5);
+              transform: translateY(-2px);
+            }
+          }
+
+          &.delete-btn {
+            color: rgba(239, 68, 68, 0.9);
+
+            &:hover {
+              background: rgba(239, 68, 68, 0.2);
+              border-color: rgba(239, 68, 68, 0.5);
+              transform: translateY(-2px);
+            }
+          }
+        }
       }
     }
   }
