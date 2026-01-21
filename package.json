@@ -112,7 +112,7 @@
     "marked": "^4.3.0",
     "mockjs": "^1.1.0",
     "mockjs-async": "^0.0.5",
-    "naive-ui": "^2.40.2",
+    "naive-ui": "git+http://192.168.110.119/zj-front-end/wisdom-naive-release.git",
     "opentype": "^0.1.2",
     "opentype.js": "^1.3.4",
     "pako": "^2.1.0",
