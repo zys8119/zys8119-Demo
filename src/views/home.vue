@@ -33,9 +33,9 @@
           <div class="logo-area">
             <div class="ai-icon">
               <div class="pulse-ring"></div>
-              <span class="icon-core">AI</span>
+              <span class="icon-core">智加</span>
             </div>
-            <span class="brand-name">SmartMeet</span>
+            <span class="brand-name">让天下没有难开的会议</span>
           </div>
 
           <div class="nav-actions">
