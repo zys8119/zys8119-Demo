@@ -1,6 +1,6 @@
 <template>
     <div class='404'>
-        asdas
+        not found
     </div>
 </template>
 <script setup lang="ts">
