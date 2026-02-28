@@ -9,18 +9,25 @@
             <div class="ar-video-wrapper">
                 <video ref="videoRef" autoplay playsinline muted></video>
                 <canvas ref="canvasRef"></canvas>
-                <transition name="fade">
-                    <div class="ar-gesture-badge" v-if="currentGesture">
-                        <span class="gesture-emoji">{{ currentGesture.emoji }}</span>
+                <transition-group name="fade" tag="div">
+                    <div class="ar-gesture-badge"
+                        v-for="g in currentGestures" :key="g.label"
+                        :class="g.label === '左手' ? 'badge-left' : 'badge-right'">
+                        <span class="gesture-emoji">{{ g.emoji }}</span>
                         <div class="gesture-info">
-                            <span class="gesture-name">{{ currentGesture.name }}</span>
-                            <div class="gesture-bar">
-                                <div class="gesture-bar-fill" :style="{ width: currentGesture.confidence * 100 + '%' }"></div>
+                            <div class="gesture-header">
+                                <span class="gesture-label" :style="{ color: g.label === '左手' ? '#00e5ff' : '#69f0ae' }">{{ g.label }}</span>
+                                <span class="gesture-name">{{ g.name }}</span>
                             </div>
-                            <span class="gesture-conf">{{ Math.round(currentGesture.confidence * 100) }}%</span>
+                            <div class="gesture-bar">
+                                <div class="gesture-bar-fill"
+                                    :style="{ width: g.confidence * 100 + '%', background: g.label === '左手' ? 'linear-gradient(90deg,#00e5ff,#00bcd4)' : 'linear-gradient(90deg,#69f0ae,#00c853)' }">
+                                </div>
+                            </div>
+                            <span class="gesture-conf">{{ Math.round(g.confidence * 100) }}%</span>
                         </div>
                     </div>
-                </transition>
+                </transition-group>
                 <div class="ar-loading" v-if="loading">
                     <div class="spinner"></div>
                     <span>{{ loadingText }}</span>
@@ -40,7 +47,7 @@
                 <div class="guide-title">支持的手势</div>
                 <div class="guide-grid">
                     <div class="guide-item" v-for="g in gestureGuide" :key="g.name"
-                        :class="{ active: currentGesture?.name === g.name }">
+                        :class="{ active: currentGestures.some(cg => cg.name === g.name) }">
                         <span>{{ g.emoji }}</span>
                         <span>{{ g.name }}</span>
                     </div>
@@ -53,6 +60,7 @@
                     <div class="history-item" v-for="(g, i) in gestureHistory" :key="i">
                         <span>{{ g.emoji }}</span>
                         <span>{{ g.name }}</span>
+                        <span class="history-label" :style="{ color: g.label === '左手' ? '#00e5ff' : '#69f0ae' }">{{ g.label }}</span>
                         <span class="history-time">{{ g.time }}</span>
                     </div>
                 </div>
@@ -69,6 +77,7 @@ interface GestureResult {
     name: string
     emoji: string
     confidence: number
+    label: string  // '左手' | '右手'
 }
 interface HistoryItem extends GestureResult {
     time: string
@@ -85,7 +94,7 @@ const canvasRef = ref<HTMLCanvasElement>()
 const cameraActive = ref(false)
 const loading = ref(false)
 const loadingText = ref('初始化中...')
-const currentGesture = ref<GestureResult | null>(null)
+const currentGestures = ref<GestureResult[]>([])
 const gestureHistory = ref<HistoryItem[]>([])
 
 let stream: MediaStream | null = null
@@ -138,7 +147,7 @@ function isThumbExtended(landmarks: Landmark[], handedness: string): boolean {
     }
 }
 
-function classifyGesture(landmarks: Landmark[], handedness: string): GestureResult {
+function classifyGesture(landmarks: Landmark[], handedness: string): Omit<GestureResult, 'label'> {
     const thumb = isThumbExtended(landmarks, handedness)
     const index = isFingerExtended(landmarks, 8, 6)
     const middle = isFingerExtended(landmarks, 12, 10)
@@ -205,7 +214,7 @@ function classifyGesture(landmarks: Landmark[], handedness: string): GestureResu
 }
 
 // --- Drawing ---
-function drawLandmarks(ctx: CanvasRenderingContext2D, landmarks: Landmark[], w: number, h: number) {
+function drawLandmarks(ctx: CanvasRenderingContext2D, landmarks: Landmark[], w: number, h: number, color: string) {
     const connections = [
         [0, 1], [1, 2], [2, 3], [3, 4],       // thumb
         [0, 5], [5, 6], [6, 7], [7, 8],       // index
@@ -215,8 +224,7 @@ function drawLandmarks(ctx: CanvasRenderingContext2D, landmarks: Landmark[], w: 
         [5, 9], [9, 13], [13, 17],            // palm
     ]
 
-    // Draw connections
-    ctx.strokeStyle = '#00e5ff'
+    ctx.strokeStyle = color
     ctx.lineWidth = 2
     for (const [a, b] of connections) {
         ctx.beginPath()
@@ -225,7 +233,6 @@ function drawLandmarks(ctx: CanvasRenderingContext2D, landmarks: Landmark[], w: 
         ctx.stroke()
     }
 
-    // Draw joints
     for (let i = 0; i < landmarks.length; i++) {
         const lm = landmarks[i]
         ctx.beginPath()
@@ -264,8 +271,9 @@ async function initHands() {
     await hands.initialize()
 }
 
-let lastGestureName = ''
-let gestureSameCount = 0
+const HAND_COLORS = ['#00e5ff', '#69f0ae']  // 左手青色，右手绿色
+const lastGestureNames: string[] = ['', '']
+const gestureSameCounts: number[] = [0, 0]
 const HISTORY_STABLE_COUNT = 8
 
 function onResults(results: any) {
@@ -285,34 +293,42 @@ function onResults(results: any) {
     ctx.drawImage(video, -w, 0, w, h)
     ctx.restore()
 
-    if (results.multiHandLandmarks && results.multiHandLandmarks.length > 0) {
-        const landmarks: Landmark[] = results.multiHandLandmarks[0]
-        const handedness = results.multiHandedness?.[0]?.label || 'Right'
+    const handCount = results.multiHandLandmarks?.length || 0
+    const gestures: GestureResult[] = []
 
-        // 镜像坐标
+    for (let i = 0; i < handCount; i++) {
+        const landmarks: Landmark[] = results.multiHandLandmarks[i]
+        const handedness = results.multiHandedness?.[i]?.label || 'Right'
+        // 摄像头镜像后左右互换
+        const displayLabel = handedness === 'Right' ? '左手' : '右手'
         const mirrored = landmarks.map(lm => ({ ...lm, x: 1 - lm.x }))
 
-        drawLandmarks(ctx, mirrored, w, h)
+        drawLandmarks(ctx, mirrored, w, h, HAND_COLORS[i % 2])
 
-        const gesture = classifyGesture(mirrored, handedness)
-        currentGesture.value = gesture
+        const base = classifyGesture(mirrored, handedness)
+        const gesture: GestureResult = { ...base, label: displayLabel }
+        gestures.push(gesture)
 
-        // 稳定后加入历史
-        if (gesture.name === lastGestureName) {
-            gestureSameCount++
-            if (gestureSameCount === HISTORY_STABLE_COUNT) {
+        // 按手位置独立追踪稳定帧数，触发历史记录
+        if (gesture.name === lastGestureNames[i]) {
+            gestureSameCounts[i]++
+            if (gestureSameCounts[i] === HISTORY_STABLE_COUNT) {
                 const time = new Date().toLocaleTimeString()
                 gestureHistory.value.unshift({ ...gesture, time })
                 if (gestureHistory.value.length > 20) gestureHistory.value.pop()
             }
         } else {
-            lastGestureName = gesture.name
-            gestureSameCount = 0
+            lastGestureNames[i] = gesture.name
+            gestureSameCounts[i] = 0
         }
-    } else {
-        currentGesture.value = null
-        lastGestureName = ''
-        gestureSameCount = 0
+    }
+
+    currentGestures.value = gestures
+
+    // 消失的手重置追踪状态
+    for (let i = handCount; i < 2; i++) {
+        lastGestureNames[i] = ''
+        gestureSameCounts[i] = 0
     }
 }
 
@@ -381,7 +397,7 @@ function stopCamera() {
         const ctx = canvasRef.value.getContext('2d')
         if (ctx) ctx.clearRect(0, 0, canvasRef.value.width, canvasRef.value.height)
     }
-    currentGesture.value = null
+    currentGestures.value = []
     hands = null
 }
 
@@ -466,7 +482,6 @@ onUnmounted(() => stopCamera())
 .ar-gesture-badge {
     position: absolute;
     bottom: 16px;
-    left: 16px;
     z-index: 10;
     display: flex;
     align-items: center;
@@ -477,12 +492,26 @@ onUnmounted(() => stopCamera())
     border-radius: 12px;
     padding: 10px 16px;
 
+    &.badge-left { left: 16px; }
+    &.badge-right { right: 16px; border-color: rgba(105, 240, 174, 0.3); }
+
     .gesture-emoji { font-size: 36px; line-height: 1; }
 
     .gesture-info {
         display: flex;
         flex-direction: column;
         gap: 4px;
+    }
+
+    .gesture-header {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    .gesture-label {
+        font-size: 11px;
+        font-weight: 600;
     }
 
     .gesture-name {
@@ -500,7 +529,6 @@ onUnmounted(() => stopCamera())
 
         .gesture-bar-fill {
             height: 100%;
-            background: linear-gradient(90deg, #00e5ff, #00bcd4);
             border-radius: 2px;
             transition: width 0.2s;
         }
@@ -642,6 +670,11 @@ onUnmounted(() => stopCamera())
             margin-left: auto;
             color: #555;
             font-size: 12px;
+        }
+
+        .history-label {
+            font-size: 12px;
+            font-weight: 500;
         }
     }
 }
