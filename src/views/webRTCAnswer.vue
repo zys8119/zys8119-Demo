@@ -11,11 +11,13 @@ const channel = new BroadcastChannel('webrtc-signal')
 const videoEl = $ref<HTMLVideoElement>()
 const status = ref('等待发起端共享...')
 
+// 每个接收端页面生成唯一 ID，发起端靠此区分多条连接
+const peerId = crypto.randomUUID()
+
 let pc: RTCPeerConnection | null = null
 
 const send = (msg: object) => channel.postMessage(JSON.stringify(msg))
 
-/** 等待 ICE gathering 完成，gathering 已是 complete 时直接 resolve */
 const waitGatheringComplete = (currentPC: RTCPeerConnection) =>
   new Promise<void>(resolve => {
     if (currentPC.iceGatheringState === 'complete') { resolve(); return }
@@ -29,18 +31,20 @@ const waitGatheringComplete = (currentPC: RTCPeerConnection) =>
   })
 
 onMounted(() => {
-  send({ type: 'ready' })
+  // 携带自身 peerId 告知发起端
+  send({ type: 'ready', peerId })
 
   channel.onmessage = async (e) => {
     const msg = JSON.parse(e.data)
 
+    // 发起端就绪，重新上报自己的 peerId，触发专属 offer
     if (msg.type === 'offer-ready') {
-      // 发起端就绪，回复 ready 触发 offer 流程
-      send({ type: 'ready' })
+      send({ type: 'ready', peerId })
       return
     }
 
-    if (msg.type === 'offer') {
+    // offer 只处理发给自己的
+    if (msg.type === 'offer' && msg.peerId === peerId) {
       status.value = '收到 offer，协商中...'
 
       pc?.close()
@@ -48,7 +52,6 @@ onMounted(() => {
         iceServers: [{ urls: 'stun:stun.l.google.com:19302' }],
       })
 
-      // 用 MediaStream 手动聚合 track，不依赖 event.streams[0]
       const remoteStream = new MediaStream()
       videoEl.srcObject = remoteStream
 
@@ -64,11 +67,10 @@ onMounted(() => {
       await pc.setRemoteDescription(new RTCSessionDescription(msg.data))
       const answer = await pc.createAnswer()
       await pc.setLocalDescription(answer)
-
-      // 等 ICE 全部收集完再发，SDP 里已内嵌所有 candidate，和发起端策略一致
       await waitGatheringComplete(pc)
 
-      send({ type: 'answer', data: pc.localDescription })
+      // answer 带回 peerId，发起端靠此找到对应的 PeerConnection
+      send({ type: 'answer', peerId, data: pc.localDescription })
       status.value = '已发送 answer，等待连接建立...'
     }
   }

@@ -8,6 +8,7 @@
       <button v-if="sharing" @click="stopShare">停止共享</button>
     </div>
     <p class="status">{{ status }}</p>
+    <p class="peers">已连接接收端: {{ connectedCount }}</p>
   </div>
 </template>
 
@@ -17,24 +18,60 @@ const channel = new BroadcastChannel('webrtc-signal')
 const videoEl = $ref<HTMLVideoElement>()
 const sharing = ref(false)
 const status = ref('等待开始共享...')
+const connectedCount = ref(0)
 
-let pc: RTCPeerConnection | null = null
 let localStream: MediaStream | null = null
+
+// 每个接收端对应一条独立的 PeerConnection，key 为 peerId
+const peers = new Map<string, RTCPeerConnection>()
 
 const send = (msg: object) => channel.postMessage(JSON.stringify(msg))
 
-/** 等待 ICE gathering 完成，gathering 已是 complete 时直接 resolve */
-const waitGatheringComplete = (currentPC: RTCPeerConnection) =>
+const waitGatheringComplete = (pc: RTCPeerConnection) =>
   new Promise<void>(resolve => {
-    if (currentPC.iceGatheringState === 'complete') { resolve(); return }
+    if (pc.iceGatheringState === 'complete') { resolve(); return }
     const check = () => {
-      if (currentPC.iceGatheringState === 'complete') {
-        currentPC.removeEventListener('icegatheringstatechange', check)
+      if (pc.iceGatheringState === 'complete') {
+        pc.removeEventListener('icegatheringstatechange', check)
         resolve()
       }
     }
-    currentPC.addEventListener('icegatheringstatechange', check)
+    pc.addEventListener('icegatheringstatechange', check)
   })
+
+/** 为某个接收端创建 PeerConnection 并发送 offer */
+const createOfferForPeer = async (peerId: string) => {
+  if (!localStream) return
+
+  // 清理旧连接（同一接收端重连时）
+  peers.get(peerId)?.close()
+
+  const pc = new RTCPeerConnection({
+    iceServers: [{ urls: 'stun:stun.l.google.com:19302' }],
+  })
+  peers.set(peerId, pc)
+
+  localStream.getTracks().forEach(track => pc.addTrack(track, localStream!))
+
+  pc.onconnectionstatechange = () => {
+    const state = pc.connectionState
+    if (state === 'connected') {
+      connectedCount.value = [...peers.values()].filter(p => p.connectionState === 'connected').length
+      status.value = `已有 ${connectedCount.value} 个接收端连接`
+    }
+    if (state === 'failed' || state === 'closed' || state === 'disconnected') {
+      peers.delete(peerId)
+      connectedCount.value = [...peers.values()].filter(p => p.connectionState === 'connected').length
+    }
+  }
+
+  const offer = await pc.createOffer()
+  await pc.setLocalDescription(offer)
+  await waitGatheringComplete(pc)
+
+  // offer 带上 peerId，接收端原样回传，发起端靠此识别是哪条连接的 answer
+  send({ type: 'offer', peerId, data: pc.localDescription })
+}
 
 const startShare = async () => {
   if (sharing.value) return
@@ -50,52 +87,34 @@ const startShare = async () => {
   videoEl.srcObject = localStream
   localStream.getVideoTracks()[0].addEventListener('ended', stopShare)
 
-  pc?.close()
-  pc = new RTCPeerConnection({
-    iceServers: [{ urls: 'stun:stun.l.google.com:19302' }],
-  })
-
-  pc.onconnectionstatechange = () => {
-    status.value = `连接状态: ${pc?.connectionState}`
-    if (pc?.connectionState === 'failed') stopShare()
-  }
-
-  localStream.getTracks().forEach(track => pc!.addTrack(track, localStream!))
-
   channel.onmessage = async (e) => {
     const msg = JSON.parse(e.data)
 
+    // 每个接收端就绪时携带自己的 peerId
     if (msg.type === 'ready') {
-      if (!pc || !sharing.value) return
-      status.value = '接收端已就绪，创建 offer...'
-
-      const offer = await pc.createOffer()
-      await pc.setLocalDescription(offer)
-
-      // 等 ICE 全部收集完再发，SDP 里已内嵌所有 candidate
-      await waitGatheringComplete(pc)
-
-      send({ type: 'offer', data: pc.localDescription })
-      status.value = '已发送 offer，等待 answer...'
+      await createOfferForPeer(msg.peerId)
     }
 
     if (msg.type === 'answer') {
-      await pc?.setRemoteDescription(new RTCSessionDescription(msg.data))
-      status.value = '已收到 answer，等待连接建立...'
+      const pc = peers.get(msg.peerId)
+      if (pc) {
+        await pc.setRemoteDescription(new RTCSessionDescription(msg.data))
+      }
     }
   }
 
-  // 通知接收端发起端已就绪
+  // 通知所有已在线的接收端发起端已就绪
   send({ type: 'offer-ready' })
 }
 
 const stopShare = () => {
+  peers.forEach(pc => pc.close())
+  peers.clear()
   localStream?.getTracks().forEach(t => t.stop())
-  pc?.close()
-  pc = null
   localStream = null
   if (videoEl) videoEl.srcObject = null
   sharing.value = false
+  connectedCount.value = 0
   status.value = '已停止共享'
   channel.onmessage = null
 }
@@ -142,6 +161,6 @@ onUnmounted(() => {
     }
   }
 
-  .status { font-size: 13px; color: #888; }
+  .status, .peers { font-size: 13px; color: #888; }
 }
 </style>
