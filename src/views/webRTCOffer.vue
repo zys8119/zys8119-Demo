@@ -9,6 +9,7 @@
       <button :disabled="sharing" @click="startShare">
         {{ sharing ? '共享中...' : '开始共享屏幕' }}
       </button>
+      <button v-if="sharing" @click="replaceMainStream">更换默认画面</button>
       <button v-if="sharing" @click="stopShare">停止共享</button>
     </div>
 
@@ -161,6 +162,30 @@ const assignCustomStream = async (peerId: string) => {
   // 绑定预览
   const videoRef = peerVideoRefs.get(peerId)
   if (videoRef) videoRef.srcObject = stream
+}
+
+// ── 替换默认主流，并同步更新所有使用主流的 peer ──────────────
+const replaceMainStream = async () => {
+  let newStream: MediaStream
+  try {
+    newStream = await navigator.mediaDevices.getDisplayMedia({ video: true, audio: true })
+  } catch {
+    return
+  }
+
+  // 停掉旧主流
+  localStream?.getTracks().forEach(t => t.stop())
+  localStream = newStream
+  videoEl.srcObject = localStream
+
+  // 原生停止按钮同步
+  localStream.getVideoTracks()[0].addEventListener('ended', stopShare)
+
+  // 只替换没有自定义流的 peer
+  const updates = [...peerConns.entries()]
+    .filter(([peerId]) => !peerCustomStreams.has(peerId))
+    .map(([peerId]) => replaceTracksForPeer(peerId, localStream!))
+  await Promise.all(updates)
 }
 
 // ── 恢复主流 ─────────────────────────────────────────────
