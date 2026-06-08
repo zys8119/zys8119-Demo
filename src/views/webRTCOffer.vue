@@ -92,7 +92,7 @@ interface ChatMessage {
 const peerList = ref<PeerInfo[]>([])
 const chatMessages = ref<ChatMessage[]>([])
 const inputText = ref('')
-const chatCollapsed = ref(false)
+const chatCollapsed = ref(true)
 const unreadCount = ref(0)
 
 // ── 名称编辑状态 ──────────────────────────────────────────

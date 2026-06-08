@@ -59,7 +59,7 @@ interface ChatMessage {
 
 const chatMessages = ref<ChatMessage[]>([])
 const inputText = ref('')
-const chatCollapsed = ref(false)
+const chatCollapsed = ref(true)
 const unreadCount = ref(0)
 
 const formatTime = (ts: number) => {
