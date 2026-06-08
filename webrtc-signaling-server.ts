@@ -1,5 +1,5 @@
 // WebRTC 信令服务器 - 局域网投屏
-// 启动: npx tsx signaling-server.ts
+// 启动: npx tsx webrtc-signaling-server.ts
 // 默认端口: 9000，可通过环境变量 PORT 修改
 
 import WebSocket, { WebSocketServer } from "ws";

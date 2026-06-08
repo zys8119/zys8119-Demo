@@ -6,7 +6,8 @@
   "homepage": "https://zys8119.github.io/zys8119-Demo/#/",
   "scripts": {
     "dev": "vite --host",
-    "signal": "npx tsx signaling-server.ts",
+    "signal": "npx tsx webrtc-signaling-server.ts",
+    "webrtc": "npm run signal & npm run dev",
     "build": "vite build",
     "cypress": "cypress open",
     "preview": "wireit"
