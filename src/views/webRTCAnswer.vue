@@ -3,7 +3,7 @@
     <video ref="videoEl" muted autoplay playsinline controls></video>
     <p class="status">{{ status }}</p>
 
-    <!-- 右侧固定聊天面板 -->
+    <!-- 底部固定聊天面板 -->
     <div class="chat-panel" :class="{ collapsed: chatCollapsed }">
       <div class="chat-header" @click="chatCollapsed = !chatCollapsed">
         <span class="chat-title">聊天</span>
@@ -226,11 +226,11 @@ onUnmounted(() => {
   align-items: center;
   gap: 12px;
   padding: 16px;
-  padding-right: 336px; // 默认为聊天面板留出空间
-  transition: padding-right 0.25s ease;
+  padding-bottom: 52px; // 折叠时为 header 留空间
+  transition: padding-bottom 0.25s ease;
 
   &.chat-open {
-    padding-right: 336px;
+    padding-bottom: 320px; // 展开时为面板留空间
   }
 
   video {
@@ -244,36 +244,36 @@ onUnmounted(() => {
   .status { font-size: 13px; color: #888; }
 }
 
-// ── 聊天面板 ──────────────────────────────────────────────
+// ── 聊天面板（底部固定）──────────────────────────────────
 .chat-panel {
   position: fixed;
-  top: 0;
+  bottom: 0;
+  left: 0;
   right: 0;
-  height: 100vh;
-  width: 320px;
+  height: 320px;
   background: #fff;
-  border-left: 1px solid #e8e8e8;
-  box-shadow: -2px 0 8px rgba(0, 0, 0, 0.06);
+  border-top: 1px solid #e8e8e8;
+  box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.06);
   display: flex;
   flex-direction: column;
   z-index: 100;
-  transition: width 0.25s ease;
+  transition: height 0.25s ease;
 
   &.collapsed {
-    width: 48px;
+    height: 48px;
     overflow: hidden;
   }
 
   .chat-header {
     display: flex;
     align-items: center;
-    padding: 0 12px;
+    padding: 0 16px;
     height: 48px;
     border-bottom: 1px solid #e8e8e8;
     cursor: pointer;
     user-select: none;
     flex-shrink: 0;
-    gap: 6px;
+    gap: 8px;
 
     &:hover { background: #f5f5f5; }
 
@@ -281,7 +281,6 @@ onUnmounted(() => {
       font-size: 14px;
       font-weight: 600;
       color: #333;
-      white-space: nowrap;
     }
 
     .chat-badge {
@@ -301,14 +300,13 @@ onUnmounted(() => {
       margin-left: auto;
       font-size: 12px;
       color: #888;
-      white-space: nowrap;
     }
   }
 
   .chat-messages {
     flex: 1;
     overflow-y: auto;
-    padding: 12px;
+    padding: 12px 16px;
     display: flex;
     flex-direction: column;
     gap: 10px;
@@ -318,7 +316,7 @@ onUnmounted(() => {
       flex-direction: column;
       align-items: flex-start;
       gap: 2px;
-      max-width: 80%;
+      max-width: 60%;
 
       &.self {
         align-self: flex-end;
@@ -339,7 +337,7 @@ onUnmounted(() => {
       .msg-bubble {
         background: #f0f0f0;
         color: #333;
-        padding: 7px 12px;
+        padding: 6px 12px;
         border-radius: 12px;
         font-size: 14px;
         word-break: break-all;
@@ -356,8 +354,8 @@ onUnmounted(() => {
 
   .chat-input {
     display: flex;
-    gap: 6px;
-    padding: 10px 12px;
+    gap: 8px;
+    padding: 10px 16px;
     border-top: 1px solid #e8e8e8;
     flex-shrink: 0;
 
@@ -373,14 +371,13 @@ onUnmounted(() => {
     }
 
     button {
-      padding: 6px 14px;
+      padding: 6px 18px;
       background: #1890ff;
       color: #fff;
       border: none;
       border-radius: 6px;
       cursor: pointer;
       font-size: 13px;
-      white-space: nowrap;
 
       &:hover { opacity: 0.85; }
     }
