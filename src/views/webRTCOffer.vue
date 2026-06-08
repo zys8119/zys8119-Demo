@@ -1,104 +1,113 @@
 <template>
-  <div class="aaa">
-    <video ref="video"></video>
+  <div class="offer">
+    <video ref="videoEl" muted autoplay playsinline></video>
     <div class="controls">
       <button :disabled="sharing" @click="startShare">
         {{ sharing ? '共享中...' : '开始共享屏幕' }}
       </button>
       <button v-if="sharing" @click="stopShare">停止共享</button>
     </div>
+    <p class="status">{{ status }}</p>
   </div>
 </template>
 
 <script setup lang="ts" title="webRTC发起端">
-const video = $ref() as HTMLVideoElement
+const channel = new BroadcastChannel('webrtc-signal')
+
+const videoEl = $ref<HTMLVideoElement>()
 const sharing = ref(false)
+const status = ref('等待开始共享...')
 
-// 在一个标签页中创建广播通道
-const channel = new BroadcastChannel('myChannel');
-
-let peerConnection: RTCPeerConnection | null = null
+let pc: RTCPeerConnection | null = null
 let localStream: MediaStream | null = null
+
+const send = (msg: object) => channel.postMessage(JSON.stringify(msg))
+
+/** 等待 ICE gathering 完成，gathering 已是 complete 时直接 resolve */
+const waitGatheringComplete = (currentPC: RTCPeerConnection) =>
+  new Promise<void>(resolve => {
+    if (currentPC.iceGatheringState === 'complete') { resolve(); return }
+    const check = () => {
+      if (currentPC.iceGatheringState === 'complete') {
+        currentPC.removeEventListener('icegatheringstatechange', check)
+        resolve()
+      }
+    }
+    currentPC.addEventListener('icegatheringstatechange', check)
+  })
 
 const startShare = async () => {
   if (sharing.value) return
-  localStream = await navigator.mediaDevices.getDisplayMedia({ video: true })
+  try {
+    localStream = await navigator.mediaDevices.getDisplayMedia({ video: true, audio: true })
+  } catch {
+    status.value = '获取屏幕失败'
+    return
+  }
+
   sharing.value = true
+  status.value = '已获取屏幕，等待接收端...'
+  videoEl.srcObject = localStream
+  localStream.getVideoTracks()[0].addEventListener('ended', stopShare)
 
-  video.srcObject = localStream;
-  video.onloadedmetadata = function () {
-    video.play();
-  };
+  pc?.close()
+  pc = new RTCPeerConnection({
+    iceServers: [{ urls: 'stun:stun.l.google.com:19302' }],
+  })
 
-  // 用户主动停止共享时（点击浏览器原生停止按钮）同步状态
-  localStream.getVideoTracks()[0].onended = () => stopShare()
-
-  // 创建 RTCPeerConnection 对象
-  peerConnection = new RTCPeerConnection();
-  const c = peerConnection.createDataChannel('chat')
-  c.onmessage = ev => { console.log(ev.data) }
-  c.onopen = () => {
-    setInterval(() => { c.send("Hi you!") }, 1000)
+  pc.onconnectionstatechange = () => {
+    status.value = `连接状态: ${pc?.connectionState}`
+    if (pc?.connectionState === 'failed') stopShare()
   }
 
-  localStream.getTracks().forEach(track => peerConnection!.addTrack(track, localStream!));
+  localStream.getTracks().forEach(track => pc!.addTrack(track, localStream!))
 
-  // 用 flag 防止 ready 被多次处理导致重复 createOffer
-  let offerSent = false
-
-  const sendOffer = async () => {
-    if (offerSent || !peerConnection) return
-    offerSent = true
-
-    await peerConnection.setLocalDescription(await peerConnection.createOffer())
-
-    // 等待 ICE 收集完成，加 2s 超时兜底（本地场景可能已经 complete 但不再触发回调）
-    await new Promise<void>(resolve => {
-      if (peerConnection!.iceGatheringState === 'complete') {
-        resolve()
-        return
-      }
-      const timeout = setTimeout(resolve, 2000)
-      peerConnection!.onicegatheringstatechange = () => {
-        if (peerConnection!.iceGatheringState === 'complete') {
-          clearTimeout(timeout)
-          resolve()
-        }
-      }
-    })
-
-    channel.postMessage(JSON.stringify({
-      type: 'offer',
-      data: peerConnection.localDescription,
-    }))
-  }
-
-  channel.onmessage = async e => {
+  channel.onmessage = async (e) => {
     const msg = JSON.parse(e.data)
+
+    if (msg.type === 'ready') {
+      if (!pc || !sharing.value) return
+      status.value = '接收端已就绪，创建 offer...'
+
+      const offer = await pc.createOffer()
+      await pc.setLocalDescription(offer)
+
+      // 等 ICE 全部收集完再发，SDP 里已内嵌所有 candidate
+      await waitGatheringComplete(pc)
+
+      send({ type: 'offer', data: pc.localDescription })
+      status.value = '已发送 offer，等待 answer...'
+    }
+
     if (msg.type === 'answer') {
-      await peerConnection!.setRemoteDescription(new RTCSessionDescription(msg.data))
-    } else if (msg.type === 'ready') {
-      await sendOffer()
+      await pc?.setRemoteDescription(new RTCSessionDescription(msg.data))
+      status.value = '已收到 answer，等待连接建立...'
     }
   }
 
-  // 通知接收端发起端已就绪，触发 ready 回复
-  channel.postMessage(JSON.stringify({ type: 'offer-ready' }))
+  // 通知接收端发起端已就绪
+  send({ type: 'offer-ready' })
 }
 
 const stopShare = () => {
   localStream?.getTracks().forEach(t => t.stop())
-  peerConnection?.close()
-  peerConnection = null
+  pc?.close()
+  pc = null
   localStream = null
-  video.srcObject = null
+  if (videoEl) videoEl.srcObject = null
   sharing.value = false
+  status.value = '已停止共享'
   channel.onmessage = null
 }
+
+onUnmounted(() => {
+  stopShare()
+  channel.close()
+})
 </script>
 
 <style scoped lang="less">
-.aaa {
+.offer {
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -110,6 +119,7 @@ const stopShare = () => {
     max-width: 800px;
     border-radius: 8px;
     background: #000;
+    aspect-ratio: 16 / 9;
   }
 
   .controls {
@@ -123,26 +133,15 @@ const stopShare = () => {
       cursor: pointer;
       font-size: 14px;
       transition: opacity 0.2s;
+      background: #1890ff;
+      color: #fff;
 
-      &:first-child {
-        background: #1890ff;
-        color: #fff;
-
-        &:disabled {
-          opacity: 0.6;
-          cursor: not-allowed;
-        }
-      }
-
-      &:last-child {
-        background: #ff4d4f;
-        color: #fff;
-      }
-
-      &:not(:disabled):hover {
-        opacity: 0.85;
-      }
+      &:last-child { background: #ff4d4f; }
+      &:disabled { opacity: 0.5; cursor: not-allowed; }
+      &:not(:disabled):hover { opacity: 0.85; }
     }
   }
+
+  .status { font-size: 13px; color: #888; }
 }
 </style>
