@@ -1,19 +1,116 @@
 <template>
-  <div class="answer">
+  <div class="answer" :class="{ 'chat-open': !chatCollapsed }">
     <video ref="videoEl" muted autoplay playsinline controls></video>
     <p class="status">{{ status }}</p>
+
+    <!-- 右侧固定聊天面板 -->
+    <div class="chat-panel" :class="{ collapsed: chatCollapsed }">
+      <div class="chat-header" @click="chatCollapsed = !chatCollapsed">
+        <span class="chat-title">聊天</span>
+        <span class="chat-badge" v-if="chatCollapsed && unreadCount > 0">{{ unreadCount }}</span>
+        <span class="collapse-btn">{{ chatCollapsed ? '展开' : '收起' }}</span>
+      </div>
+      <template v-if="!chatCollapsed">
+        <div ref="msgListEl" class="chat-messages">
+          <div
+            v-for="msg in chatMessages"
+            :key="msg.time + msg.from"
+            class="msg-item"
+            :class="{ self: msg.isSelf }"
+          >
+            <span class="msg-from">{{ msg.isSelf ? '我' : msg.from }}</span>
+            <span class="msg-bubble">{{ msg.text }}</span>
+            <span class="msg-time">{{ formatTime(msg.time) }}</span>
+          </div>
+        </div>
+        <div class="chat-input">
+          <input
+            v-model="inputText"
+            placeholder="发送消息..."
+            @keydown.enter.prevent="sendChat"
+          />
+          <button @click="sendChat">发送</button>
+        </div>
+      </template>
+    </div>
   </div>
 </template>
 
-<script setup lang="ts" title="webRTC接收端">
+<script setup lang="ts">
+import { useRoute } from 'vue-router'
+
+const route = useRoute()
 const channel = new BroadcastChannel('webrtc-signal')
 
 const videoEl = $ref<HTMLVideoElement>()
+const msgListEl = $ref<HTMLDivElement>()
 const status = ref('正在连接发起端...')
 
-// 每个接收端页面生成唯一 ID，发起端靠此区分多条连接
-const peerId = crypto.randomUUID()
+// ── 名称 ──────────────────────────────────────────────────
+const name = ref((route.query.title as string) || '访客')
 
+// ── 聊天 ──────────────────────────────────────────────────
+interface ChatMessage {
+  from: string
+  text: string
+  time: number
+  isSelf: boolean
+}
+
+const chatMessages = ref<ChatMessage[]>([])
+const inputText = ref('')
+const chatCollapsed = ref(false)
+const unreadCount = ref(0)
+
+const formatTime = (ts: number) => {
+  const d = new Date(ts)
+  return `${d.getHours().toString().padStart(2, '0')}:${d.getMinutes().toString().padStart(2, '0')}`
+}
+
+const scrollToBottom = async () => {
+  await nextTick()
+  if (msgListEl) msgListEl.scrollTop = msgListEl.scrollHeight
+}
+
+const pushMessage = (msg: ChatMessage) => {
+  chatMessages.value.push(msg)
+  if (chatCollapsed.value && !msg.isSelf) unreadCount.value++
+  scrollToBottom()
+}
+
+watch(chatCollapsed, (collapsed) => {
+  if (!collapsed) {
+    unreadCount.value = 0
+    scrollToBottom()
+  }
+})
+
+// ── DataChannel（与发起端通信）────────────────────────────
+let dataChannel: RTCDataChannel | null = null
+
+const setupDataChannel = (dc: RTCDataChannel) => {
+  dataChannel = dc
+  dc.onmessage = (e) => {
+    try {
+      const msg = JSON.parse(e.data)
+      if (msg.type === 'chat') {
+        pushMessage({ from: msg.from, text: msg.text, time: msg.time, isSelf: false })
+      }
+    } catch {}
+  }
+}
+
+const sendChat = () => {
+  const text = inputText.value.trim()
+  if (!text || !dataChannel || dataChannel.readyState !== 'open') return
+  const msg = { type: 'chat', from: name.value, text, time: Date.now() }
+  dataChannel.send(JSON.stringify(msg))
+  pushMessage({ from: name.value, text, time: msg.time, isSelf: true })
+  inputText.value = ''
+}
+
+// ── WebRTC ────────────────────────────────────────────────
+const peerId = crypto.randomUUID()
 let pc: RTCPeerConnection | null = null
 let retryTimer: ReturnType<typeof setTimeout> | null = null
 
@@ -35,11 +132,9 @@ const waitGatheringComplete = (currentPC: RTCPeerConnection) =>
     currentPC.addEventListener('icegatheringstatechange', check)
   })
 
-/** 向发起端申请加入，若 3s 内未收到 offer 则重试，直到成功为止 */
 const joinOrRetry = () => {
   clearRetryTimer()
   send({ type: 'ready', peerId })
-  // 3s 内没收到 offer 说明发起端还未共享，继续等待并重试
   retryTimer = setTimeout(() => {
     if (pc?.connectionState !== 'connected') {
       status.value = '发起端未响应，等待中...'
@@ -52,16 +147,19 @@ onMounted(() => {
   channel.onmessage = async (e) => {
     const msg = JSON.parse(e.data)
 
-    // 发起端开始共享时广播 offer-ready，重新申请加入
     if (msg.type === 'offer-ready') {
       status.value = '检测到发起端，正在加入...'
       joinOrRetry()
       return
     }
 
-    // offer 只处理发给自己的
+    // 发起端修改了本端名称
+    if (msg.type === 'rename' && msg.peerId === peerId) {
+      name.value = msg.name
+      return
+    }
+
     if (msg.type === 'offer' && msg.peerId === peerId) {
-      // 收到 offer，停止重试计时
       clearRetryTimer()
       status.value = '收到 offer，协商中...'
 
@@ -78,18 +176,25 @@ onMounted(() => {
         status.value = `收到 ${track.kind} 轨道，播放中...`
       }
 
+      // 接收发起端创建的 DataChannel
+      pc.ondatachannel = ({ channel: dc }) => {
+        setupDataChannel(dc)
+      }
+
       pc.onconnectionstatechange = () => {
         const state = pc?.connectionState
         if (state === 'connected') {
           status.value = '已连接，画面传输中'
           clearRetryTimer()
+          // 连接成功后上报名称
+          send({ type: 'name', peerId, name: name.value })
         }
         if (state === 'failed' || state === 'disconnected') {
           status.value = '连接断开，等待发起端重新共享...'
           pc?.close()
           pc = null
+          dataChannel = null
           if (videoEl) videoEl.srcObject = null
-          // 连接失败后重新申请，等待发起端
           joinOrRetry()
         }
       }
@@ -104,7 +209,6 @@ onMounted(() => {
     }
   }
 
-  // 页面加载后立即尝试加入
   joinOrRetry()
 })
 
@@ -122,15 +226,164 @@ onUnmounted(() => {
   align-items: center;
   gap: 12px;
   padding: 16px;
+  padding-right: 336px; // 默认为聊天面板留出空间
+  transition: padding-right 0.25s ease;
+
+  &.chat-open {
+    padding-right: 336px;
+  }
 
   video {
     width: 100%;
-    max-width: 800px;
+    max-width: 100%;
     border-radius: 8px;
     background: #000;
     aspect-ratio: 16 / 9;
   }
 
   .status { font-size: 13px; color: #888; }
+}
+
+// ── 聊天面板 ──────────────────────────────────────────────
+.chat-panel {
+  position: fixed;
+  top: 0;
+  right: 0;
+  height: 100vh;
+  width: 320px;
+  background: #fff;
+  border-left: 1px solid #e8e8e8;
+  box-shadow: -2px 0 8px rgba(0, 0, 0, 0.06);
+  display: flex;
+  flex-direction: column;
+  z-index: 100;
+  transition: width 0.25s ease;
+
+  &.collapsed {
+    width: 48px;
+    overflow: hidden;
+  }
+
+  .chat-header {
+    display: flex;
+    align-items: center;
+    padding: 0 12px;
+    height: 48px;
+    border-bottom: 1px solid #e8e8e8;
+    cursor: pointer;
+    user-select: none;
+    flex-shrink: 0;
+    gap: 6px;
+
+    &:hover { background: #f5f5f5; }
+
+    .chat-title {
+      font-size: 14px;
+      font-weight: 600;
+      color: #333;
+      white-space: nowrap;
+    }
+
+    .chat-badge {
+      background: #ff4d4f;
+      color: #fff;
+      font-size: 11px;
+      min-width: 18px;
+      height: 18px;
+      border-radius: 9px;
+      padding: 0 5px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .collapse-btn {
+      margin-left: auto;
+      font-size: 12px;
+      color: #888;
+      white-space: nowrap;
+    }
+  }
+
+  .chat-messages {
+    flex: 1;
+    overflow-y: auto;
+    padding: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+
+    .msg-item {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 2px;
+      max-width: 80%;
+
+      &.self {
+        align-self: flex-end;
+        align-items: flex-end;
+
+        .msg-bubble {
+          background: #1890ff;
+          color: #fff;
+        }
+      }
+
+      .msg-from {
+        font-size: 11px;
+        color: #aaa;
+        padding: 0 4px;
+      }
+
+      .msg-bubble {
+        background: #f0f0f0;
+        color: #333;
+        padding: 7px 12px;
+        border-radius: 12px;
+        font-size: 14px;
+        word-break: break-all;
+        line-height: 1.5;
+      }
+
+      .msg-time {
+        font-size: 10px;
+        color: #ccc;
+        padding: 0 4px;
+      }
+    }
+  }
+
+  .chat-input {
+    display: flex;
+    gap: 6px;
+    padding: 10px 12px;
+    border-top: 1px solid #e8e8e8;
+    flex-shrink: 0;
+
+    input {
+      flex: 1;
+      border: 1px solid #d9d9d9;
+      border-radius: 6px;
+      padding: 6px 10px;
+      font-size: 13px;
+      outline: none;
+
+      &:focus { border-color: #1890ff; }
+    }
+
+    button {
+      padding: 6px 14px;
+      background: #1890ff;
+      color: #fff;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 13px;
+      white-space: nowrap;
+
+      &:hover { opacity: 0.85; }
+    }
+  }
 }
 </style>
