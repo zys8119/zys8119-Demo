@@ -64,7 +64,36 @@
 </template>
 
 <script setup lang="ts" title="webRTC发起端">
-const channel = new BroadcastChannel('webrtc-signal')
+// ── WebSocket 信令（支持局域网跨设备）────────────────────
+// 同机调试时使用 BroadcastChannel 降级，跨设备时走 WebSocket
+const WS_URL = `wss://${location.hostname}:9000`
+let ws: WebSocket | null = null
+let wsReady = false
+const wsMsgQueue: string[] = []
+
+const connectSignaling = () => {
+  ws = new WebSocket(WS_URL)
+  ws.onopen = () => {
+    wsReady = true
+    wsMsgQueue.splice(0).forEach(m => ws!.send(m))
+  }
+  ws.onclose = () => {
+    wsReady = false
+    // 断线 2s 后重连
+    setTimeout(connectSignaling, 2000)
+  }
+  ws.onmessage = (e) => {
+    if (wsMessageHandler) wsMessageHandler(JSON.parse(e.data))
+  }
+}
+
+let wsMessageHandler: ((msg: any) => void) | null = null
+
+const send = (msg: object) => {
+  const str = JSON.stringify(msg)
+  if (wsReady && ws) ws.send(str)
+  else wsMsgQueue.push(str)
+}
 
 const videoEl = $ref<HTMLVideoElement>()
 const msgListEl = $ref<HTMLDivElement>()
@@ -150,8 +179,6 @@ const sendChat = () => {
 const peerConns = new Map<string, RTCPeerConnection>()
 const peerCustomStreams = new Map<string, MediaStream>()
 const peerVideoRefs = new Map<string, HTMLVideoElement>()
-
-const send = (msg: object) => channel.postMessage(JSON.stringify(msg))
 
 const stateLabel = (state: RTCPeerConnectionState) => ({
   connected: '已连接', connecting: '连接中',
@@ -317,9 +344,7 @@ const startShare = async () => {
   videoEl.srcObject = localStream
   localStream.getVideoTracks()[0].addEventListener('ended', stopShare)
 
-  channel.onmessage = async (e) => {
-    const msg = JSON.parse(e.data)
-
+  wsMessageHandler = async (msg) => {
     if (msg.type === 'ready') {
       status.value = `接收端加入，创建连接...`
       await createOfferForPeer(msg.peerId)
@@ -330,11 +355,9 @@ const startShare = async () => {
       if (pc) await pc.setRemoteDescription(new RTCSessionDescription(msg.data))
     }
 
-    // 接收端上报自己的名称
     if (msg.type === 'name') {
       const item = peerList.value.find(p => p.id === msg.peerId)
       if (item && item.name === `接收端 ${msg.peerId.slice(0, 8)}`) {
-        // 仅当还是默认名时才更新，避免覆盖发起端已手动设置的名称
         item.name = msg.name
       }
     }
@@ -355,12 +378,16 @@ const stopShare = () => {
   if (videoEl) videoEl.srcObject = null
   sharing.value = false
   status.value = '已停止共享'
-  channel.onmessage = null
+  wsMessageHandler = null
 }
+
+onMounted(() => {
+  connectSignaling()
+})
 
 onUnmounted(() => {
   stopShare()
-  channel.close()
+  ws?.close()
 })
 </script>
 

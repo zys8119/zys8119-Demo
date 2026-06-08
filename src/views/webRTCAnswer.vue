@@ -12,23 +12,14 @@
       </div>
       <template v-if="!chatCollapsed">
         <div ref="msgListEl" class="chat-messages">
-          <div
-            v-for="msg in chatMessages"
-            :key="msg.time + msg.from"
-            class="msg-item"
-            :class="{ self: msg.isSelf }"
-          >
+          <div v-for="msg in chatMessages" :key="msg.time + msg.from" class="msg-item" :class="{ self: msg.isSelf }">
             <span class="msg-from">{{ msg.isSelf ? '我' : msg.from }}</span>
             <span class="msg-bubble">{{ msg.text }}</span>
             <span class="msg-time">{{ formatTime(msg.time) }}</span>
           </div>
         </div>
         <div class="chat-input">
-          <input
-            v-model="inputText"
-            placeholder="发送消息..."
-            @keydown.enter.prevent="sendChat"
-          />
+          <input v-model="inputText" placeholder="发送消息..." @keydown.enter.prevent="sendChat" />
           <button @click="sendChat">发送</button>
         </div>
       </template>
@@ -40,7 +31,18 @@
 import { useRoute } from 'vue-router'
 
 const route = useRoute()
-const channel = new BroadcastChannel('webrtc-signal')
+
+// ── WebSocket 信令（支持局域网跨设备）────────────────────
+const WS_URL = `wss://${location.hostname}:9000`
+let ws: WebSocket | null = null
+let wsReady = false
+const wsMsgQueue: string[] = []
+
+const send = (msg: object) => {
+  const str = JSON.stringify(msg)
+  if (wsReady && ws) ws.send(str)
+  else wsMsgQueue.push(str)
+}
 
 const videoEl = $ref<HTMLVideoElement>()
 const msgListEl = $ref<HTMLDivElement>()
@@ -96,7 +98,7 @@ const setupDataChannel = (dc: RTCDataChannel) => {
       if (msg.type === 'chat') {
         pushMessage({ from: msg.from, text: msg.text, time: msg.time, isSelf: false })
       }
-    } catch {}
+    } catch { }
   }
 }
 
@@ -113,8 +115,6 @@ const sendChat = () => {
 const peerId = crypto.randomUUID()
 let pc: RTCPeerConnection | null = null
 let retryTimer: ReturnType<typeof setTimeout> | null = null
-
-const send = (msg: object) => channel.postMessage(JSON.stringify(msg))
 
 const clearRetryTimer = () => {
   if (retryTimer) { clearTimeout(retryTimer); retryTimer = null }
@@ -144,7 +144,20 @@ const joinOrRetry = () => {
 }
 
 onMounted(() => {
-  channel.onmessage = async (e) => {
+  // 建立 WebSocket 连接
+  ws = new WebSocket(WS_URL)
+  ws.onopen = () => {
+    wsReady = true
+    wsMsgQueue.splice(0).forEach(m => ws!.send(m))
+    joinOrRetry()
+  }
+  ws.onclose = () => {
+    wsReady = false
+    setTimeout(() => {
+      ws = new WebSocket(WS_URL)
+    }, 2000)
+  }
+  ws.onmessage = async (e) => {
     const msg = JSON.parse(e.data)
 
     if (msg.type === 'offer-ready') {
@@ -208,14 +221,12 @@ onMounted(() => {
       status.value = '已发送 answer，等待连接建立...'
     }
   }
-
-  joinOrRetry()
 })
 
 onUnmounted(() => {
   clearRetryTimer()
   pc?.close()
-  channel.close()
+  ws?.close()
 })
 </script>
 
@@ -241,7 +252,10 @@ onUnmounted(() => {
     aspect-ratio: 16 / 9;
   }
 
-  .status { font-size: 13px; color: #888; }
+  .status {
+    font-size: 13px;
+    color: #888;
+  }
 }
 
 // ── 聊天面板（底部固定）──────────────────────────────────
@@ -275,7 +289,9 @@ onUnmounted(() => {
     flex-shrink: 0;
     gap: 8px;
 
-    &:hover { background: #f5f5f5; }
+    &:hover {
+      background: #f5f5f5;
+    }
 
     .chat-title {
       font-size: 14px;
@@ -367,7 +383,9 @@ onUnmounted(() => {
       font-size: 13px;
       outline: none;
 
-      &:focus { border-color: #1890ff; }
+      &:focus {
+        border-color: #1890ff;
+      }
     }
 
     button {
@@ -379,7 +397,9 @@ onUnmounted(() => {
       cursor: pointer;
       font-size: 13px;
 
-      &:hover { opacity: 0.85; }
+      &:hover {
+        opacity: 0.85;
+      }
     }
   }
 }

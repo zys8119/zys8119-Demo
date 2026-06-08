@@ -6,6 +6,7 @@
   "homepage": "https://zys8119.github.io/zys8119-Demo/#/",
   "scripts": {
     "dev": "vite --host",
+    "signal": "npx tsx signaling-server.ts",
     "build": "vite build",
     "cypress": "cypress open",
     "preview": "wireit"
@@ -66,6 +67,7 @@
     "@types/sm-crypto": "^0.3.4",
     "@types/three": "^0.149.0",
     "@types/video.js": "^7.3.58",
+    "@types/ws": "^8.18.1",
     "@vinejs/vine": "^1.8.0",
     "@vitejs/plugin-basic-ssl": "^2.3.0",
     "@vitejs/plugin-vue": "^4.6.2",
@@ -153,6 +155,7 @@
     "vue-router": "^4.5.0",
     "wavefile": "^11.0.0",
     "winframe": "^0.0.3",
+    "ws": "^8.21.0",
     "wujie": "^1.0.23"
   },
   "devDependencies": {
