@@ -1,5 +1,6 @@
 <template>
   <div class="answer" :class="{ 'chat-open': !chatCollapsed }">
+    <a :href="WS_URL.replace('wss://', 'https://')">允许安全连接</a>
     <video ref="videoEl" muted autoplay playsinline controls></video>
     <p class="status">{{ status }}</p>
 
