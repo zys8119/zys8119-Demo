@@ -18,14 +18,14 @@ import Markdown from "unplugin-vue-markdown/vite";
 import hljs from "highlight.js";
 import MarkdownVueDemo from "vitejs-markdown-vue-demo/vite";
 import VueDevTools from "vite-plugin-vue-devtools";
-import basicSsl from "@vitejs/plugin-basic-ssl";
+// import basicSsl from "@vitejs/plugin-basic-ssl";
 export default defineConfig({
   base: "",
   build: {
     outDir: "docs",
   },
   plugins: [
-    basicSsl({}),
+    // basicSsl({}),
     VueDevTools({
       componentInspector: {
         enabled: false,
