@@ -7,7 +7,6 @@ import vueJsx from "@vitejs/plugin-vue-jsx";
 import AutoRoute from "vitejs-plugin-vue-route-auto-import";
 import AutoApi from "vitejs-plugin-api-auto-import";
 import AutoConfig from "vitejs-plugin-config-auto-import/vite";
-import VueSql from "vitejs-plugin-vue-sql";
 
 // vite.config.ts
 import ReactivityTransform from "@vue-macros/reactivity-transform/vite";
@@ -32,9 +31,6 @@ export default defineConfig({
       },
     }),
     MarkdownVueDemo(),
-    VueSql({
-      file: "./src/sql/sql.ts",
-    }),
     UnoCss(),
     // MarkdownVueDemo(),
     Markdown({

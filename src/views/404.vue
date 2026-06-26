@@ -1,5 +1,5 @@
 <template>
-    <div class='_404'></div>
+    <div class='_404'>404 not found</div>
 </template>
 <script setup lang="ts">
 
