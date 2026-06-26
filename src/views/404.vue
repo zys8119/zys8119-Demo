@@ -1,8 +1,9 @@
 <template>
-    <div class="404">
-        404页面
-    </div>
+    <div class='_404'></div>
 </template>
-
 <script setup lang="ts">
+
 </script>
+<style scoped lang="less">
+._404 {}
+</style>
