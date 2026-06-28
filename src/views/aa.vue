@@ -5,7 +5,7 @@
             <div class="flex-center w-full mt-10px">
                 <img src="/images/cy/1.png" class="w-80%" alt="">
             </div>
-            <div class="flex-center w-full mt-10px abs-r  w-60% h-30px">
+            <div class="flex-center  mt-10px abs-r  w-60% h-30px">
                 <img class="abs-content" src="/images/cy/2.png" alt="">
                 <div
                     class="abs-content flex-center bg-linear-to-r from-#57c0cd to-#fce173 bg-clip-text text-transparent">
