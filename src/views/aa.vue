@@ -14,7 +14,7 @@
             </div>
             <div class="flex-1  m-y-10px w-[calc(100%-20px)] flex flex-col gap-10px">
                 <div class="flex-center gap-10px justify-between w-full">
-                    <div class=" abs-r h-80px w-60%">
+                    <div class=" abs-r h-80px w-55%">
                         <img class="abs-content" src="/images/cy/5.png" alt="">
                         <div class="abs-content flex flex-col gap-5px">
                             <div class="flex-center mt-10px justify-between p-x-10px">
@@ -23,7 +23,15 @@
                                     <div class="text-12px">{{ item.text }}</div>
                                 </div>
                             </div>
-                            <div class="flex-1">礼物</div>
+                            <div class="flex-1">
+                                <n-marquee auto-fill>
+                                    <div class="flex-center gap-10px m-x-10px">
+                                        <div>礼物</div>
+                                        <div>礼物</div>
+                                        <div>礼物</div>
+                                    </div>
+                                </n-marquee>
+                            </div>
                         </div>
                     </div>
                     <div class="flex-1 abs-r h-80px">
@@ -34,10 +42,12 @@
                                 <div>asd</div>
                             </div>
                             <div class="p-x-10px">
-                                <div class="text-16px text-#c8f0f9">火腿肠</div>
+                                <div
+                                    class="text-30px bold  bg-linear-to-r from-#57c0cd to-#fce173 bg-clip-text text-transparent">
+                                    火腿肠啊</div>
                             </div>
                         </div>
-                        <img class="abs bottom-0 right-0 w-50px" src="/images/cy/8.png" alt="">
+                        <img class="abs bottom-0 right-0 tr-y-10px w-50px" src="/images/cy/8.png" alt="">
                     </div>
                 </div>
                 <div class="flex-1 flex-center gap-10px">
@@ -52,6 +62,40 @@
                         <div class="abs-center top-10px text-12px  text-#ffffff text-shadow-">
                             排行榜
                         </div>
+                        <div class="abs-content text-#fff  top-30px h-[calc(100%-30px)] p-x-10px flex flex-col gap-5px">
+                            <div class="flex flex-col gap-5px">
+                                <div v-for="(item, index) in tops" :key="index" class="abs-r h-40px of-hidden">
+                                    <img class="abs-content" :src="item.img" alt="">
+                                    <div class="abs-content flex-center justify-between">
+                                        <div class="flex-1"></div>
+                                        <div class="flex-1">
+                                            <img class="s-20px object-fill of-hidden b-rd-100%" :src="item.tx" alt="">
+                                        </div>
+                                        <div class="flex-1 flex-center items-start flex-col">
+                                            <n-ellipsis class="text-12px">{{ item.name }}</n-ellipsis>
+                                            <n-ellipsis class="text-12px">{{ item.score }}分</n-ellipsis>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="flex-1">
+                                <n-scroll-list :height="100" :duration="500" :animation-duration="1000" :space="20">
+                                    <div v-for="(item, index) in tops" :key="index" class="abs-r h-40px of-hidden">
+                                        <div class="abs-content flex-center justify-between">
+                                            <div class="flex-1 flex-center">{{ index + 4 }}</div>
+                                            <div class="flex-1">
+                                                <img class="s-20px object-fill of-hidden b-rd-100%" :src="item.tx"
+                                                    alt="">
+                                            </div>
+                                            <div class="flex-1 flex-center items-start flex-col">
+                                                <n-ellipsis class="text-12px">{{ item.name }}</n-ellipsis>
+                                                <n-ellipsis class="text-12px">{{ item.score }}分</n-ellipsis>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </n-scroll-list>
+                            </div>
+                        </div>
                     </div>
                 </div>
                 <div class="abs-r h-100px">
@@ -59,8 +103,8 @@
                     <div class="abs-center top-10px text-12px  text-#c8f0f9 text-shadow-xs text-shadow-#00ceee">
                         弹幕区域
                     </div>
-                    <div class="abs-content  top-10px h-[calc(100%-10px)]">
-                        asda
+                    <div class="abs-content text-#fff  top-10px h-[calc(100%-10px)]">
+                        asdaasdas
                     </div>
                 </div>
             </div>
@@ -82,6 +126,27 @@ const chunk1 = ref([
         text: '倒计时'
     }
 ])
+const tops = ref([
+    {
+        img: '/images/cy/a.png',
+        name: '字数',
+        score: 100000,
+        tx: "/images/cy/a.png"
+    },
+    {
+        img: '/images/cy/b.png',
+        name: '提示',
+        score: 100000,
+        tx: "/images/cy/a.png"
+    },
+    {
+        img: '/images/cy/c.png',
+        name: '倒计时',
+        score: 100000,
+        tx: "/images/cy/a.png"
+    }
+])
+
 </script>
 <style scoped lang="less">
 .aa {}
