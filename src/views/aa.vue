@@ -79,7 +79,7 @@
                                 </div>
                             </div>
                             <div class="flex-1 of-hidden mb-10px">
-                                <Vue3SeamlessScroll :list="tops.concat(tops)" direction="up">
+                                <!-- <Vue3SeamlessScroll :list="tops.concat(tops)" direction="up" ease="ease-in">
                                     <template v-slot="{ data: item, index }">
                                         <div class="abs-r h-40px of-hidden">
                                             <div class="abs-content flex-center justify-between">
@@ -96,7 +96,7 @@
                                         </div>
                                     </template>
 
-                                </Vue3SeamlessScroll>
+</Vue3SeamlessScroll> -->
                             </div>
                         </div>
                     </div>
@@ -106,8 +106,9 @@
                     <div class="abs-center top-10px text-12px  text-#c8f0f9 text-shadow-xs text-shadow-#00ceee">
                         弹幕区域
                     </div>
-                    <div class="abs-content text-#fff  top-10px h-[calc(100%-10px)]">
-                        asdaasdas
+                    <div class="abs-content top-10px h-[calc(100%-10px)]">
+                        <Danmaku :list="danmakuList" :speed="2" :row="5" :interval="1000" />
+
                     </div>
                 </div>
             </div>
@@ -116,6 +117,7 @@
 </template>
 <script setup lang="ts">
 import { Vue3SeamlessScroll } from "vue3-seamless-scroll";
+
 const chunk1 = ref([
     {
         img: '/images/cy/11.png',
@@ -151,7 +153,16 @@ const tops = ref([
     }
 ])
 
+const danmakuList = ref([
+    { id: 1, content: '666666' },
+    { id: 2, content: '哈哈哈' },
+    { id: 3, content: '冲冲冲', color: '#ffdd57' },
+    { id: 4, content: '主播牛逼' },
+    { id: 5, content: '来了来了' },
+    { id: 6, content: '加油加油', color: '#ff6b6b' },
+    { id: 7, content: '666' },
+    { id: 8, content: '好厉害！' },
+])
+
 </script>
-<style scoped lang="less">
-.aa {}
-</style>
+<style scoped lang="less"></style>

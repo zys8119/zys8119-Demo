@@ -18,6 +18,7 @@ declare module 'vue' {
     ConferenceRect: typeof import('./src/components/drag-new/elements/ConferenceRect.tsx')['default']
     ConferenceRotundity: typeof import('./src/components/drag-new/elements/ConferenceRotundity.tsx')['default']
     ConferenceRotundityAndRect: typeof import('./src/components/drag-new/elements/ConferenceRotundityAndRect.tsx')['default']
+    Danmaku: typeof import('./src/components/danmaku.vue')['default']
     Demo: typeof import('./src/components/Demo.vue')['default']
     DragNew: typeof import('./src/components/drag-new/drag-new.vue')['default']
     DragNewAside: typeof import('./src/components/drag-new/drag-new-aside.vue')['default']
