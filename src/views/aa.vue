@@ -56,6 +56,14 @@
                         <div class="abs-center top-10px text-12px  text-#ffffff text-shadow-">
                             猜词区域
                         </div>
+                        <ScrollUpTable class="text-#fff  top-30px h-[calc(100%-30px)]" :data="data" :columns="columns">
+                            <template #user="{ row, col }">
+                                {{ row[col.key] }}
+                            </template>
+                            <template #match="{ row, col }">
+                                {{ row[col.key] }}
+                            </template>
+                        </ScrollUpTable>
                     </div>
                     <div class=" flex-1 h-full abs-r">
                         <img class="abs-content" src="/images/cy/4.png" alt="">
@@ -113,7 +121,7 @@
         </div>
     </div>
 </template>
-<script setup lang="ts">
+<script setup lang="ts" title="语义猜词-大挑战">
 const chunk1 = ref([
     {
         img: '/images/cy/11.png',
@@ -165,6 +173,27 @@ const danmakuList = ref([
     { id: 7, content: '666' },
     { id: 8, content: '好厉害！' },
 ])
-
+const columns = ref([
+    {
+        title: '用户',
+        className: 'flex-1',
+        key: 'user'
+    },
+    {
+        title: '关键词',
+        className: 'flex-1',
+        key: 'keyword'
+    },
+    {
+        title: '匹配度',
+        className: 'flex-1',
+        key: 'match'
+    }
+])
+const data = ref(new Array(30).fill(0).map((e, k) => ({
+    user: '用户' + (k + 1),
+    keyword: '关键词' + (k + 1),
+    match: '匹配度' + (k + 1)
+})))
 </script>
 <style scoped lang="less"></style>
