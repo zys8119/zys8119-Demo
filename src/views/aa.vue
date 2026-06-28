@@ -78,22 +78,25 @@
                                     </div>
                                 </div>
                             </div>
-                            <div class="flex-1">
-                                <n-scroll-list :height="100" :duration="500" :animation-duration="1000" :space="20">
-                                    <div v-for="(item, index) in tops" :key="index" class="abs-r h-40px of-hidden">
-                                        <div class="abs-content flex-center justify-between">
-                                            <div class="flex-1 flex-center">{{ index + 4 }}</div>
-                                            <div class="flex-1">
-                                                <img class="s-20px object-fill of-hidden b-rd-100%" :src="item.tx"
-                                                    alt="">
-                                            </div>
-                                            <div class="flex-1 flex-center items-start flex-col">
-                                                <n-ellipsis class="text-12px">{{ item.name }}</n-ellipsis>
-                                                <n-ellipsis class="text-12px">{{ item.score }}分</n-ellipsis>
+                            <div class="flex-1 of-hidden mb-10px">
+                                <Vue3SeamlessScroll :list="tops.concat(tops)" direction="up">
+                                    <template v-slot="{ data: item, index }">
+                                        <div class="abs-r h-40px of-hidden">
+                                            <div class="abs-content flex-center justify-between">
+                                                <div class="flex-1 flex-center">{{ index + 4 }}</div>
+                                                <div class="flex-1">
+                                                    <img class="s-20px object-fill of-hidden b-rd-100%" :src="item.tx"
+                                                        alt="">
+                                                </div>
+                                                <div class="flex-1 flex-center items-start flex-col">
+                                                    <n-ellipsis class="text-12px">{{ item.name }}</n-ellipsis>
+                                                    <n-ellipsis class="text-12px">{{ item.score }}分</n-ellipsis>
+                                                </div>
                                             </div>
                                         </div>
-                                    </div>
-                                </n-scroll-list>
+                                    </template>
+
+                                </Vue3SeamlessScroll>
                             </div>
                         </div>
                     </div>
@@ -112,6 +115,7 @@
     </div>
 </template>
 <script setup lang="ts">
+import { Vue3SeamlessScroll } from "vue3-seamless-scroll";
 const chunk1 = ref([
     {
         img: '/images/cy/11.png',
