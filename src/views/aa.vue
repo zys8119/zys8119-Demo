@@ -106,9 +106,8 @@
                     <div class="abs-center top-10px text-12px  text-#c8f0f9 text-shadow-xs text-shadow-#00ceee">
                         弹幕区域
                     </div>
-                    <div class="abs-content top-10px h-[calc(100%-10px)]">
-                        <Danmaku :list="danmakuList" :speed="2" :row="5" :interval="1000" />
-
+                    <div class="abs-content top-10px h-[calc(100%-10px)] of-hidden">
+                        <Danmaku class="abs-content" :list="danmakuList" :speed="2" :row="5" :interval="1000" />
                     </div>
                 </div>
             </div>
