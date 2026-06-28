@@ -58,10 +58,16 @@
                         </div>
                         <ScrollUpTable class="text-#fff  top-30px h-[calc(100%-30px)]" :data="data" :columns="columns">
                             <template #user="{ row, col }">
-                                {{ row[col.key] }}
+                                <div class="flex-center gap-5px">
+                                    <img class="s-20px of-hidden object-cover b-rd-100%" src="/images/cy/8.png" alt="">
+                                    <div :class="{
+                                        ' bg-linear-to-r from-#57c0cd to-#fce173 bg-clip-text text-transparent': row.colors
+                                    }">{{ row[col.key] }}</div>
+                                </div>
                             </template>
                             <template #match="{ row, col }">
-                                {{ row[col.key] }}
+                                <n-progress color="#ffd375" indicator-text-color="#ffd375" rail-color="#17223c"
+                                    show-indicator type="line" segment :percentage="row[col.key]" />
                             </template>
                         </ScrollUpTable>
                     </div>
@@ -176,7 +182,12 @@ const danmakuList = ref([
 const columns = ref([
     {
         title: '用户',
-        className: 'flex-1',
+        className: (col: any, row: any) => {
+            if (row) {
+                return 'flex-1 of-hidden flex-center-start p-x-10px'
+            }
+            return 'flex-1 of-hidden p-x-10px'
+        },
         key: 'user'
     },
     {
@@ -193,7 +204,7 @@ const columns = ref([
 const data = ref(new Array(30).fill(0).map((e, k) => ({
     user: '用户' + (k + 1),
     keyword: '关键词' + (k + 1),
-    match: '匹配度' + (k + 1)
+    match: k
 })))
 </script>
 <style scoped lang="less"></style>

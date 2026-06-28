@@ -39,6 +39,7 @@ declare module 'vue' {
     NLoadingBarProvider: typeof import('naive-ui')['NLoadingBarProvider']
     NMarquee: typeof import('naive-ui')['NMarquee']
     NMessageProvider: typeof import('naive-ui')['NMessageProvider']
+    NProgress: typeof import('naive-ui')['NProgress']
     NScrollList: typeof import('naive-ui')['NScrollList']
     Rect: typeof import('./src/components/drag-new/elements/Rect.tsx')['default']
     Rotundity: typeof import('./src/components/drag-new/elements/Rotundity.tsx')['default']
