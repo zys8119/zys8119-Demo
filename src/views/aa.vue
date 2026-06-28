@@ -146,6 +146,12 @@ const tops = ref([
         name: '倒计时',
         score: 100000,
         tx: "/images/cy/a.png"
+    },
+    {
+        img: '/images/cy/c.png',
+        name: '倒计时',
+        score: 100000,
+        tx: "/images/cy/a.png"
     }
 ])
 
