@@ -45,6 +45,7 @@ declare module 'vue' {
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']
     Scroll: typeof import('./src/components/scroll.vue')['default']
+    ScrollUp: typeof import('./src/components/scroll-up.vue')['default']
     Seat: typeof import('./src/components/drag-new/elements/Seat.tsx')['default']
     SvgIcon: typeof import('./src/components/svg-icon.tsx')['default']
     Text: typeof import('./src/components/drag-new/elements/Text.tsx')['default']

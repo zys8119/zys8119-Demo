@@ -79,8 +79,8 @@
                                 </div>
                             </div>
                             <div class="flex-1 of-hidden mb-10px">
-                                <!-- <Vue3SeamlessScroll :list="tops.concat(tops)" direction="up" ease="ease-in">
-                                    <template v-slot="{ data: item, index }">
+                                <ScrollUp :list="tops">
+                                    <template #default="{ item, index }">
                                         <div class="abs-r h-40px of-hidden">
                                             <div class="abs-content flex-center justify-between">
                                                 <div class="flex-1 flex-center">{{ index + 4 }}</div>
@@ -95,8 +95,7 @@
                                             </div>
                                         </div>
                                     </template>
-
-</Vue3SeamlessScroll> -->
+                                </ScrollUp>
                             </div>
                         </div>
                     </div>
@@ -115,8 +114,6 @@
     </div>
 </template>
 <script setup lang="ts">
-import { Vue3SeamlessScroll } from "vue3-seamless-scroll";
-
 const chunk1 = ref([
     {
         img: '/images/cy/11.png',
