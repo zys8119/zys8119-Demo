@@ -25,7 +25,7 @@ export default defineConfig({
     outDir: "docs",
   },
   plugins: [
-    basicSsl({}),
+    // basicSsl({}),
     VueDevTools({
       componentInspector: {
         enabled: false,
