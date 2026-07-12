@@ -68,7 +68,10 @@
 
             <!-- 当前框选 -->
             <div class="current-selection">
-              <p>点击并拖拽在视频上框选水印区域</p>
+              <p>
+                <span class="shortcut-hint">按住 Ctrl (Windows) 或 Cmd (Mac)</span>
+                在视频上拖拽框选水印区域
+              </p>
               <div v-if="currentSelection" class="selection-info">
                 <p>当前选择: X: {{ currentSelection.x }}px, Y: {{ currentSelection.y }}px</p>
                 <p>大小: {{ currentSelection.width }}x{{ currentSelection.height }}px</p>
@@ -190,6 +193,8 @@ const startX = ref(0)
 const startY = ref(0)
 const canvasCtx = ref(null)
 const extractionAnimationId = ref(null)
+const ctrlKeyPressed = ref(false)
+const selectionMode = ref(false) // 框选模式开关
 
 // 触发文件输入
 const triggerFileInput = () => {
@@ -245,24 +250,43 @@ const resetVideo = () => {
 // 视频加载完成
 const onVideoLoaded = () => {
   const video = videoElement.value
-  if (!canvasOverlay.value) return
+  const canvas = canvasOverlay.value
 
-  canvasOverlay.value.width = video.videoWidth
-  canvasOverlay.value.height = video.videoHeight
-  canvasCtx.value = canvasOverlay.value.getContext('2d')
+  if (!video || !canvas) return
+
+  // 设置 canvas 的实际分辨率（内部尺寸）
+  canvas.width = video.videoWidth
+  canvas.height = video.videoHeight
+
+  // 同步 canvas 的显示尺寸与 video 元素
+  canvas.style.width = video.clientWidth + 'px'
+  canvas.style.height = video.clientHeight + 'px'
+
+  canvasCtx.value = canvas.getContext('2d')
   totalFrames.value = Math.floor(video.duration * 30) // 假设30fps
 
-  // 设置画布大小与视频相同
-  canvasOverlay.value.style.width = video.clientWidth + 'px'
-  canvasOverlay.value.style.height = video.clientHeight + 'px'
+  // 初始化画布背景
+  redrawCanvas()
 }
 
 // 开始框选
 const startSelection = (e) => {
+  // 只在按住 Ctrl/Cmd 时才开始框选
+  if (!ctrlKeyPressed.value) return
+
+  e.preventDefault()
+  e.stopPropagation()
+
   const canvas = canvasOverlay.value
+  if (!canvas) return
+
   const rect = canvas.getBoundingClientRect()
-  const scaleX = canvas.width / rect.width
-  const scaleY = canvas.height / rect.height
+  const canvasWidth = canvas.clientWidth
+  const canvasHeight = canvas.clientHeight
+
+  // 根据实际显示大小计算缩放比
+  const scaleX = canvas.width / canvasWidth
+  const scaleY = canvas.height / canvasHeight
 
   startX.value = (e.clientX - rect.left) * scaleX
   startY.value = (e.clientY - rect.top) * scaleY
@@ -271,12 +295,22 @@ const startSelection = (e) => {
 
 // 绘制框选
 const drawSelection = (e) => {
-  if (!isSelecting.value) return
+  // 只在按住 Ctrl/Cmd 时才绘制
+  if (!isSelecting.value || !ctrlKeyPressed.value) return
+
+  e.preventDefault()
+  e.stopPropagation()
 
   const canvas = canvasOverlay.value
+  if (!canvas) return
+
   const rect = canvas.getBoundingClientRect()
-  const scaleX = canvas.width / rect.width
-  const scaleY = canvas.height / rect.height
+  const canvasWidth = canvas.clientWidth
+  const canvasHeight = canvas.clientHeight
+
+  // 根据实际显示大小计算缩放比
+  const scaleX = canvas.width / canvasWidth
+  const scaleY = canvas.height / canvasHeight
 
   const currentX = (e.clientX - rect.left) * scaleX
   const currentY = (e.clientY - rect.top) * scaleY
@@ -613,7 +647,33 @@ const downloadVideo = () => {
 
 // 清理资源
 onMounted(() => {
+  // 添加键盘事件监听
+  const handleKeyDown = (e) => {
+    if (e.ctrlKey || e.metaKey) {
+      e.preventDefault()
+      ctrlKeyPressed.value = true
+      // 更新 canvas cursor
+      if (canvasOverlay.value) {
+        canvasOverlay.value.style.cursor = 'crosshair'
+      }
+    }
+  }
+
+  const handleKeyUp = () => {
+    ctrlKeyPressed.value = false
+    isSelecting.value = false
+    // 恢复 canvas cursor
+    if (canvasOverlay.value) {
+      canvasOverlay.value.style.cursor = 'default'
+    }
+  }
+
+  window.addEventListener('keydown', handleKeyDown)
+  window.addEventListener('keyup', handleKeyUp)
+
   return () => {
+    window.removeEventListener('keydown', handleKeyDown)
+    window.removeEventListener('keyup', handleKeyUp)
     if (extractionAnimationId.value) {
       cancelAnimationFrame(extractionAnimationId.value)
     }
@@ -638,6 +698,9 @@ onMounted(() => {
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   padding: 20px;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  /* 禁用框选时的布局抖动 */
+  overflow-y: scroll;
+  scrollbar-gutter: stable;
 }
 
 .header {
@@ -661,6 +724,8 @@ onMounted(() => {
 .main-content {
   max-width: 1200px;
   margin: 0 auto;
+  /* 防止框选时的布局抖动 */
+  contain: layout;
 }
 
 /* 上传区域 */
@@ -743,12 +808,16 @@ onMounted(() => {
   padding: 30px;
   margin-bottom: 30px;
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+  /* 防止框选时的布局改变 */
+  contain: layout style;
 }
 
 .preview-container {
   display: grid;
   grid-template-columns: 2fr 1fr;
   gap: 30px;
+  width: 100%;
+  overflow: hidden;
 }
 
 .video-preview-wrapper {
@@ -756,25 +825,50 @@ onMounted(() => {
   background: #000;
   border-radius: 8px;
   overflow: hidden;
+  max-width: 100%;
+  aspect-ratio: 16 / 9;
+  /* 防止框选时的抖动 */
+  contain: layout style paint;
 }
 
 .video-preview {
   width: 100%;
-  height: auto;
+  height: 100%;
   display: block;
+  max-width: 100%;
+  object-fit: contain;
 }
 
 .canvas-overlay {
   position: absolute;
   top: 0;
   left: 0;
-  cursor: crosshair;
+  cursor: default;
+  width: 100%;
+  height: 100%;
+  display: block;
+  /* 防止框选时的布局抖动 */
+  user-select: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  touch-action: none;
+  /* 防止图像被拖动 */
+  -webkit-touch-callout: none;
+  -webkit-user-drag: none;
+}
+
+.canvas-overlay:hover {
+  cursor: default;
 }
 
 .control-panel {
   display: flex;
   flex-direction: column;
   gap: 20px;
+  /* 防止框选时内容变化导致的抖动 */
+  overflow-y: auto;
+  max-height: calc(100vh - 300px);
 }
 
 .section-title {
@@ -794,6 +888,16 @@ onMounted(() => {
   margin: 5px 0;
   color: #666;
   font-size: 0.9em;
+}
+
+.shortcut-hint {
+  background: #e3f2fd;
+  color: #1976d2;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-weight: 600;
+  font-family: 'Monaco', 'Menlo', 'Courier New', monospace;
+  margin-right: 5px;
 }
 
 .selection-info {
