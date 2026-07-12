@@ -136,10 +136,6 @@
 <script setup>
 import { ref, onMounted, nextTick } from 'vue'
 
-// OpenCV.js 引用
-const cv = ref(null)
-const openCVLoading = ref(true)
-
 const fileInput = ref(null)
 const videoElement = ref(null)
 const canvasOverlay = ref(null)
@@ -160,31 +156,6 @@ const canvasCtx = ref(null)
 const extractionAnimationId = ref(null)
 const ctrlKeyPressed = ref(false)
 const selectionMode = ref(false) // 框选模式开关
-
-// 等待 OpenCV 加载 - 带超时保护
-const waitForOpenCV = () => {
-  return new Promise((resolve) => {
-    let attempts = 0
-    const maxAttempts = 50  // 最多尝试 50 次（5 秒）
-
-    const checkOpenCV = () => {
-      if (window.cv && window.cv.Mat) {
-        console.log('✅ OpenCV.js 加载成功')
-        resolve(window.cv)
-      } else if (attempts < maxAttempts) {
-        attempts++
-        setTimeout(checkOpenCV, 100)
-      } else {
-        console.warn('⚠️ OpenCV.js 加载超时，将使用备用算法')
-        // 如果加载失败，返回一个虚拟对象，这样不会卡住
-        resolve(null)
-      }
-    }
-
-    // 立即检查一次
-    checkOpenCV()
-  })
-}
 
 // 触发文件输入
 const triggerFileInput = () => {
@@ -441,15 +412,17 @@ const processVideo = async () => {
               processCanvas.height
             )
 
-            // 使用 OpenCV.js 进行水印去除（效果更好！）
-            const processedData = removeWatermarkWithOpenCV(
-              imageData,
-              watermarks.value,
-              processCanvas.width,
-              processCanvas.height
-            )
+            // 应用水印移除算法
+            watermarks.value.forEach((wm) => {
+              removeWatermarkFromFrame(
+                imageData,
+                wm,
+                processCanvas.width,
+                processCanvas.height
+              )
+            })
 
-            processCtx.putImageData(processedData, 0, 0)
+            processCtx.putImageData(imageData, 0, 0)
 
             // 使用 PNG 格式获得更好的质量
             frames.push(processCanvas.toDataURL('image/png'))
@@ -504,123 +477,113 @@ const processVideo = async () => {
   }
 }
 
-// 备用算法：简单模糊（当 OpenCV 不可用时使用）
-const removeWatermarkFallback = (imageData, watermarks, width, height) => {
+// 移除单帧中的水印 - 改进版本
+const removeWatermarkFromFrame = (imageData, watermark, width, height) => {
   const data = imageData.data
+  const x1 = Math.floor(watermark.x)
+  const y1 = Math.floor(watermark.y)
+  const x2 = Math.ceil(watermark.x + watermark.width)
+  const y2 = Math.ceil(watermark.y + watermark.height)
 
-  watermarks.forEach((wm) => {
-    const x1 = Math.floor(wm.x)
-    const y1 = Math.floor(wm.y)
-    const x2 = Math.ceil(wm.x + wm.width)
-    const y2 = Math.ceil(wm.y + wm.height)
+  // 确保坐标在范围内
+  const startX = Math.max(0, x1)
+  const startY = Math.max(0, y1)
+  const endX = Math.min(width, x2)
+  const endY = Math.min(height, y2)
 
-    const startX = Math.max(0, x1)
-    const startY = Math.max(0, y1)
-    const endX = Math.min(width, x2)
-    const endY = Math.min(height, y2)
+  if (startX >= endX || startY >= endY) return
 
-    // 简单高斯模糊
-    const blurRadius = 8
+  // 第一步：使用边缘像素采样法
+  const sampleEdgePixels = (x, y) => {
+    let r = 0, g = 0, b = 0, count = 0
 
-    for (let y = startY; y < endY; y++) {
-      for (let x = startX; x < endX; x++) {
-        const idx = (y * width + x) * 4
-        let r = 0, g = 0, b = 0, count = 0
+    // 从水印外边界采样
+    const sampleRadius = 15
+    for (let dx = -sampleRadius; dx <= sampleRadius; dx++) {
+      for (let dy = -sampleRadius; dy <= sampleRadius; dy++) {
+        const sx = x + dx
+        const sy = y + dy
 
-        for (let dy = -blurRadius; dy <= blurRadius; dy++) {
-          for (let dx = -blurRadius; dx <= blurRadius; dx++) {
-            const nx = x + dx
-            const ny = y + dy
+        // 只采样水印外的像素
+        if (
+          (sx < startX || sx >= endX || sy < startY || sy >= endY) &&
+          sx >= 0 &&
+          sx < width &&
+          sy >= 0 &&
+          sy < height
+        ) {
+          const sidx = (sy * width + sx) * 4
+          const distance = Math.sqrt(dx * dx + dy * dy)
+          // 使用高斯权重，距离越近权重越大
+          const weight = Math.exp(-(distance * distance) / (2 * 25))
 
-            if (nx >= 0 && nx < width && ny >= 0 && ny < height) {
-              // 只采样水印外的像素
-              if (!(nx >= startX && nx < endX && ny >= startY && ny < endY)) {
-                const nidx = (ny * width + nx) * 4
-                const distance = Math.sqrt(dx * dx + dy * dy)
-                const weight = Math.exp(-(distance * distance) / 32)
-
-                r += data[nidx] * weight
-                g += data[nidx + 1] * weight
-                b += data[nidx + 2] * weight
-                count += weight
-              }
-            }
-          }
-        }
-
-        if (count > 0) {
-          data[idx] = Math.round(r / count)
-          data[idx + 1] = Math.round(g / count)
-          data[idx + 2] = Math.round(b / count)
+          r += data[sidx] * weight
+          g += data[sidx + 1] * weight
+          b += data[sidx + 2] * weight
+          count += weight
         }
       }
     }
-  })
 
-  return imageData
-}
-
-// 使用 OpenCV.js 进行水印去除（如果可用）
-const removeWatermarkWithOpenCV = (imageData, watermarks, width, height) => {
-  if (!cv.value) {
-    // OpenCV 不可用，使用备用算法
-    return removeWatermarkFallback(imageData, watermarks, width, height)
+    if (count > 0) {
+      return {
+        r: Math.round(r / count),
+        g: Math.round(g / count),
+        b: Math.round(b / count),
+      }
+    }
+    return null
   }
 
-  try {
-    // 1. 将 ImageData 转换为 OpenCV Mat
-    const src = cv.value.matFromImageData(imageData)
+  // 第二步：填充水印区域
+  for (let y = startY; y < endY; y++) {
+    for (let x = startX; x < endX; x++) {
+      const idx = (y * width + x) * 4
+      const color = sampleEdgePixels(x, y)
 
-    // 2. 转换为 RGB（OpenCV inpaint 需要 RGB）
-    const srcRgb = new cv.value.Mat()
-    cv.value.cvtColor(src, srcRgb, cv.value.COLOR_RGBA2RGB)
+      if (color) {
+        data[idx] = color.r
+        data[idx + 1] = color.g
+        data[idx + 2] = color.b
+        // 保持透明度不变
+        data[idx + 3] = 255
+      }
+    }
+  }
 
-    // 3. 创建掩码（标记需要修复的区域）
-    const mask = cv.value.Mat.zeros(height, width, cv.value.CV_8UC1)
+  // 第三步：平滑处理以减少伪影
+  const smoothKernel = 3
+  const tempData = new Uint8ClampedArray(data)
 
-    // 标记所有水印区域
-    watermarks.forEach((wm) => {
-      const x1 = Math.floor(wm.x)
-      const y1 = Math.floor(wm.y)
-      const x2 = Math.ceil(wm.x + wm.width)
-      const y2 = Math.ceil(wm.y + wm.height)
+  for (let y = startY + smoothKernel; y < endY - smoothKernel; y++) {
+    for (let x = startX + smoothKernel; x < endX - smoothKernel; x++) {
+      const idx = (y * width + x) * 4
 
-      for (let py = y1; py < y2; py++) {
-        for (let px = x1; px < x2; px++) {
-          if (px >= 0 && px < width && py >= 0 && py < height) {
-            mask.ucharPtr(py, px)[0] = 255 // 标记为需要修复
+      // 只平滑水印区域内的像素
+      let r = 0, g = 0, b = 0, count = 0
+
+      for (let dy = -1; dy <= 1; dy++) {
+        for (let dx = -1; dx <= 1; dx++) {
+          const nx = x + dx
+          const ny = y + dy
+          const nidx = (ny * width + nx) * 4
+
+          // 如果邻近像素在水印区域内
+          if (nx >= startX && nx < endX && ny >= startY && ny < endY) {
+            r += tempData[nidx]
+            g += tempData[nidx + 1]
+            b += tempData[nidx + 2]
+            count++
           }
         }
       }
-    })
 
-    // 4. 使用 TELEA 算法进行内容感知填充
-    const dst = new cv.value.Mat()
-    cv.value.inpaint(srcRgb, mask, dst, 3, cv.value.INPAINT_TELEA)
-
-    // 5. 转换回 RGBA
-    const dstRgba = new cv.value.Mat()
-    cv.value.cvtColor(dst, dstRgba, cv.value.COLOR_RGB2RGBA)
-
-    // 6. 转换回 ImageData
-    const result = new ImageData(
-      new Uint8ClampedArray(dstRgba.data),
-      width,
-      height
-    )
-
-    // 7. 清理内存
-    src.delete()
-    srcRgb.delete()
-    mask.delete()
-    dst.delete()
-    dstRgba.delete()
-
-    return result
-  } catch (error) {
-    console.error('OpenCV 处理失败，使用备用算法:', error)
-    // 失败时降级使用备用算法
-    return removeWatermarkFallback(imageData, watermarks, width, height)
+      if (count > 0) {
+        data[idx] = Math.round(r / count)
+        data[idx + 1] = Math.round(g / count)
+        data[idx + 2] = Math.round(b / count)
+      }
+    }
   }
 }
 
@@ -748,21 +711,6 @@ onMounted(() => {
 
   window.addEventListener('keydown', handleKeyDown)
   window.addEventListener('keyup', handleKeyUp)
-
-  // 加载 OpenCV.js（非阻塞）
-  waitForOpenCV().then((opencvModule) => {
-    if (opencvModule) {
-      cv.value = opencvModule
-      console.log('✅ OpenCV.js 加载成功，将使用高级算法去除水印')
-    } else {
-      console.log('ℹ️ OpenCV.js 未加载，将使用备用算法去除水印')
-    }
-    openCVLoading.value = false
-  }).catch((error) => {
-    console.warn('⚠️ OpenCV.js 加载出错:', error)
-    console.log('ℹ️ 将使用备用算法去除水印')
-    openCVLoading.value = false
-  })
 
   return () => {
     window.removeEventListener('keydown', handleKeyDown)
