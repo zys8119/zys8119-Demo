@@ -9,22 +9,12 @@
       <!-- 上传区域 -->
       <section class="upload-section">
         <div class="upload-box" @click="triggerFileInput" :class="{ dragging }">
-          <input
-            ref="fileInput"
-            type="file"
-            accept="video/*"
-            @change="handleFileSelect"
-            @dragover.prevent="dragging = true"
-            @dragleave.prevent="dragging = false"
-            @drop.prevent="handleDrop"
-            hidden
-          />
+          <input ref="fileInput" type="file" accept="video/*" @change="handleFileSelect"
+            @dragover.prevent="dragging = true" @dragleave.prevent="dragging = false" @drop.prevent="handleDrop"
+            hidden />
           <div v-if="!videoFile" class="upload-prompt">
             <svg class="upload-icon" viewBox="0 0 24 24">
-              <path
-                d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"
-                fill="currentColor"
-              />
+              <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z" fill="currentColor" />
             </svg>
             <p>拖拽视频或点击选择</p>
             <small>支持 MP4、WebM 等格式</small>
@@ -41,25 +31,15 @@
       <section v-if="videoFile" class="preview-section">
         <div class="preview-container">
           <!-- 视频预览 -->
-          <div class="video-preview-wrapper">
-            <video
-              ref="videoElement"
-              class="video-preview"
-              controls
-              @loadedmetadata="onVideoLoaded"
-              @play="startFrameExtraction"
-              @pause="stopFrameExtraction"
-            >
+          <div class="video-preview-wrapper abs-r">
+            <video ref="videoElement" class="video-preview" controls @loadedmetadata="onVideoLoaded"
+              @play="startFrameExtraction" @pause="stopFrameExtraction">
               Your browser does not support the video tag.
             </video>
-            <canvas
-              ref="canvasOverlay"
-              class="canvas-overlay"
-              @mousedown="startSelection"
-              @mousemove="drawSelection"
-              @mouseup="endSelection"
-              @mouseleave="endSelection"
-            />
+            <canvas ref="canvasOverlay" :class="{
+              'pointer-events-none': !ctrlKeyPressed
+            }" class="canvas-overlay  abs-content w-full! h-full!" @mousedown="startSelection"
+              @mousemove="drawSelection" @mouseup="endSelection" @mouseleave="endSelection" />
           </div>
 
           <!-- 控制面板 -->
@@ -89,12 +69,9 @@
               </div>
               <div v-else class="watermarks">
                 <div v-for="(wm, idx) in watermarks" :key="idx" class="watermark-item">
-                  <span
-                    class="watermark-preview"
-                    :style="{
-                      backgroundColor: wm.color,
-                    }"
-                  />
+                  <span class="watermark-preview" :style="{
+                    backgroundColor: wm.color,
+                  }" />
                   <div class="watermark-info">
                     <small>区域 {{ idx + 1 }}</small>
                     <p>{{ wm.width }}x{{ wm.height }}px</p>
@@ -108,26 +85,13 @@
 
             <!-- 添加和处理按钮 -->
             <div class="button-group">
-              <button
-                v-if="currentSelection"
-                class="btn btn-primary"
-                @click="addWatermark"
-              >
+              <button v-if="currentSelection" class="btn btn-primary" @click="addWatermark">
                 确认添加水印区域
               </button>
-              <button
-                v-if="watermarks.length > 0"
-                class="btn btn-success"
-                :disabled="processing"
-                @click="processVideo"
-              >
+              <button v-if="watermarks.length > 0" class="btn btn-success" :disabled="processing" @click="processVideo">
                 {{ processing ? '处理中...' : '开始处理视频' }}
               </button>
-              <button
-                v-if="processedVideoUrl"
-                class="btn btn-download"
-                @click="downloadVideo"
-              >
+              <button v-if="processedVideoUrl" class="btn btn-download" @click="downloadVideo">
                 ⬇️ 下载处理后的视频
               </button>
             </div>
@@ -135,10 +99,7 @@
             <!-- 进度显示 -->
             <div v-if="processing" class="progress-section">
               <div class="progress-bar">
-                <div
-                  class="progress-fill"
-                  :style="{ width: processingProgress + '%' }"
-                />
+                <div class="progress-fill" :style="{ width: processingProgress + '%' }" />
               </div>
               <p class="progress-text">
                 处理进度: {{ processingProgress }}% - {{ currentFrame }}/{{ totalFrames }} 帧
@@ -431,11 +392,16 @@ const processVideo = async () => {
     // 逐帧处理
     for (let frameIdx = 0; frameIdx < totalFrames; frameIdx++) {
       const frameTime = frameIdx / fps
-      video.currentTime = frameTime
 
       // 等待帧加载
       await new Promise((resolve) => {
-        const checkFrame = () => {
+        let resolved = false
+
+        const onSeeked = () => {
+          if (resolved) return
+          resolved = true
+          video.removeEventListener('seeked', onSeeked)
+
           try {
             // 绘制当前帧
             processCtx.drawImage(video, 0, 0)
@@ -457,7 +423,9 @@ const processVideo = async () => {
             })
 
             processCtx.putImageData(imageData, 0, 0)
-            frames.push(processCanvas.toDataURL('image/webp', 0.9))
+
+            // 使用 PNG 格式获得更好的质量
+            frames.push(processCanvas.toDataURL('image/png'))
 
             currentFrame.value = frameIdx + 1
             processingProgress.value = Math.round(
@@ -471,7 +439,22 @@ const processVideo = async () => {
           }
         }
 
-        setTimeout(checkFrame, 50)
+        // 设置超时以防止卡住
+        setTimeout(() => {
+          if (!resolved) {
+            resolved = true
+            video.removeEventListener('seeked', onSeeked)
+            console.warn(`帧 ${frameIdx} 加载超时，跳过处理`)
+            currentFrame.value = frameIdx + 1
+            processingProgress.value = Math.round(
+              ((frameIdx + 1) / totalFrames) * 100
+            )
+            resolve()
+          }
+        }, 500)
+
+        video.addEventListener('seeked', onSeeked, { once: true })
+        video.currentTime = frameTime
       })
     }
 
@@ -484,63 +467,121 @@ const processVideo = async () => {
         '视频合成失败，您的浏览器可能不支持此功能'
       )
     }
+
+    alert('✅ 视频处理完成！水印已成功去除。')
   } catch (error) {
     console.error('处理视频失败:', error)
-    alert(`处理视频失败: ${error.message}`)
+    alert(`❌ 处理视频失败: ${error.message}`)
   } finally {
     processing.value = false
   }
 }
 
-// 移除单帧中的水印
+// 移除单帧中的水印 - 改进版本
 const removeWatermarkFromFrame = (imageData, watermark, width, height) => {
   const data = imageData.data
   const x1 = Math.floor(watermark.x)
   const y1 = Math.floor(watermark.y)
-  const x2 = Math.floor(watermark.x + watermark.width)
-  const y2 = Math.floor(watermark.y + watermark.height)
+  const x2 = Math.ceil(watermark.x + watermark.width)
+  const y2 = Math.ceil(watermark.y + watermark.height)
 
-  // 使用高斯模糊效果去除水印
-  const blurRadius = 5
+  // 确保坐标在范围内
+  const startX = Math.max(0, x1)
+  const startY = Math.max(0, y1)
+  const endX = Math.min(width, x2)
+  const endY = Math.min(height, y2)
 
-  for (let y = y1; y < y2; y++) {
-    for (let x = x1; x < x2; x++) {
-      if (x >= 0 && x < width && y >= 0 && y < height) {
-        const idx = (y * width + x) * 4
+  if (startX >= endX || startY >= endY) return
 
-        // 从周围像素采样
-        let r = 0, g = 0, b = 0, count = 0
+  // 第一步：使用边缘像素采样法
+  const sampleEdgePixels = (x, y) => {
+    let r = 0, g = 0, b = 0, count = 0
 
-        for (let dy = -blurRadius; dy <= blurRadius; dy++) {
-          for (let dx = -blurRadius; dx <= blurRadius; dx++) {
-            const nx = x + dx
-            const ny = y + dy
+    // 从水印外边界采样
+    const sampleRadius = 15
+    for (let dx = -sampleRadius; dx <= sampleRadius; dx++) {
+      for (let dy = -sampleRadius; dy <= sampleRadius; dy++) {
+        const sx = x + dx
+        const sy = y + dy
 
-            // 避免采样水印区域内的像素
-            if (
-              nx >= x1 &&
-              nx < x2 &&
-              ny >= y1 &&
-              ny < y2
-            ) {
-              continue
-            }
+        // 只采样水印外的像素
+        if (
+          (sx < startX || sx >= endX || sy < startY || sy >= endY) &&
+          sx >= 0 &&
+          sx < width &&
+          sy >= 0 &&
+          sy < height
+        ) {
+          const sidx = (sy * width + sx) * 4
+          const distance = Math.sqrt(dx * dx + dy * dy)
+          // 使用高斯权重，距离越近权重越大
+          const weight = Math.exp(-(distance * distance) / (2 * 25))
 
-            if (nx >= 0 && nx < width && ny >= 0 && ny < height) {
-              const nidx = (ny * width + nx) * 4
-              r += data[nidx]
-              g += data[nidx + 1]
-              b += data[nidx + 2]
-              count++
-            }
+          r += data[sidx] * weight
+          g += data[sidx + 1] * weight
+          b += data[sidx + 2] * weight
+          count += weight
+        }
+      }
+    }
+
+    if (count > 0) {
+      return {
+        r: Math.round(r / count),
+        g: Math.round(g / count),
+        b: Math.round(b / count),
+      }
+    }
+    return null
+  }
+
+  // 第二步：填充水印区域
+  for (let y = startY; y < endY; y++) {
+    for (let x = startX; x < endX; x++) {
+      const idx = (y * width + x) * 4
+      const color = sampleEdgePixels(x, y)
+
+      if (color) {
+        data[idx] = color.r
+        data[idx + 1] = color.g
+        data[idx + 2] = color.b
+        // 保持透明度不变
+        data[idx + 3] = 255
+      }
+    }
+  }
+
+  // 第三步：平滑处理以减少伪影
+  const smoothKernel = 3
+  const tempData = new Uint8ClampedArray(data)
+
+  for (let y = startY + smoothKernel; y < endY - smoothKernel; y++) {
+    for (let x = startX + smoothKernel; x < endX - smoothKernel; x++) {
+      const idx = (y * width + x) * 4
+
+      // 只平滑水印区域内的像素
+      let r = 0, g = 0, b = 0, count = 0
+
+      for (let dy = -1; dy <= 1; dy++) {
+        for (let dx = -1; dx <= 1; dx++) {
+          const nx = x + dx
+          const ny = y + dy
+          const nidx = (ny * width + nx) * 4
+
+          // 如果邻近像素在水印区域内
+          if (nx >= startX && nx < endX && ny >= startY && ny < endY) {
+            r += tempData[nidx]
+            g += tempData[nidx + 1]
+            b += tempData[nidx + 2]
+            count++
           }
         }
+      }
 
-        if (count > 0) {
-          data[idx] = Math.round(r / count)
-          data[idx + 1] = Math.round(g / count)
-          data[idx + 2] = Math.round(b / count)
-        }
+      if (count > 0) {
+        data[idx] = Math.round(r / count)
+        data[idx + 1] = Math.round(g / count)
+        data[idx + 2] = Math.round(b / count)
       }
     }
   }
