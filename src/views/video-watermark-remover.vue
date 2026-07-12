@@ -12,7 +12,7 @@
           <input ref="fileInput" type="file" accept="video/*" @change="handleFileSelect"
             @dragover.prevent="dragging = true" @dragleave.prevent="dragging = false" @drop.prevent="handleDrop"
             hidden />
-          <div v-if="!videoFile" class="upload-prompt">
+          <div v-if="!videoFile" class="upload-prompt flex-center flex-col items-center">
             <svg class="upload-icon" viewBox="0 0 24 24">
               <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z" fill="currentColor" />
             </svg>
@@ -79,6 +79,128 @@
                   <button class="remove-btn" @click="removeWatermark(idx)">
                     删除
                   </button>
+                </div>
+              </div>
+            </div>
+
+            <!-- 水印去除强度配置面板 -->
+            <div class="config-section">
+              <button class="config-toggle-btn" @click="showConfigPanel = !showConfigPanel">
+                {{ showConfigPanel ? '▼ 隐藏高级配置' : '► 显示高级配置' }}
+              </button>
+
+              <div v-if="showConfigPanel" class="config-panel">
+                <h4>🎯 水印去除强度配置</h4>
+
+                <!-- 预设方案 -->
+                <div class="preset-buttons">
+                  <button class="preset-btn"
+                    :class="{ active: watermarkRemovalConfig.algorithm === 'INPAINT_NS' && watermarkRemovalConfig.neighborhoodRadius === 7 }"
+                    @click="applyPreset('quality')">
+                    ⭐⭐⭐⭐⭐ 极致质量
+                  </button>
+                  <button class="preset-btn" :class="{ active: watermarkRemovalConfig.neighborhoodRadius === 5 }"
+                    @click="applyPreset('balanced')">
+                    ⭐⭐⭐⭐ 平衡推荐
+                  </button>
+                  <button class="preset-btn" :class="{ active: watermarkRemovalConfig.algorithm === 'INPAINT_TELEA' }"
+                    @click="applyPreset('fast')">
+                    ⭐⭐⭐ 快速模式
+                  </button>
+                </div>
+
+                <!-- 算法选择 -->
+                <div class="config-item">
+                  <label>算法选择</label>
+                  <select v-model="watermarkRemovalConfig.algorithm" class="config-select">
+                    <option value="INPAINT_NS">Navier-Stokes（最强，慢）</option>
+                    <option value="INPAINT_TELEA">TELEA（快速，较好）</option>
+                  </select>
+                </div>
+
+                <!-- 邻域半径 -->
+                <div class="config-item">
+                  <label>邻域半径: <span class="param-value">{{ watermarkRemovalConfig.neighborhoodRadius }}</span></label>
+                  <div class="input-group">
+                    <input v-model.number="watermarkRemovalConfig.neighborhoodRadius" type="number" min="1"
+                      class="config-number-input" @change="validateNeighborhoodRadius" />
+                    <input v-model.number="watermarkRemovalConfig.neighborhoodRadius" type="range" min="1" max="20"
+                      class="config-slider" />
+                  </div>
+                  <small>范围: 1-∞ (推荐: 5-7，可无限增加)</small>
+                </div>
+
+                <!-- 模糊半径 -->
+                <div class="config-item">
+                  <label>备用算法模糊半径: <span class="param-value">{{ watermarkRemovalConfig.blurRadius }}</span></label>
+                  <div class="input-group">
+                    <input v-model.number="watermarkRemovalConfig.blurRadius" type="number" min="1"
+                      class="config-number-input" @change="validateBlurRadius" />
+                    <input v-model.number="watermarkRemovalConfig.blurRadius" type="range" min="1" max="50"
+                      class="config-slider" />
+                  </div>
+                  <small>范围: 1-∞ (推荐: 15-20，可无限增加)</small>
+                </div>
+
+                <!-- 高斯权重 -->
+                <div class="config-item">
+                  <label>高斯权重 Sigma: <span class="param-value">{{ watermarkRemovalConfig.gaussianSigma }}</span></label>
+                  <div class="input-group">
+                    <input v-model.number="watermarkRemovalConfig.gaussianSigma" type="number" min="1"
+                      class="config-number-input" @change="validateGaussianSigma" />
+                    <input v-model.number="watermarkRemovalConfig.gaussianSigma" type="range" min="1" max="100"
+                      class="config-slider" />
+                  </div>
+                  <small>范围: 1-∞ (推荐: 40-50，可无限增加)</small>
+                </div>
+
+                <!-- 平滑迭代次数 -->
+                <div class="config-item">
+                  <label>平滑迭代次数: <span class="param-value">{{ watermarkRemovalConfig.smoothIterations }}</span></label>
+                  <div class="input-group">
+                    <input v-model.number="watermarkRemovalConfig.smoothIterations" type="number" min="1"
+                      class="config-number-input" @change="validateSmoothIterations" />
+                    <input v-model.number="watermarkRemovalConfig.smoothIterations" type="range" min="1" max="20"
+                      class="config-slider" />
+                  </div>
+                  <small>范围: 1-∞ (推荐: 2-3，可无限增加)</small>
+                </div>
+
+                <!-- 处理选项 -->
+                <div class="config-options">
+                  <label class="checkbox-label">
+                    <input v-model="watermarkRemovalConfig.preProcessing" type="checkbox" />
+                    预处理：增强对比度
+                  </label>
+                  <label class="checkbox-label">
+                    <input v-model="watermarkRemovalConfig.postProcessing" type="checkbox" />
+                    后处理：额外平滑
+                  </label>
+                </div>
+
+                <!-- 配置信息 -->
+                <div class="config-info">
+                  <p><strong>当前配置信息:</strong></p>
+                  <p v-if="watermarkRemovalConfig.algorithm === 'INPAINT_NS'">
+                    🔴 Navier-Stokes 算法（最强） - 处理时间会较长
+                  </p>
+                  <p v-else>
+                    🟢 TELEA 算法（快速） - 效果仍很好
+                  </p>
+                  <p>
+                    邻域半径: {{ watermarkRemovalConfig.neighborhoodRadius }}
+                    <span v-if="watermarkRemovalConfig.neighborhoodRadius >= 10" class="strength-indicator">🔥 超强</span>
+                    <span v-else-if="watermarkRemovalConfig.neighborhoodRadius >= 6" class="strength-indicator">🔴
+                      非常强</span>
+                    <span v-else-if="watermarkRemovalConfig.neighborhoodRadius >= 4" class="strength-indicator">🟡
+                      很强</span>
+                    <span v-else class="strength-indicator">🟢 中等</span>
+                  </p>
+                  <p>平滑迭代: {{ watermarkRemovalConfig.smoothIterations }} 次</p>
+                  <p
+                    v-if="watermarkRemovalConfig.neighborhoodRadius > 10 || watermarkRemovalConfig.smoothIterations > 5">
+                    ⚠️ 警告: 参数非常强，处理时间会很长！
+                  </p>
                 </div>
               </div>
             </div>
@@ -160,6 +282,102 @@ const canvasCtx = ref(null)
 const extractionAnimationId = ref(null)
 const ctrlKeyPressed = ref(false)
 const selectionMode = ref(false) // 框选模式开关
+
+// 🆕 水印去除强度配置
+const watermarkRemovalConfig = ref({
+  // OpenCV 参数
+  algorithm: 'INPAINT_NS', // 最强算法：NS（Navier-Stokes）
+  neighborhoodRadius: 7,   // 邻域半径：7（最大值）
+
+  // 备用算法参数
+  blurRadius: 20,          // 模糊半径：20（更强）
+  gaussianSigma: 50,       // 高斯权重 sigma
+  smoothIterations: 3,     // 平滑迭代次数
+
+  // 处理优化
+  preProcessing: true,     // 预处理：增强对比度
+  postProcessing: true,    // 后处理：额外平滑
+  multiPass: false,        // 多遍处理（更强但慢）
+})
+
+const showConfigPanel = ref(false)  // 显示配置面板
+const previewMode = ref(false)      // 预览模式
+
+// 预设配置方案
+const presets = {
+  quality: {
+    name: '极致质量（最强，慢）',
+    algorithm: 'INPAINT_NS',
+    neighborhoodRadius: 7,
+    blurRadius: 20,
+    gaussianSigma: 50,
+    smoothIterations: 3,
+    preProcessing: true,
+    postProcessing: true,
+    multiPass: false,
+  },
+  balanced: {
+    name: '平衡模式（推荐）',
+    algorithm: 'INPAINT_NS',
+    neighborhoodRadius: 5,
+    blurRadius: 15,
+    gaussianSigma: 40,
+    smoothIterations: 2,
+    preProcessing: true,
+    postProcessing: true,
+    multiPass: false,
+  },
+  fast: {
+    name: '快速模式（快，质量较好）',
+    algorithm: 'INPAINT_TELEA',
+    neighborhoodRadius: 3,
+    blurRadius: 12,
+    gaussianSigma: 30,
+    smoothIterations: 1,
+    preProcessing: false,
+    postProcessing: false,
+    multiPass: false,
+  },
+}
+
+// 应用预设配置
+const applyPreset = (presetName) => {
+  if (presets[presetName]) {
+    watermarkRemovalConfig.value = { ...presets[presetName] }
+    console.log(`✅ 应用预设配置: ${presets[presetName].name}`)
+  }
+}
+
+
+// 重置为最强配置
+const resetToMaximum = () => {
+  applyPreset('quality')
+}
+
+// 参数验证函数
+const validateNeighborhoodRadius = () => {
+  if (watermarkRemovalConfig.value.neighborhoodRadius < 1) {
+    watermarkRemovalConfig.value.neighborhoodRadius = 1
+  }
+}
+
+const validateBlurRadius = () => {
+  if (watermarkRemovalConfig.value.blurRadius < 1) {
+    watermarkRemovalConfig.value.blurRadius = 1
+  }
+}
+
+const validateGaussianSigma = () => {
+  if (watermarkRemovalConfig.value.gaussianSigma < 1) {
+    watermarkRemovalConfig.value.gaussianSigma = 1
+  }
+}
+
+const validateSmoothIterations = () => {
+  if (watermarkRemovalConfig.value.smoothIterations < 1) {
+    watermarkRemovalConfig.value.smoothIterations = 1
+  }
+}
 
 // 等待 OpenCV 加载 - 带超时保护
 const waitForOpenCV = () => {
@@ -405,6 +623,20 @@ const processVideo = async () => {
       throw new Error('视频未加载')
     }
 
+    // 调试：打印水印信息
+    console.log('========== 开始处理视频 ==========')
+    console.log('水印数量:', watermarks.value.length)
+    watermarks.value.forEach((wm, idx) => {
+      console.log(`水印 ${idx}:`, {
+        x: wm.x,
+        y: wm.y,
+        width: wm.width,
+        height: wm.height,
+      })
+    })
+    console.log('视频尺寸:', video.videoWidth, 'x', video.videoHeight)
+    console.log('OpenCV 可用:', cv.value ? '是' : '否')
+
     const fps = 30
     const duration = video.duration
     const totalFrames = Math.floor(duration * fps)
@@ -440,6 +672,11 @@ const processVideo = async () => {
               processCanvas.width,
               processCanvas.height
             )
+
+            // 调试：仅在前几帧输出日志
+            if (frameIdx < 3) {
+              console.log(`处理第 ${frameIdx} 帧，水印数: ${watermarks.value.length}`)
+            }
 
             // 使用 OpenCV.js 进行水印去除（效果更好！）
             const processedData = removeWatermarkWithOpenCV(
@@ -501,14 +738,27 @@ const processVideo = async () => {
     alert(`❌ 处理视频失败: ${error.message}`)
   } finally {
     processing.value = false
+    console.log('========== 处理完成 ==========')
   }
 }
 
-// 备用算法：简单模糊（当 OpenCV 不可用时使用）
+// 备用算法：自适应参数的高斯模糊
 const removeWatermarkFallback = (imageData, watermarks, width, height) => {
   const data = imageData.data
+  const config = watermarkRemovalConfig.value
 
-  watermarks.forEach((wm) => {
+  // 调试：仅在第一次调用时打印
+  if (!window._watermarkDebugLogged) {
+    console.log('使用备用算法处理水印:', {
+      算法: '自适应高斯模糊',
+      模糊半径: config.blurRadius,
+      sigma: config.gaussianSigma,
+      平滑次数: config.smoothIterations,
+    })
+    window._watermarkDebugLogged = true
+  }
+
+  watermarks.forEach((wm, wmIdx) => {
     const x1 = Math.floor(wm.x)
     const y1 = Math.floor(wm.y)
     const x2 = Math.ceil(wm.x + wm.width)
@@ -519,39 +769,47 @@ const removeWatermarkFallback = (imageData, watermarks, width, height) => {
     const endX = Math.min(width, x2)
     const endY = Math.min(height, y2)
 
-    // 简单高斯模糊
-    const blurRadius = 8
+    if (startX >= endX || startY >= endY) {
+      console.warn(`水印 ${wmIdx} 坐标无效:`, { startX, startY, endX, endY })
+      return
+    }
 
-    for (let y = startY; y < endY; y++) {
-      for (let x = startX; x < endX; x++) {
-        const idx = (y * width + x) * 4
-        let r = 0, g = 0, b = 0, count = 0
+    const blurRadius = config.blurRadius
+    const sigmaSq = config.gaussianSigma * config.gaussianSigma
 
-        for (let dy = -blurRadius; dy <= blurRadius; dy++) {
-          for (let dx = -blurRadius; dx <= blurRadius; dx++) {
-            const nx = x + dx
-            const ny = y + dy
+    // 多遍平滑处理
+    for (let iteration = 0; iteration < config.smoothIterations; iteration++) {
+      for (let y = startY; y < endY; y++) {
+        for (let x = startX; x < endX; x++) {
+          const idx = (y * width + x) * 4
+          let r = 0, g = 0, b = 0, count = 0
 
-            if (nx >= 0 && nx < width && ny >= 0 && ny < height) {
-              // 只采样水印外的像素
-              if (!(nx >= startX && nx < endX && ny >= startY && ny < endY)) {
-                const nidx = (ny * width + nx) * 4
-                const distance = Math.sqrt(dx * dx + dy * dy)
-                const weight = Math.exp(-(distance * distance) / 32)
+          for (let dy = -blurRadius; dy <= blurRadius; dy++) {
+            for (let dx = -blurRadius; dx <= blurRadius; dx++) {
+              const nx = x + dx
+              const ny = y + dy
 
-                r += data[nidx] * weight
-                g += data[nidx + 1] * weight
-                b += data[nidx + 2] * weight
-                count += weight
+              if (nx >= 0 && nx < width && ny >= 0 && ny < height) {
+                // 只采样水印外的像素
+                if (!(nx >= startX && nx < endX && ny >= startY && ny < endY)) {
+                  const nidx = (ny * width + nx) * 4
+                  const distance = Math.sqrt(dx * dx + dy * dy)
+                  const weight = Math.exp(-(distance * distance) / sigmaSq)
+
+                  r += data[nidx] * weight
+                  g += data[nidx + 1] * weight
+                  b += data[nidx + 2] * weight
+                  count += weight
+                }
               }
             }
           }
-        }
 
-        if (count > 0) {
-          data[idx] = Math.round(r / count)
-          data[idx + 1] = Math.round(g / count)
-          data[idx + 2] = Math.round(b / count)
+          if (count > 0) {
+            data[idx] = Math.round(r / count)
+            data[idx + 1] = Math.round(g / count)
+            data[idx + 2] = Math.round(b / count)
+          }
         }
       }
     }
@@ -560,12 +818,14 @@ const removeWatermarkFallback = (imageData, watermarks, width, height) => {
   return imageData
 }
 
-// 使用 OpenCV.js 进行水印去除（如果可用）
+// 使用 OpenCV.js 进行水印去除（如果可用） - 使用最强算法
 const removeWatermarkWithOpenCV = (imageData, watermarks, width, height) => {
   if (!cv.value) {
     // OpenCV 不可用，使用备用算法
     return removeWatermarkFallback(imageData, watermarks, width, height)
   }
+
+  const config = watermarkRemovalConfig.value
 
   try {
     // 1. 将 ImageData 转换为 OpenCV Mat
@@ -575,45 +835,82 @@ const removeWatermarkWithOpenCV = (imageData, watermarks, width, height) => {
     const srcRgb = new cv.value.Mat()
     cv.value.cvtColor(src, srcRgb, cv.value.COLOR_RGBA2RGB)
 
-    // 3. 创建掩码（标记需要修复的区域）
+    // 3. 预处理：提高对比度（可选）
+    let processSource = srcRgb
+    if (config.preProcessing) {
+      const temp = new cv.value.Mat()
+      cv.value.convertScaleAbs(srcRgb, temp, 1.2, 0)
+      processSource = temp
+    }
+
+    // 4. 创建掩码（标记需要修复的区域）
     const mask = cv.value.Mat.zeros(height, width, cv.value.CV_8UC1)
 
     // 标记所有水印区域
-    watermarks.forEach((wm) => {
+    let totalPixels = 0
+    watermarks.forEach((wm, wmIdx) => {
       const x1 = Math.floor(wm.x)
       const y1 = Math.floor(wm.y)
       const x2 = Math.ceil(wm.x + wm.width)
       const y2 = Math.ceil(wm.y + wm.height)
 
+      let count = 0
       for (let py = y1; py < y2; py++) {
         for (let px = x1; px < x2; px++) {
           if (px >= 0 && px < width && py >= 0 && py < height) {
             mask.ucharPtr(py, px)[0] = 255 // 标记为需要修复
+            count++
           }
         }
       }
+      totalPixels += count
     })
 
-    // 4. 使用 TELEA 算法进行内容感知填充
+    // 调试：仅在第一次调用时打印
+    if (!window._opencvDebugLogged) {
+      const algorithmName = config.algorithm === 'INPAINT_NS' ? 'Navier-Stokes (最强)' : 'TELEA (快速)'
+      console.log('使用 OpenCV.js 处理（最强模式）:', {
+        算法: algorithmName,
+        邻域半径: config.neighborhoodRadius,
+        标记像素: totalPixels,
+        图像尺寸: `${width}x${height}`,
+        预处理: config.preProcessing,
+        后处理: config.postProcessing,
+      })
+      window._opencvDebugLogged = true
+    }
+
+    // 5. 使用最强算法进行内容感知填充
     const dst = new cv.value.Mat()
-    cv.value.inpaint(srcRgb, mask, dst, 3, cv.value.INPAINT_TELEA)
+    const algorithm = config.algorithm === 'INPAINT_NS' ? cv.value.INPAINT_NS : cv.value.INPAINT_TELEA
+    cv.value.inpaint(processSource, mask, dst, config.neighborhoodRadius, algorithm)
 
-    // 5. 转换回 RGBA
+    // 6. 后处理：额外平滑（可选）
+    let finalResult = dst
+    if (config.postProcessing) {
+      const blurred = new cv.value.Mat()
+      cv.value.GaussianBlur(dst, blurred, new cv.value.Size(5, 5), 0.5)
+      finalResult = blurred
+    }
+
+    // 7. 转换回 RGBA
     const dstRgba = new cv.value.Mat()
-    cv.value.cvtColor(dst, dstRgba, cv.value.COLOR_RGB2RGBA)
+    cv.value.cvtColor(finalResult, dstRgba, cv.value.COLOR_RGB2RGBA)
 
-    // 6. 转换回 ImageData
+    // 8. 转换回 ImageData
     const result = new ImageData(
       new Uint8ClampedArray(dstRgba.data),
       width,
       height
     )
 
-    // 7. 清理内存
+    // 9. 清理内存
     src.delete()
     srcRgb.delete()
     mask.delete()
     dst.delete()
+    if (config.preProcessing && processSource !== srcRgb) processSource.delete()
+    if (config.postProcessing && finalResult !== dst) finalResult.delete()
     dstRgba.delete()
 
     return result
@@ -1184,12 +1481,226 @@ onMounted(() => {
   background: #000;
 }
 
+/* 配置面板 */
+.config-section {
+  margin: 20px 0;
+}
+
+.config-toggle-btn {
+  width: 100%;
+  padding: 12px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 1em;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.config-toggle-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.config-panel {
+  background: #f8f9ff;
+  border: 2px solid #667eea;
+  border-radius: 8px;
+  padding: 20px;
+  margin-top: 12px;
+  animation: slideDown 0.3s ease-out;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.config-panel h4 {
+  margin: 0 0 15px;
+  color: #333;
+  font-size: 1.1em;
+}
+
+.preset-buttons {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.preset-btn {
+  padding: 10px;
+  background: white;
+  border: 2px solid #ddd;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.9em;
+  font-weight: 600;
+  transition: all 0.3s;
+}
+
+.preset-btn:hover {
+  border-color: #667eea;
+  background: #f0f4ff;
+}
+
+.preset-btn.active {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border-color: #667eea;
+}
+
+.config-item {
+  margin-bottom: 18px;
+}
+
+.config-item label {
+  display: block;
+  margin-bottom: 8px;
+  color: #333;
+  font-weight: 600;
+  font-size: 0.95em;
+}
+
+.param-value {
+  color: #667eea;
+  font-weight: 700;
+  font-size: 1.1em;
+}
+
+.input-group {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.config-number-input {
+  width: 80px;
+  padding: 8px;
+  border: 2px solid #667eea;
+  border-radius: 6px;
+  font-size: 0.95em;
+  font-weight: 600;
+  text-align: center;
+  color: #667eea;
+}
+
+.config-number-input:focus {
+  outline: none;
+  box-shadow: 0 0 8px rgba(102, 126, 234, 0.4);
+  border-color: #764ba2;
+}
+
+.config-item small {
+  display: block;
+  color: #999;
+  font-size: 0.85em;
+  margin-top: 5px;
+}
+
+.strength-indicator {
+  font-weight: 700;
+  margin-left: 8px;
+}
+
+.config-select,
+.config-slider {
+  width: 100%;
+  padding: 8px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  font-size: 0.95em;
+  cursor: pointer;
+}
+
+.config-slider {
+  height: 6px;
+  padding: 0;
+  background: linear-gradient(90deg, #e0e0e0 0%, #667eea 100%);
+}
+
+.config-slider::-webkit-slider-thumb {
+  appearance: none;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #667eea;
+  cursor: pointer;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+}
+
+.config-slider::-moz-range-thumb {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #667eea;
+  cursor: pointer;
+  border: none;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+}
+
+.config-options {
+  margin: 20px 0;
+  padding: 15px;
+  background: white;
+  border-radius: 6px;
+}
+
+.checkbox-label {
+  display: flex;
+  align-items: center;
+  margin-bottom: 10px;
+  color: #333;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.checkbox-label input {
+  margin-right: 8px;
+  width: 18px;
+  height: 18px;
+  cursor: pointer;
+}
+
+.config-info {
+  background: #fff3cd;
+  border: 1px solid #ffc107;
+  border-radius: 6px;
+  padding: 12px;
+  margin-top: 15px;
+  font-size: 0.9em;
+}
+
+.config-info p {
+  margin: 6px 0;
+  color: #333;
+}
+
+.config-info strong {
+  color: #664d00;
+}
+
 @media (max-width: 768px) {
   .preview-container {
     grid-template-columns: 1fr;
   }
 
   .comparison {
+    grid-template-columns: 1fr;
+  }
+
+  .preset-buttons {
     grid-template-columns: 1fr;
   }
 
