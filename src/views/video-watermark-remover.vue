@@ -8,20 +8,20 @@
     <main class="main-content">
       <!-- 上传区域 -->
       <section class="upload-section">
-        <div class="upload-box" @click="triggerFileInput" :class="{ dragging }">
+        <div class="upload-box h-100px p-0px! flex-center" @click="triggerFileInput" :class="{ dragging }">
           <input ref="fileInput" type="file" accept="video/*" @change="handleFileSelect"
             @dragover.prevent="dragging = true" @dragleave.prevent="dragging = false" @drop.prevent="handleDrop"
             hidden />
-          <div v-if="!videoFile" class="upload-prompt flex-center flex-col items-center">
+          <div v-if="!videoFile" class="upload-prompt flex-center flex-col items-center h-full">
             <svg class="upload-icon" viewBox="0 0 24 24">
               <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z" fill="currentColor" />
             </svg>
-            <p>拖拽视频或点击选择</p>
+            <p class="m-0!">拖拽视频或点击选择</p>
             <small>支持 MP4、WebM 等格式</small>
           </div>
-          <div v-else class="file-info">
+          <div v-else class="file-info flex-center gap-15px">
             <p>✓ {{ videoFile.name }}</p>
-            <small>{{ (videoFile.size / 1024 / 1024).toFixed(2) }} MB</small>
+            <small class="flex-center m-0!">{{ (videoFile.size / 1024 / 1024).toFixed(2) }} MB</small>
             <button class="change-btn" @click.stop="resetVideo">更换视频</button>
           </div>
         </div>
@@ -29,9 +29,9 @@
 
       <!-- 预览和水印框选区域 -->
       <section v-if="videoFile" class="preview-section">
-        <div class="preview-container">
+        <div class="preview-container flex-center!">
           <!-- 视频预览 -->
-          <div class="video-preview-wrapper abs-r">
+          <div class="video-preview-wrapper abs-r w-500px">
             <video ref="videoElement" class="video-preview" controls @loadedmetadata="onVideoLoaded"
               @play="startFrameExtraction" @pause="stopFrameExtraction">
               Your browser does not support the video tag.
@@ -43,24 +43,54 @@
           </div>
 
           <!-- 控制面板 -->
-          <div class="control-panel">
-            <div class="section-title">水印区域框选</div>
-
+          <div class="control-panel flex-1 min-h-400px of-auto!">
+            <div class="section-title flex-center-start!">
+              <div>水印区域框选</div>
+              <!-- 水印去除强度配置面板 - 悬浮窗口 -->
+              <button class=" w-100px! h-30px! text-12px!" @click="showConfigPanel = !showConfigPanel">
+                {{ showConfigPanel ? '▼ 隐藏高级配置' : '► 显示高级配置' }}
+              </button>
+            </div>
+            <p class="text-12px">
+              <span class="shortcut-hint">按住 Ctrl (Windows) 或 Cmd (Mac)</span>
+              在视频上拖拽框选水印区域
+            </p>
             <!-- 当前框选 -->
-            <div class="current-selection">
-              <p>
-                <span class="shortcut-hint">按住 Ctrl (Windows) 或 Cmd (Mac)</span>
-                在视频上拖拽框选水印区域
-              </p>
-              <div v-if="currentSelection" class="selection-info">
-                <p>当前选择: X: {{ currentSelection.x }}px, Y: {{ currentSelection.y }}px</p>
-                <p>大小: {{ currentSelection.width }}x{{ currentSelection.height }}px</p>
-                <button class="cancel-btn" @click="currentSelection = null">
-                  清除当前选择
-                </button>
+            <div class="current-selection p-10px! m-0!">
+              <div v-if="currentSelection" class="selection-info flex-center-start! justify-between! items-center!">
+                <div>
+                  <p>当前选择: X: {{ (currentSelection.x).toFixed(0) }}px, Y: {{ (currentSelection.y).toFixed(2) }}px</p>
+                  <p>大小: {{ (currentSelection.width).toFixed(0) }}x{{ (currentSelection.height).toFixed(0) }}px</p>
+                </div>
+                <div class="flex-center items-start! gap-10px flex-col">
+                  <button class="cancel-btn m-0!" @click="currentSelection = null">
+                    清除当前选择
+                  </button>
+                  <button v-if="currentSelection" class="btn text-12px! btn-primary p-x-12px! p-y-8px!"
+                    @click="addWatermark">
+                    确认添加水印区域
+                  </button>
+                </div>
               </div>
             </div>
-
+            <!-- 添加和处理按钮 -->
+            <div class="button-group">
+              <button v-if="watermarks.length > 0" class="btn btn-success" :disabled="processing" @click="processVideo">
+                {{ processing ? '处理中...' : '开始处理视频' }}
+              </button>
+              <button v-if="processedVideoUrl" class="btn btn-download" @click="downloadVideo">
+                ⬇️ 下载处理后的视频
+              </button>
+            </div>
+            <!-- 进度显示 -->
+            <div v-if="processing" class="progress-section">
+              <div class="progress-bar">
+                <div class="progress-fill" :style="{ width: processingProgress + '%' }" />
+              </div>
+              <p class="progress-text">
+                处理进度: {{ processingProgress }}% - {{ currentFrame }}/{{ totalFrames }} 帧
+              </p>
+            </div>
             <!-- 水印区域列表 -->
             <div class="watermarks-list">
               <div class="section-title">已标记水印区域 ({{ watermarks.length }})</div>
@@ -83,150 +113,7 @@
               </div>
             </div>
 
-            <!-- 水印去除强度配置面板 -->
-            <div class="config-section">
-              <button class="config-toggle-btn" @click="showConfigPanel = !showConfigPanel">
-                {{ showConfigPanel ? '▼ 隐藏高级配置' : '► 显示高级配置' }}
-              </button>
 
-              <div v-if="showConfigPanel" class="config-panel">
-                <h4>🎯 水印去除强度配置</h4>
-
-                <!-- 预设方案 -->
-                <div class="preset-buttons">
-                  <button class="preset-btn"
-                    :class="{ active: watermarkRemovalConfig.algorithm === 'INPAINT_NS' && watermarkRemovalConfig.neighborhoodRadius === 7 }"
-                    @click="applyPreset('quality')">
-                    ⭐⭐⭐⭐⭐ 极致质量
-                  </button>
-                  <button class="preset-btn" :class="{ active: watermarkRemovalConfig.neighborhoodRadius === 5 }"
-                    @click="applyPreset('balanced')">
-                    ⭐⭐⭐⭐ 平衡推荐
-                  </button>
-                  <button class="preset-btn" :class="{ active: watermarkRemovalConfig.algorithm === 'INPAINT_TELEA' }"
-                    @click="applyPreset('fast')">
-                    ⭐⭐⭐ 快速模式
-                  </button>
-                </div>
-
-                <!-- 算法选择 -->
-                <div class="config-item">
-                  <label>算法选择</label>
-                  <select v-model="watermarkRemovalConfig.algorithm" class="config-select">
-                    <option value="INPAINT_NS">Navier-Stokes（最强，慢）</option>
-                    <option value="INPAINT_TELEA">TELEA（快速，较好）</option>
-                  </select>
-                </div>
-
-                <!-- 邻域半径 -->
-                <div class="config-item">
-                  <label>邻域半径: <span class="param-value">{{ watermarkRemovalConfig.neighborhoodRadius }}</span></label>
-                  <div class="input-group">
-                    <input v-model.number="watermarkRemovalConfig.neighborhoodRadius" type="number" min="1"
-                      class="config-number-input" @change="validateNeighborhoodRadius" />
-                    <input v-model.number="watermarkRemovalConfig.neighborhoodRadius" type="range" min="1" max="20"
-                      class="config-slider" />
-                  </div>
-                  <small>范围: 1-∞ (推荐: 5-7，可无限增加)</small>
-                </div>
-
-                <!-- 模糊半径 -->
-                <div class="config-item">
-                  <label>备用算法模糊半径: <span class="param-value">{{ watermarkRemovalConfig.blurRadius }}</span></label>
-                  <div class="input-group">
-                    <input v-model.number="watermarkRemovalConfig.blurRadius" type="number" min="1"
-                      class="config-number-input" @change="validateBlurRadius" />
-                    <input v-model.number="watermarkRemovalConfig.blurRadius" type="range" min="1" max="50"
-                      class="config-slider" />
-                  </div>
-                  <small>范围: 1-∞ (推荐: 15-20，可无限增加)</small>
-                </div>
-
-                <!-- 高斯权重 -->
-                <div class="config-item">
-                  <label>高斯权重 Sigma: <span class="param-value">{{ watermarkRemovalConfig.gaussianSigma }}</span></label>
-                  <div class="input-group">
-                    <input v-model.number="watermarkRemovalConfig.gaussianSigma" type="number" min="1"
-                      class="config-number-input" @change="validateGaussianSigma" />
-                    <input v-model.number="watermarkRemovalConfig.gaussianSigma" type="range" min="1" max="100"
-                      class="config-slider" />
-                  </div>
-                  <small>范围: 1-∞ (推荐: 40-50，可无限增加)</small>
-                </div>
-
-                <!-- 平滑迭代次数 -->
-                <div class="config-item">
-                  <label>平滑迭代次数: <span class="param-value">{{ watermarkRemovalConfig.smoothIterations }}</span></label>
-                  <div class="input-group">
-                    <input v-model.number="watermarkRemovalConfig.smoothIterations" type="number" min="1"
-                      class="config-number-input" @change="validateSmoothIterations" />
-                    <input v-model.number="watermarkRemovalConfig.smoothIterations" type="range" min="1" max="20"
-                      class="config-slider" />
-                  </div>
-                  <small>范围: 1-∞ (推荐: 2-3，可无限增加)</small>
-                </div>
-
-                <!-- 处理选项 -->
-                <div class="config-options">
-                  <label class="checkbox-label">
-                    <input v-model="watermarkRemovalConfig.preProcessing" type="checkbox" />
-                    预处理：增强对比度
-                  </label>
-                  <label class="checkbox-label">
-                    <input v-model="watermarkRemovalConfig.postProcessing" type="checkbox" />
-                    后处理：额外平滑
-                  </label>
-                </div>
-
-                <!-- 配置信息 -->
-                <div class="config-info">
-                  <p><strong>当前配置信息:</strong></p>
-                  <p v-if="watermarkRemovalConfig.algorithm === 'INPAINT_NS'">
-                    🔴 Navier-Stokes 算法（最强） - 处理时间会较长
-                  </p>
-                  <p v-else>
-                    🟢 TELEA 算法（快速） - 效果仍很好
-                  </p>
-                  <p>
-                    邻域半径: {{ watermarkRemovalConfig.neighborhoodRadius }}
-                    <span v-if="watermarkRemovalConfig.neighborhoodRadius >= 10" class="strength-indicator">🔥 超强</span>
-                    <span v-else-if="watermarkRemovalConfig.neighborhoodRadius >= 6" class="strength-indicator">🔴
-                      非常强</span>
-                    <span v-else-if="watermarkRemovalConfig.neighborhoodRadius >= 4" class="strength-indicator">🟡
-                      很强</span>
-                    <span v-else class="strength-indicator">🟢 中等</span>
-                  </p>
-                  <p>平滑迭代: {{ watermarkRemovalConfig.smoothIterations }} 次</p>
-                  <p
-                    v-if="watermarkRemovalConfig.neighborhoodRadius > 10 || watermarkRemovalConfig.smoothIterations > 5">
-                    ⚠️ 警告: 参数非常强，处理时间会很长！
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            <!-- 添加和处理按钮 -->
-            <div class="button-group">
-              <button v-if="currentSelection" class="btn btn-primary" @click="addWatermark">
-                确认添加水印区域
-              </button>
-              <button v-if="watermarks.length > 0" class="btn btn-success" :disabled="processing" @click="processVideo">
-                {{ processing ? '处理中...' : '开始处理视频' }}
-              </button>
-              <button v-if="processedVideoUrl" class="btn btn-download" @click="downloadVideo">
-                ⬇️ 下载处理后的视频
-              </button>
-            </div>
-
-            <!-- 进度显示 -->
-            <div v-if="processing" class="progress-section">
-              <div class="progress-bar">
-                <div class="progress-fill" :style="{ width: processingProgress + '%' }" />
-              </div>
-              <p class="progress-text">
-                处理进度: {{ processingProgress }}% - {{ currentFrame }}/{{ totalFrames }} 帧
-              </p>
-            </div>
           </div>
         </div>
       </section>
@@ -251,6 +138,126 @@
           </div>
         </div>
       </section>
+
+      <!-- 悬浮配置面板 -->
+      <div v-if="showConfigPanel" class="floating-config-panel">
+        <div class="floating-panel-header">
+          <h3>🎯 水印去除强度配置</h3>
+          <button class="close-btn" @click="showConfigPanel = false">✕</button>
+        </div>
+
+        <div class="floating-panel-content">
+          <!-- 预设方案 -->
+          <div class="preset-buttons">
+            <button class="preset-btn"
+              :class="{ active: watermarkRemovalConfig.algorithm === 'INPAINT_NS' && watermarkRemovalConfig.neighborhoodRadius === 7 }"
+              @click="applyPreset('quality')">
+              ⭐⭐⭐⭐⭐ 极致质量
+            </button>
+            <button class="preset-btn" :class="{ active: watermarkRemovalConfig.neighborhoodRadius === 5 }"
+              @click="applyPreset('balanced')">
+              ⭐⭐⭐⭐ 平衡推荐
+            </button>
+            <button class="preset-btn" :class="{ active: watermarkRemovalConfig.algorithm === 'INPAINT_TELEA' }"
+              @click="applyPreset('fast')">
+              ⭐⭐⭐ 快速模式
+            </button>
+          </div>
+
+          <!-- 算法选择 -->
+          <div class="config-item">
+            <label>算法选择</label>
+            <select v-model="watermarkRemovalConfig.algorithm" class="config-select">
+              <option value="INPAINT_NS">Navier-Stokes（最强，慢）</option>
+              <option value="INPAINT_TELEA">TELEA（快速，较好）</option>
+            </select>
+          </div>
+
+          <!-- 邻域半径 -->
+          <div class="config-item">
+            <label>邻域半径: <span class="param-value">{{ watermarkRemovalConfig.neighborhoodRadius }}</span></label>
+            <div class="input-group">
+              <input v-model.number="watermarkRemovalConfig.neighborhoodRadius" type="number" min="1"
+                class="config-number-input" @change="validateNeighborhoodRadius" />
+              <input v-model.number="watermarkRemovalConfig.neighborhoodRadius" type="range" min="1" max="20"
+                class="config-slider" />
+            </div>
+            <small>范围: 1-∞ (推荐: 5-7，可无限增加)</small>
+          </div>
+
+          <!-- 模糊半径 -->
+          <div class="config-item">
+            <label>备用算法模糊半径: <span class="param-value">{{ watermarkRemovalConfig.blurRadius }}</span></label>
+            <div class="input-group">
+              <input v-model.number="watermarkRemovalConfig.blurRadius" type="number" min="1"
+                class="config-number-input" @change="validateBlurRadius" />
+              <input v-model.number="watermarkRemovalConfig.blurRadius" type="range" min="1" max="50"
+                class="config-slider" />
+            </div>
+            <small>范围: 1-∞ (推荐: 15-20，可无限增加)</small>
+          </div>
+
+          <!-- 高斯权重 -->
+          <div class="config-item">
+            <label>高斯权重 Sigma: <span class="param-value">{{ watermarkRemovalConfig.gaussianSigma }}</span></label>
+            <div class="input-group">
+              <input v-model.number="watermarkRemovalConfig.gaussianSigma" type="number" min="1"
+                class="config-number-input" @change="validateGaussianSigma" />
+              <input v-model.number="watermarkRemovalConfig.gaussianSigma" type="range" min="1" max="100"
+                class="config-slider" />
+            </div>
+            <small>范围: 1-∞ (推荐: 40-50，可无限增加)</small>
+          </div>
+
+          <!-- 平滑迭代次数 -->
+          <div class="config-item">
+            <label>平滑迭代次数: <span class="param-value">{{ watermarkRemovalConfig.smoothIterations }}</span></label>
+            <div class="input-group">
+              <input v-model.number="watermarkRemovalConfig.smoothIterations" type="number" min="1"
+                class="config-number-input" @change="validateSmoothIterations" />
+              <input v-model.number="watermarkRemovalConfig.smoothIterations" type="range" min="1" max="20"
+                class="config-slider" />
+            </div>
+            <small>范围: 1-∞ (推荐: 2-3，可无限增加)</small>
+          </div>
+
+          <!-- 处理选项 -->
+          <div class="config-options">
+            <label class="checkbox-label">
+              <input v-model="watermarkRemovalConfig.preProcessing" type="checkbox" />
+              预处理：增强对比度
+            </label>
+            <label class="checkbox-label">
+              <input v-model="watermarkRemovalConfig.postProcessing" type="checkbox" />
+              后处理：额外平滑
+            </label>
+          </div>
+
+          <!-- 配置信息 -->
+          <div class="config-info">
+            <p><strong>当前配置信息:</strong></p>
+            <p v-if="watermarkRemovalConfig.algorithm === 'INPAINT_NS'">
+              🔴 Navier-Stokes 算法（最强） - 处理时间会较长
+            </p>
+            <p v-else>
+              🟢 TELEA 算法（快速） - 效果仍很好
+            </p>
+            <p>
+              邻域半径: {{ watermarkRemovalConfig.neighborhoodRadius }}
+              <span v-if="watermarkRemovalConfig.neighborhoodRadius >= 10" class="strength-indicator">🔥 超强</span>
+              <span v-else-if="watermarkRemovalConfig.neighborhoodRadius >= 6" class="strength-indicator">🔴
+                非常强</span>
+              <span v-else-if="watermarkRemovalConfig.neighborhoodRadius >= 4" class="strength-indicator">🟡
+                很强</span>
+              <span v-else class="strength-indicator">🟢 中等</span>
+            </p>
+            <p>平滑迭代: {{ watermarkRemovalConfig.smoothIterations }} 次</p>
+            <p v-if="watermarkRemovalConfig.neighborhoodRadius > 10 || watermarkRemovalConfig.smoothIterations > 5">
+              ⚠️ 警告: 参数非常强，处理时间会很长！
+            </p>
+          </div>
+        </div>
+      </div>
     </main>
   </div>
 </template>
@@ -1481,11 +1488,95 @@ onMounted(() => {
   background: #000;
 }
 
-/* 配置面板 */
-.config-section {
-  margin: 20px 0;
+/* 悬浮配置面板 */
+.floating-config-panel {
+  position: fixed;
+  right: 20px;
+  top: 80px;
+  width: 420px;
+  max-height: 85vh;
+  background: white;
+  border: 2px solid #667eea;
+  border-radius: 12px;
+  box-shadow: 0 8px 32px rgba(102, 126, 234, 0.3);
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  animation: slideInRight 0.3s ease-out;
 }
 
+@keyframes slideInRight {
+  from {
+    opacity: 0;
+    transform: translateX(100px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.floating-panel-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 15px 20px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border-bottom: 2px solid #667eea;
+  border-radius: 10px 10px 0 0;
+  flex-shrink: 0;
+}
+
+.floating-panel-header h3 {
+  margin: 0;
+  font-size: 1.1em;
+  font-weight: 600;
+}
+
+.close-btn {
+  background: rgba(255, 255, 255, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  color: white;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  cursor: pointer;
+  font-size: 1.2em;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+}
+
+.close-btn:hover {
+  background: rgba(255, 255, 255, 0.3);
+  transform: rotate(90deg);
+}
+
+.floating-panel-content {
+  padding: 20px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  flex: 1;
+  scrollbar-width: none;
+}
+
+.floating-panel-content::-webkit-scrollbar {
+  display: none;
+}
+
+/* 控制面板移除滚动条 */
+.control-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  /* 不再设置最大高度和溢出，让内容流动 */
+  overflow: visible;
+}
+
+/* 配置切换按钮 */
 .config-toggle-btn {
   width: 100%;
   padding: 12px;
@@ -1502,27 +1593,6 @@ onMounted(() => {
 .config-toggle-btn:hover {
   transform: translateY(-2px);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-}
-
-.config-panel {
-  background: #f8f9ff;
-  border: 2px solid #667eea;
-  border-radius: 8px;
-  padding: 20px;
-  margin-top: 12px;
-  animation: slideDown 0.3s ease-out;
-}
-
-@keyframes slideDown {
-  from {
-    opacity: 0;
-    transform: translateY(-10px);
-  }
-
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
 }
 
 .config-panel h4 {
@@ -1692,6 +1762,17 @@ onMounted(() => {
 }
 
 @media (max-width: 768px) {
+  .floating-config-panel {
+    position: fixed;
+    right: 10px;
+    left: 10px;
+    top: auto;
+    bottom: 20px;
+    width: auto;
+    max-height: 50vh;
+    border-radius: 12px;
+  }
+
   .preview-container {
     grid-template-columns: 1fr;
   }
