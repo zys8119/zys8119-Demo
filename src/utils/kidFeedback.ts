@@ -187,6 +187,33 @@ const fetchAudio = async (url: string, id: number): Promise<AudioBuffer | null> 
   }
 }
 
+// 兜底播放器：WebView 中 fetch(file://) 不可用时，用 <audio> 直接播放本地文件
+let htmlAudio: HTMLAudioElement | null = null
+
+const playWithAudio = (url: string): Promise<boolean> =>
+  new Promise((resolve) => {
+    try {
+      if (!htmlAudio) htmlAudio = new Audio()
+      const audio = htmlAudio
+      audio.src = url
+      let settled = false
+      let timer: ReturnType<typeof setTimeout> | undefined
+      const done = (ok: boolean) => {
+        if (settled) return
+        settled = true
+        if (timer) clearTimeout(timer)
+        resolve(ok)
+      }
+      timer = setTimeout(() => done(false), 5000)
+      audio.onerror = () => done(false)
+      audio.onplaying = () => done(true)
+      const p = audio.play()
+      if (p && typeof p.catch === 'function') p.catch(() => done(false))
+    } catch {
+      resolve(false)
+    }
+  })
+
 export const speak = async (text: string) => {
   if (muted || !text || typeof window === 'undefined') return
 
@@ -198,21 +225,27 @@ export const speak = async (text: string) => {
   // 1) 固定话术：优先播放本地微软女声，音色最好、零延迟
   const localKey = LOCAL_VOICE[text]
   if (localKey) {
-    const buffer = await fetchAudio('/tts/' + localKey + '.mp3', id)
+    // 相对路径：web 下为 /tts/xxx.mp3，安卓离线包下为 file:///android_asset/www/tts/xxx.mp3
+    const url = './tts/' + localKey + '.mp3'
+    const buffer = await fetchAudio(url, id)
     if (id !== reqId) return
     if (buffer && (await playBuffer(buffer))) return
+    // WebView 中 fetch(file://) 会被拒绝，退化为 <audio> 直接播放
+    if (await playWithAudio(url)) return
   }
 
   const clean = sanitize(text)
 
-  // 2) 在线音源兜底
-  for (const build of PROVIDERS) {
-    if (id !== reqId) return
-    const buffer = await fetchAudio(build(clean), id)
-    if (id !== reqId) return
-    if (!buffer) continue
-    const ok = await playBuffer(buffer)
-    if (ok) return
+  // 2) 在线音源兜底（离线包 file:// 下跳过，避免无谓等待）
+  if (location.protocol !== 'file:') {
+    for (const build of PROVIDERS) {
+      if (id !== reqId) return
+      const buffer = await fetchAudio(build(clean), id)
+      if (id !== reqId) return
+      if (!buffer) continue
+      const ok = await playBuffer(buffer)
+      if (ok) return
+    }
   }
 
   // 3) 全部失败，退回浏览器内置语音

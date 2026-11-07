@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- 无标题栏、浅色状态栏，配合页面暖色背景 -->
+    <style name="AppTheme" parent="android:Theme.Material.Light.NoActionBar">
+        <item name="android:windowBackground">#FDF9F2</item>
+        <item name="android:statusBarColor">#FDF9F2</item>
+        <item name="android:navigationBarColor">#FDF9F2</item>
+        <item name="android:windowLightStatusBar">true</item>
+    </style>
+</resources>

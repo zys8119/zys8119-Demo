@@ -1,0 +1,45 @@
+plugins {
+    id 'com.android.application'
+}
+
+android {
+    namespace 'com.zys.qilesson'
+    compileSdk 36
+
+    defaultConfig {
+        applicationId "com.zys.qilesson"
+        minSdk 21
+        targetSdk 34
+        versionCode 1
+        versionName "1.0"
+    }
+
+    signingConfigs {
+        // 本地自签名，用于生成可直接安装的 release 包
+        release {
+            storeFile file("../../keystore/qilesson.jks")
+            storePassword "qilesson123"
+            keyAlias "qilesson"
+            keyPassword "qilesson123"
+        }
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            signingConfig signingConfigs.release
+        }
+        debug {
+            minifyEnabled false
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+}
+
+dependencies {
+    // 仅依赖系统自带 WebView，无第三方库
+}

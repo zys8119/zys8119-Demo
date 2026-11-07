@@ -1,0 +1,4 @@
+// 顶层构建脚本：仅使用 AGP，无额外插件，减小构建复杂度
+plugins {
+    id 'com.android.application' version '8.13.0' apply false
+}

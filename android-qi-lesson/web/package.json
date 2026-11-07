@@ -1,0 +1,10 @@
+{
+  "name": "qi-lesson-web",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "description": "围棋第二课·气 单页（仅打包该页面相关资源）",
+  "scripts": {
+    "build": "vite build"
+  }
+}
