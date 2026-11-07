@@ -139,6 +139,37 @@ export default defineConfig({
     port: 8899,
     strictPort: true,
     proxy: {
+      // 在线语音合成代理：同源转发，避免跨域/混合内容被拦截
+      "/tts/baidu": {
+        target: "https://fanyi.baidu.com",
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/tts\/baidu/, "/gettts"),
+        headers: {
+          referer: "https://fanyi.baidu.com/",
+          "user-agent":
+            "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36",
+        },
+      },
+      "/tts/youdao": {
+        target: "https://dict.youdao.com",
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/tts\/youdao/, "/dictvoice"),
+        headers: {
+          referer: "https://dict.youdao.com/",
+          "user-agent":
+            "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36",
+        },
+      },
+      "/tts/google": {
+        target: "https://translate.google.com",
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/tts\/google/, "/translate_tts"),
+        headers: {
+          referer: "https://translate.google.com/",
+          "user-agent":
+            "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36",
+        },
+      },
       "/api": {
         target: "https://szrd.nbyz.cn/",
         // rewrite:path => path.replace(/^\/api/,''),

@@ -14,3 +14,4 @@ huawei
 *.pdf
 cypress.config.js
 cypress/
+.trae/

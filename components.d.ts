@@ -29,6 +29,7 @@ declare module 'vue' {
     Editor: typeof import('./src/components/editor.tsx')['default']
     Elements: typeof import('./src/components/drag-new/elements.ts')['default']
     FooterFixed: typeof import('./src/components/footer-fixed.vue')['default']
+    GoBoard: typeof import('./src/components/GoBoard.vue')['default']
     Hover: typeof import('./src/components/hover.vue')['default']
     Icon: typeof import('./src/components/drag-new/Icon.vue')['default']
     Markdown: typeof import('./src/components/markdown.md')['default']
