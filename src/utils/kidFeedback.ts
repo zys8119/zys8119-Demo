@@ -68,24 +68,31 @@ export const playTap = () => {
 
 let reqId = 0
 
-// 在线免费 TTS 资源
-// 优先走同源代理（vite.config.ts 里配置了 /tts/* 转发），避免跨域 / HTTPS 混合内容被拦截；
-// 代理不可用时（如生产环境）再直连第三方接口。
+// 本地预生成的微软「晓伊」活泼女声（由 tool/gen-tts.py 生成到 public/tts/）
+// 固定话术优先用本地文件：音色最好、零网络延迟、离线可用
+const LOCAL_VOICE: Record<string, string> = {
+  '太棒了，答对啦！': '32756950a9',
+  '真厉害，你数得真准！': '0ce946b4ce',
+  '好样的，完全正确！': '0317193d95',
+  '你真是小棋手！': '9dacd77d3f',
+  '漂亮，一下就数对了！': '9b9605ecde',
+  '真聪明，继续保持！': '96e80feec6',
+  '再数一数，棋子旁边的空交叉点都算气哦': '8b959d8ea5',
+  '别着急，看看棋子四周还有哪些空点': '52411e9601',
+  '慢慢数，一个一个来': '1bf772c71c',
+  '再仔细看看，气就在棋子旁边': 'e5c54d08fd',
+  '全部答对啦，你太棒了！': 'dcedeb102e',
+  '声音打开啦': 'c108bb1771',
+}
+
+// 在线免费 TTS 兜底资源（用于本地未收录的文本）
 const BAIDU_QS = 'lan=zh&spd=5&source=web&text='
-const YOUDAO_QS = 'le=zh&audio='
-const GOOGLE_QS = 'ie=UTF-8&client=tw-ob&tl=zh-CN&q='
 
 const PROVIDERS: Array<(text: string) => string> = [
-  // 百度翻译 TTS（代理）
+  // 百度翻译 TTS（同源代理，避免跨域）
   (t) => '/tts/baidu?' + BAIDU_QS + encodeURIComponent(t),
-  // 有道词典发音（代理）
-  (t) => '/tts/youdao?' + YOUDAO_QS + encodeURIComponent(t),
   // 百度翻译 TTS（直连兜底）
   (t) => 'https://fanyi.baidu.com/gettts?' + BAIDU_QS + encodeURIComponent(t),
-  // 有道词典发音（直连兜底）
-  (t) => 'https://dict.youdao.com/dictvoice?' + YOUDAO_QS + encodeURIComponent(t),
-  // 谷歌翻译 TTS（音色接近真人）
-  (t) => 'https://translate.google.com/translate_tts?' + GOOGLE_QS + encodeURIComponent(t),
 ]
 
 
@@ -182,14 +189,23 @@ const fetchAudio = async (url: string, id: number): Promise<AudioBuffer | null> 
 
 export const speak = async (text: string) => {
   if (muted || !text || typeof window === 'undefined') return
-  const clean = sanitize(text)
 
   // 必须在用户手势里同步解锁
   unlock()
   stopSpeak()
   const id = ++reqId
 
-  // 依次尝试各在线音源，拿到可用音频就播
+  // 1) 固定话术：优先播放本地微软女声，音色最好、零延迟
+  const localKey = LOCAL_VOICE[text]
+  if (localKey) {
+    const buffer = await fetchAudio('/tts/' + localKey + '.mp3', id)
+    if (id !== reqId) return
+    if (buffer && (await playBuffer(buffer))) return
+  }
+
+  const clean = sanitize(text)
+
+  // 2) 在线音源兜底
   for (const build of PROVIDERS) {
     if (id !== reqId) return
     const buffer = await fetchAudio(build(clean), id)
@@ -199,7 +215,7 @@ export const speak = async (text: string) => {
     if (ok) return
   }
 
-  // 全部在线音源失败，退回浏览器内置语音
+  // 3) 全部失败，退回浏览器内置语音
   if (id === reqId) speakLocal(clean)
 }
 

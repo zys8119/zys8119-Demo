@@ -60,8 +60,8 @@
           </div>
           <GoBoard
             :stones="ex.stones"
-            :show-liberties="ex.input !== '' || ex.revealed"
-            :arrow="ex.input !== ''"
+            :show-liberties="ex.ok || ex.flash || (ex.input !== '' && !ex.revealed)"
+            :arrow="ex.ok || ex.flash || (ex.input !== '' && !ex.revealed)"
           />
           <div class="pad">
             <button
@@ -109,8 +109,8 @@
           </div>
           <GoBoard
             :stones="current.stones"
-            :show-liberties="current.input !== '' || current.revealed"
-            :arrow="current.input !== ''"
+            :show-liberties="current.ok || current.flash || (current.input !== '' && !current.revealed)"
+            :arrow="current.ok || current.flash || (current.input !== '' && !current.revealed)"
             :cell="46"
           />
           <div class="pad pad-lg">
@@ -163,7 +163,7 @@ import {
   speak,
   stopSpeak,
 } from '../utils/kidFeedback'
-import { burst, floatText } from '../utils/celebrate'
+import { bigCelebrate, burst, floatText } from '../utils/celebrate'
 
 type Pt = { x: number; y: number }
 
@@ -223,7 +223,24 @@ const fig2 = computed(() =>
   ].map((b) => ({ ...b, count: libertiesOf(b.stones, SIZE).length }))
 )
 
-type Exercise = { stones: Pt[]; input: string; revealed: boolean; ok: boolean }
+// flash：答错后箭头闪现 1 秒的开关；ok 为 true 时持久显示
+type Exercise = { stones: Pt[]; input: string; revealed: boolean; ok: boolean; flash: boolean }
+
+const FLASH_MS = 1000
+const flashTimers = new WeakMap<Exercise, ReturnType<typeof setTimeout>>()
+
+const flashArrows = (ex: Exercise) => {
+  const old = flashTimers.get(ex)
+  if (old) clearTimeout(old)
+  ex.flash = true
+  flashTimers.set(
+    ex,
+    setTimeout(() => {
+      ex.flash = false
+      flashTimers.delete(ex)
+    }, FLASH_MS)
+  )
+}
 
 // 音效开关
 const muted = ref(isMuted())
@@ -244,12 +261,13 @@ const celebrate = (ex: Exercise, el?: HTMLElement | null) => {
   if (ex.ok) {
     const praise = randomPraise()
     playCorrect()
-    burst(cx, cy)
-    burst(cx, Math.max(cy - 60, 40), 12)
+    // 全屏炫酷庆祝：光晕 + 三处爆炸 + 满屏花雨
+    bigCelebrate()
     floatText(praise.replace(/[，！]/g, ' '), cx, cy - 40)
     speak(praise)
   } else {
     playWrong()
+    burst(cx, cy, 8)
     speak(randomGuide())
   }
 }
@@ -257,12 +275,12 @@ const celebrate = (ex: Exercise, el?: HTMLElement | null) => {
 onBeforeUnmount(stopSpeak)
 
 const exercises = reactive<Exercise[]>([
-  { stones: [{ x: 3, y: 5 }], input: '', revealed: false, ok: false },
-  { stones: [{ x: 8, y: 3 }], input: '', revealed: false, ok: false },
-  { stones: [{ x: 8, y: 0 }], input: '', revealed: false, ok: false },
-  { stones: [{ x: 3, y: 4 }, { x: 4, y: 4 }, { x: 5, y: 4 }], input: '', revealed: false, ok: false },
-  { stones: [{ x: 8, y: 3 }, { x: 8, y: 4 }], input: '', revealed: false, ok: false },
-  { stones: [{ x: 8, y: 0 }, { x: 7, y: 0 }, { x: 8, y: 1 }], input: '', revealed: false, ok: false },
+  { stones: [{ x: 3, y: 5 }], input: '', revealed: false, ok: false, flash: false },
+  { stones: [{ x: 8, y: 3 }], input: '', revealed: false, ok: false, flash: false },
+  { stones: [{ x: 8, y: 0 }], input: '', revealed: false, ok: false, flash: false },
+  { stones: [{ x: 3, y: 4 }, { x: 4, y: 4 }, { x: 5, y: 4 }], input: '', revealed: false, ok: false, flash: false },
+  { stones: [{ x: 8, y: 3 }, { x: 8, y: 4 }], input: '', revealed: false, ok: false, flash: false },
+  { stones: [{ x: 8, y: 0 }, { x: 7, y: 0 }, { x: 8, y: 1 }], input: '', revealed: false, ok: false, flash: false },
 ])
 
 const onInput = (ex: Exercise) => {
@@ -270,11 +288,28 @@ const onInput = (ex: Exercise) => {
   ex.input = ex.input.replace(/\D/g, '').slice(0, 2)
   ex.revealed = false
   ex.ok = false
+  ex.flash = false
+  const timer = flashTimers.get(ex)
+  if (timer) {
+    clearTimeout(timer)
+    flashTimers.delete(ex)
+  }
 }
 
 const check = (ex: Exercise, e?: MouseEvent | KeyboardEvent) => {
   ex.revealed = true
   ex.ok = ex.input !== '' && Number(ex.input) === libCount(ex.stones)
+  // 答对：箭头持久显示；答错：闪现 1 秒提示后消失
+  if (ex.ok) {
+    ex.flash = false
+    const timer = flashTimers.get(ex)
+    if (timer) {
+      clearTimeout(timer)
+      flashTimers.delete(ex)
+    }
+  } else {
+    flashArrows(ex)
+  }
   celebrate(ex, (e?.currentTarget as HTMLElement) || null)
 }
 
@@ -302,6 +337,7 @@ const randomExercises = (): Exercise[] => {
     input: '',
     revealed: false,
     ok: false,
+    flash: false,
   }))
 }
 
@@ -337,8 +373,9 @@ const checkAndNext = (ex: Exercise, e?: MouseEvent | KeyboardEvent) => {
     if (next < exercises.length) {
       fullIndex.value = next
     } else {
-      // 全部答对：来一次大撒花，再自动换一批从第一题继续
-      burst(window.innerWidth / 2, window.innerHeight / 2, 30)
+      // 全部答对：来一次超级全屏庆祝，再自动换一批从第一题继续
+      bigCelebrate()
+      setTimeout(() => bigCelebrate(), 420)
       speak('全部答对啦，你太棒了！')
       refresh()
       fullIndex.value = 0
